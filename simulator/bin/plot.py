@@ -5,6 +5,7 @@ Example:
     python plot.py --inputfolder simData/numMotes_50/ -x chargeConsumed --y aveLatency
 """
 from __future__ import print_function
+import matplotlib.pyplot as plt
 
 # =========================== imports =========================================
 
@@ -20,7 +21,6 @@ import numpy as np
 # third party
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 # ============================ defines ========================================
 
@@ -36,6 +36,7 @@ KPIS = [
 
 # ============================ main ===========================================
 
+
 def main(options):
 
     # init
@@ -43,14 +44,16 @@ def main(options):
 
     # chose lastest results
     subfolders = list(
-        [os.path.join(options.inputfolder, x) for x in os.listdir(options.inputfolder)]
+        [os.path.join(options.inputfolder, x)
+         for x in os.listdir(options.inputfolder)]
     )
     subfolder = max(subfolders, key=os.path.getmtime)
 
     for key in options.kpis:
         # load data
         for file_path in sorted(glob.glob(os.path.join(subfolder, '*.kpi'))):
-            curr_combination = os.path.basename(file_path)[:-8] # remove .dat.kpi
+            curr_combination = os.path.basename(
+                file_path)[:-8]  # remove .dat.kpi
             with open(file_path, 'r') as f:
 
                 # read kpi file
@@ -66,17 +69,18 @@ def main(options):
                             data[curr_combination].append(mote[key])
 
         # plot
-        try:
-            if key in ['lifetime_AA_years', 'latencies']:
-                plot_cdf(data, key, subfolder)
-            else:
-                plot_box(data, key, subfolder)
+        # try:
+        if key in ['lifetime_AA_years', 'latencies']:
+            plot_cdf(data, key, subfolder)
+        else:
+            plot_box(data, key, subfolder)
 
-        except TypeError as e:
-            print("Cannot create a plot for {0}: {1}.".format(key, e))
+        # except TypeError as e:
+            # print("Cannot create a plot for {0}: {1}.".format(key, e))
     print("Plots are saved in the {0} folder.".format(subfolder))
 
 # =========================== helpers =========================================
+
 
 def plot_cdf(data, key, subfolder):
     for k, values in data.items():
@@ -96,12 +100,17 @@ def plot_cdf(data, key, subfolder):
     savefig(subfolder, key + ".cdf")
     plt.clf()
 
+
 def plot_box(data, key, subfolder):
-    plt.boxplot(list(data.values()))
+    values = np.array(data.values())
+    values = list(values[values != None])
+
+    plt.boxplot(list(values))
     plt.xticks(list(range(1, len(data) + 1)), list(data.keys()))
     plt.ylabel(key)
     savefig(subfolder, key)
     plt.clf()
+
 
 def savefig(output_folder, output_name, output_format="png"):
     # check if output folder exists and create it if not
@@ -111,44 +120,46 @@ def savefig(output_folder, output_name, output_format="png"):
     # save the figure
     plt.savefig(
         os.path.join(output_folder, output_name + "." + output_format),
-        bbox_inches     = 'tight',
-        pad_inches      = 0,
-        format          = output_format,
+        bbox_inches='tight',
+        pad_inches=0,
+        format=output_format,
     )
+
 
 def parse_args():
     # parse options
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--inputfolder',
-        help       = 'The simulation result folder.',
-        default    = 'simData',
+        help='The simulation result folder.',
+        default='simData',
     )
     parser.add_argument(
-        '-k','--kpis',
-        help       = 'The kpis to plot',
-        type       = list,
-        default    = KPIS
+        '-k', '--kpis',
+        help='The kpis to plot',
+        type=list,
+        default=KPIS
     )
     parser.add_argument(
         '--xlabel',
-        help       = 'The x-axis label',
-        type       = str,
-        default    = None,
+        help='The x-axis label',
+        type=str,
+        default=None,
     )
     parser.add_argument(
         '--ylabel',
-        help       = 'The y-axis label',
-        type       = str,
-        default    = None,
+        help='The y-axis label',
+        type=str,
+        default=None,
     )
     parser.add_argument(
         '--show',
-        help       = 'Show the plots.',
-        action     = 'store_true',
-        default    = None,
+        help='Show the plots.',
+        action='store_true',
+        default=None,
     )
     return parser.parse_args()
+
 
 if __name__ == '__main__':
 

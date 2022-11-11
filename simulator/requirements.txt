@@ -5,7 +5,7 @@ numpy
 k7
 netaddr
 eel>=0.9.11
-watchdog
+watchdog==0.10.7
 gitpython
 psutil
 future
