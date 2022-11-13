@@ -9,6 +9,7 @@ Each cell of the matrix is a dict with the fields `pdr` and `rssi`
 The connectivity matrix can be filled statically at startup or be updated along
 time if a connectivity trace is given.
 
+# TODO DZAKY Collision Check
 The propagate() method is called at every slot. It loops through the
 transmissions occurring during that slot and checks if the transmission fails or
 succeeds.

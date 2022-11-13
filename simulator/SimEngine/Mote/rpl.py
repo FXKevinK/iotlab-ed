@@ -28,7 +28,15 @@ import numpy
 # Simulator-wide modules
 import SimEngine
 from . import MoteDefines as d
-from .trickle_timer import TrickleTimer
+
+if d.used_trickle == 1:
+    from .trickle_timer import TrickleTimer
+elif d.used_trickle == 2:
+    from .trickle_qtrickle import QTrickle as TrickleTimer
+elif d.used_trickle == 3:    
+    from .trickle_riata import RiataTrickle as TrickleTimer
+elif d.used_trickle == 4:
+    from .trickle_acpb import ACPBTrickle as TrickleTimer
 
 # =========================== defines =========================================
 
@@ -58,12 +66,15 @@ class Rpl(object):
         # local variables
         self.dodagId                   = None
         self.of                        = RplOFNone(self)
+
         self.trickle_timer             = TrickleTimer(
             i_min    = pow(2, self.DEFAULT_DIO_INTERVAL_MIN),
             i_max    = self.DEFAULT_DIO_INTERVAL_DOUBLINGS,
             k        = self.DEFAULT_DIO_REDUNDANCY_CONSTANT,
-            callback = self._send_DIO
+            callback = self._send_DIO,
+            mote     = self.mote
         )
+
         self.parentChildfromDAOs       = {}      # dictionary containing parents of each node
         self._tx_stat                  = {}      # indexed by mote_id
         self.dis_mode = self._get_dis_mode()
@@ -259,6 +270,8 @@ class Rpl(object):
 
     def _send_DIO(self, dstIp=None):
         if self.dodagId is None:
+            # TODO Reset event DZAKY
+            # self.trickle_timer.reset()
             # seems we performed local repair
             return
 
@@ -270,6 +283,16 @@ class Rpl(object):
             {
                 u'_mote_id':  self.mote.id,
                 u'packet':    dio,
+            }
+        )
+
+        # log
+        self.log(
+            SimEngine.SimLog.LOG_DEBUG_ASN,
+            {
+                u'_mote_id':        self.mote.id,
+                u'position':        2,
+                u'asn':             self.engine.getAsn(),
             }
         )
 

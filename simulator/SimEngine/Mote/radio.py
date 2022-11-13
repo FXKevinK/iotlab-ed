@@ -85,6 +85,7 @@ class Radio(object):
 
         onGoingBroadcast = (self.onGoingTransmission[u'packet'][u'mac'][u'dstMac']==d.BROADCAST_ADDRESS)
 
+        # TODO DZAKY TX SLOT
         # log charge consumed
         if self.mote.tsch.getIsSync():
             if onGoingBroadcast:

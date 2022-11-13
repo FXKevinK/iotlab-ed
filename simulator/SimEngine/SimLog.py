@@ -105,6 +105,11 @@ LOG_PROP_DROP_LOCKON              = {u'type': u'prop.drop_lockon' ,         u'ke
 # === connectivity matrix
 LOG_CONN_MATRIX_K7_UPDATE         = {u'type': u'conn.matrix.update',        u'keys': [u'start_trace_position', u'end_trace_position', u'asn_of_next_update']}
 
+
+LOG_DEBUG_PACKET                  = {u'type': u'tsch.debug.packet',         u'keys': [u'_mote_id',u'packet']}
+LOG_DEBUG_CELL                    = {u'type': u'tsch.debug.cell',           u'keys': [u'_mote_id',u'link_type',u'slotOffset',u'channelOffset',u'neighbor',u'cellOptions',u'asn',u'slotframe']}
+LOG_DEBUG_ASN                     = {u'type': u'tsch.debug.asn',            u'keys': [u'_mote_id',u'position',u'asn']}
+
 # ============================ SimLog =========================================
 
 class SimLog(object):

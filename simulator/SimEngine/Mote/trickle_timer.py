@@ -18,7 +18,7 @@ class TrickleTimer(object):
     STATE_STOPPED = u'stopped'
     STATE_RUNNING = u'running'
 
-    def __init__(self, i_min, i_max, k, callback):
+    def __init__(self, i_min, i_max, k, callback, mote):
         assert isinstance(i_min, (int, int))
         assert isinstance(i_max, (int, int))
         assert isinstance(k, (int, int))
@@ -27,6 +27,7 @@ class TrickleTimer(object):
         # shorthand to singletons
         self.engine   = SimEngine.SimEngine.SimEngine()
         self.settings = SimEngine.SimSettings.SimSettings()
+        self.log                       = SimEngine.SimLog.SimLog().log
 
         # constants of this timer instance
         # min_interval is expected to given in milliseconds
@@ -42,6 +43,8 @@ class TrickleTimer(object):
         self.interval = 0
         self.user_callback = callback
         self.state = self.STATE_STOPPED
+        
+        self.mote = mote
 
     @property
     def is_running(self):
@@ -127,6 +130,16 @@ class TrickleTimer(object):
                 # do nothing
                 pass
 
+        # log
+        self.log(
+            SimEngine.SimLog.LOG_DEBUG_ASN,
+            {
+                u'_mote_id':        self.mote.id,
+                u'position':        2,
+                u'asn':             asn,
+            }
+        )
+        
         self.engine.scheduleAtAsn(
             asn            = asn,
             cb             = _callback,

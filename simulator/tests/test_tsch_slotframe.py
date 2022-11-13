@@ -392,3 +392,48 @@ def test_slotframe_set_length_with_cells(sim_engine):
     slotframe.set_length(new_length)
     assert slotframe.length == new_length
     assert len(slotframe.get_busy_slots()) == len(cells) - 1  # make sure we have the right amount of cells
+
+def test_tsch_slotframe_priority(sim_engine):
+    sim_engine = sim_engine()
+    mote = sim_engine.motes[0]
+    assert len(mote.tsch.slotframes) == 1
+    assert mote.tsch.get_slotframe(0)
+
+    # add slotframes
+    mote.tsch.add_slotframe(4, sim_engine.settings.tsch_slotframeLength)
+    mote.tsch.add_slotframe(2, sim_engine.settings.tsch_slotframeLength)
+    mote.tsch.add_slotframe(3, sim_engine.settings.tsch_slotframeLength)
+    mote.tsch.add_slotframe(1, sim_engine.settings.tsch_slotframeLength)
+
+    # proceed one tick
+    sim_engine.asn += 1
+
+    # the slotframes should be placed in ascending order
+    assert ([handle for handle, _ in mote.tsch.slotframes.items()] ==
+            [0, 1, 2, 3, 4])
+
+    # add TX cells and packets
+    mote.tsch.addCell(1, 0, '00-00-00-00-00-00-00-01',
+                      [d.CELLOPTION_TX, d.CELLOPTION_SHARED],
+                      slotframe_handle=1)
+    mote.tsch.addCell(1, 0, '00-00-00-00-00-00-00-01',
+                      [d.CELLOPTION_TX],
+                      slotframe_handle=2)
+
+    # put one packet
+    mote.tsch.enqueue({'type': 'd.PKT_TYPE_DATA',
+                       'mac': {'srcMac': mote.get_mac_addr(),
+                               'dstMac': '00-00-00-00-00-00-00-01'}})
+
+    candidate_cells = mote.tsch._get_candidate_cells()
+    assert len(candidate_cells) == 2
+    active_cell, pktToSend = mote.tsch._select_active_cell(candidate_cells)
+    assert d.CELLOPTION_SHARED in active_cell.options
+
+    # if we have an RX cell in the slotframe 0, that cell should be selected
+    mote.tsch.addCell(1, 0, None, [d.CELLOPTION_RX], slotframe_handle=0)
+    candidate_cells = mote.tsch._get_candidate_cells()
+    assert len(candidate_cells) == 3
+    active_cell, pktToSend = mote.tsch._select_active_cell(candidate_cells)
+    assert active_cell.options == [d.CELLOPTION_RX]
+    assert pktToSend is None
