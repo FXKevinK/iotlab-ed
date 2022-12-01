@@ -128,6 +128,3 @@ CHARGE_RxDataTxAck_uC                       = 32.6
 CHARGE_RxData_uC                            = 22.6
 # Time slot during which the node’s radio stays off
 CHARGE_Sleep_uC                             = 0.0
-
-
-used_trickle =  1

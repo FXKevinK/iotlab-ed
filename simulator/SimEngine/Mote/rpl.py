@@ -28,15 +28,10 @@ import numpy
 # Simulator-wide modules
 import SimEngine
 from . import MoteDefines as d
-
-if d.used_trickle == 1:
-    from .trickle_timer import TrickleTimer
-elif d.used_trickle == 2:
-    from .trickle_qtrickle import QTrickle as TrickleTimer
-elif d.used_trickle == 3:    
-    from .trickle_riata import RiataTrickle as TrickleTimer
-elif d.used_trickle == 4:
-    from .trickle_acpb import ACPBTrickle as TrickleTimer
+from .trickle_timer import TrickleTimer
+from .trickle_qtrickle import QTrickle
+from .trickle_riata import RiataTrickle
+from .trickle_acpb import ACPBTrickle
 
 # =========================== defines =========================================
 
@@ -67,7 +62,18 @@ class Rpl(object):
         self.dodagId                   = None
         self.of                        = RplOFNone(self)
 
-        self.trickle_timer             = TrickleTimer(
+        trickle_method = self.settings.trickle_method or ""
+        print("trickle", trickle_method, self.mote.id)
+        if trickle_method == 'qt':
+            trickle_class = QTrickle
+        elif trickle_method == 'riata':    
+            trickle_class = RiataTrickle
+        elif trickle_method == 'acpb':
+            trickle_class = ACPBTrickle
+        else:
+            trickle_class = TrickleTimer
+            
+        self.trickle_timer             = trickle_class(
             i_min    = pow(2, self.DEFAULT_DIO_INTERVAL_MIN),
             i_max    = self.DEFAULT_DIO_INTERVAL_DOUBLINGS,
             k        = self.DEFAULT_DIO_REDUNDANCY_CONSTANT,
@@ -98,6 +104,10 @@ class Rpl(object):
     def getPreferredParent(self):
         # return the MAC address of the current preferred parent
         return self.of.get_preferred_parent()
+
+    def getNeighbors(self):
+        # return the MAC address of the current preferred parent
+        return self.neighbors
 
     # admin
 

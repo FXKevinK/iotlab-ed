@@ -265,3 +265,101 @@ class AppBurst(AppBase):
                 dstIp         = self.mote.rpl.dodagId,
                 packet_length = self.settings.app_pkLength
             )
+
+
+class AppBurstPeriodic(AppBase):
+    """
+    Generate Burst Traffic Patterns of 20 packets 
+    in uniform varying intervals between 1-10 minutes
+
+    The first timing to send packet is at slotframe rlsf_startSendingData
+    """
+    def __init__(self, mote, **kwargs):
+        super(AppBurstPeriodic, self).__init__(mote)
+        self.sending_first_packet = True
+        self.packet_interval = 0
+
+    def startSendingData(self):
+        if self.sending_first_packet:
+            self._schedule_transmission()
+
+    def _schedule_transmission(self):
+        # compute initial time
+        startSF = self.settings.rlsf_startSendingData
+        lenSF = self.settings.tsch_slotframeLength
+
+        asnStart = startSF * lenSF
+
+        if self.sending_first_packet:
+            # compute initial time start from asnStart + packet_interval
+            if asnStart <= self.engine.getAsn():
+                delay = self.engine.getAsn() * self.settings.tsch_slotDuration + random.uniform(60, 300)
+            else:
+                interval = random.uniform(60, 300)
+                delay = asnStart * self.settings.tsch_slotDuration + interval
+
+            self.sending_first_packet = False
+            asn = int(float(delay) / float(self.settings.tsch_slotDuration))
+
+            self.engine.scheduleAtAsn(
+                asn             = asn,
+                cb              = self._send_burst_packet,
+                uniqueTag       = (
+                    u'AppBurstPeriodic',
+                    u'scheduled_by_{0}'.format(self.mote.id)
+                ),
+                intraSlotOrder  = d.INTRASLOTORDER_ADMINTASKS,
+            )
+        else:
+            # compute random uniform delay
+            delay = random.uniform(60, 300)
+
+            # schedule
+            self.engine.scheduleIn(
+                delay           = delay,
+                cb              = self._send_burst_packet,
+                uniqueTag       = (
+                    u'AppBurstPeriodic',
+                    u'scheduled_by_{0}'.format(self.mote.id)
+                ),
+                intraSlotOrder  = d.INTRASLOTORDER_ADMINTASKS,
+            )
+
+
+    def _send_burst_packet(self):
+        if self.mote.rpl.dodagId == None:
+            # it seems we left the dodag; stop the transmission
+            self.sending_first_packet = True
+            return
+
+        sfLen = self.settings.tsch_slotframeLength
+        curAsn = ((self.engine.getAsn() / sfLen) + 1) * sfLen
+
+        for i in range(4):
+            self.engine.scheduleAtAsn(
+                asn             = curAsn + i*sfLen + 95,
+                cb              = self._send_packet_slotframe,
+                uniqueTag       = (
+                    u'AppBurstPeriodic',
+                    u'scheduled_by_{0}_asn{1}'.format(self.mote.id, curAsn + i*sfLen + 95)
+                ),
+                intraSlotOrder  = d.INTRASLOTORDER_ADMINTASKS,
+            )
+
+        
+        # schedule the next transmission
+        self._schedule_transmission()
+
+    def _send_packet_slotframe(self):
+        if self.mote.rpl.dodagId == None:
+            # it seems we left the dodag; stop the transmission
+            self.sending_first_packet = True
+            return
+        
+        for _ in range(5):
+            self._send_packet(
+                dstIp         = self.mote.rpl.dodagId,
+                packet_length = self.settings.app_pkLength
+            )
+        
+

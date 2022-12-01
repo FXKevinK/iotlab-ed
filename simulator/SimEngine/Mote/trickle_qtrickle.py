@@ -16,10 +16,6 @@ from . import MoteDefines as d
 import numpy as np
 import random
 
-# DEFAULT_DIO_INTERVAL_MIN = 14
-# DEFAULT_DIO_INTERVAL_DOUBLINGS = 9
-# DEFAULT_DIO_REDUNDANCY_CONSTANT = 3
-
 class QTrickle(object):
     STATE_STOPPED = u'stopped'
     STATE_RUNNING = u'running'
@@ -33,7 +29,7 @@ class QTrickle(object):
         # shorthand to singletons
         self.engine   = SimEngine.SimEngine.SimEngine()
         self.settings = SimEngine.SimSettings.SimSettings()
-        self.mote = mote
+        self.log      = SimEngine.SimLog.SimLog().log
 
         # constants of this timer instance
         # min_interval is expected to given in milliseconds
@@ -50,11 +46,13 @@ class QTrickle(object):
         self.user_callback = callback
         self.state = self.STATE_STOPPED
 
+        self.mote = mote
+
         # =======================
         
-        self.alpha = 0.5
-        self.gamma = 0.5
-        self.epsilon = 0.5
+        self.alpha = self.settings.ql_learning_rate
+        self.gamma = self.settings.ql_discount_rate
+        self.epsilon = self.settings.ql_epsilon
 
         self.i_max = i_max
         self.m = -1
@@ -92,7 +90,6 @@ class QTrickle(object):
         #       the first interval.
         self.state = self.STATE_RUNNING
         self.interval = self.min_interval
-        # self.interval = random.randint(self.min_interval, self.max_interval)
         self._start_next_interval()
 
     def stop(self):
@@ -137,7 +134,9 @@ class QTrickle(object):
         self.pstable = 1 - self.preset
     
     def calculate_k(self):
-        self.Nnbr = len(self.mote.rpl.of.neighbors)
+        # print("aaaa")
+        # self.Nnbr = len(self.mote.rpl.getNeighbors())
+        self.Nnbr = 3
         k = 1 + math.ceil( min(self.Nnbr, self.kmax) * self.preset) - 1
         return k
 
@@ -160,7 +159,7 @@ class QTrickle(object):
         self.Ncell[self.m] = int(math.ceil(old_div((self.t_end-self.t_start), slotframe_len)))
         
         # TODO to get collision
-        # self.num_collision_busy[self.m] = 5
+        self.num_collision_busy[self.m] = 0
 
         assert self.num_collision_busy[self.m] <= self.Ncell[self.m]
         self.pcollision[self.m] = self.num_collision_busy[self.m] / self.Ncell[self.m]
@@ -212,33 +211,32 @@ class QTrickle(object):
             asn = self.engine.getAsn() + 1
 
         def _callback():
-
-            if random.uniform(0, 1) <= self.epsilon:
-                # Explore action space
-                if self.counter < self.redundancy_constant:
-                    #  Section 4.2:
-                    #    4.  At time t, Trickle transmits if and only if the
-                    #        counter c is less than the redundancy constant k.
-                    self.user_callback()
-                    self.calculate_ptransmit()
-                    self.current_action = 1
-                    self.DIOtransmit += 1
-                else:
-                    # do nothing
-                    self.current_action = 0
-
+            # if random.uniform(0, 1) <= self.epsilon:
+            # Explore action space
+            if self.counter < self.redundancy_constant:
+                #  Section 4.2:
+                #    4.  At time t, Trickle transmits if and only if the
+                #        counter c is less than the redundancy constant k.
+                self.user_callback()
+                self.calculate_ptransmit()
+                self.current_action = 1
+                self.DIOtransmit += 1
             else:
-                # Exploit learned values
-                action = np.argmax(self.q_table[self.m])
+                # do nothing
+                self.current_action = 0
 
-                if action == 1:
-                    self.user_callback()
-                    self.calculate_ptransmit()
-                    self.current_action = 1
-                    self.DIOtransmit += 1
-                else:
-                    # do nothing
-                    self.current_action = 0
+            # else:
+            #     # Exploit learned values
+            #     action = np.argmax(self.q_table[self.m])
+
+            #     if action == 1:
+            #         self.user_callback()
+            #         self.calculate_ptransmit()
+            #         self.current_action = 1
+            #         self.DIOtransmit += 1
+            #     else:
+            #         # do nothing
+            #         self.current_action = 0
 
         self.engine.scheduleAtAsn(
             asn            = asn,
@@ -268,7 +266,6 @@ class QTrickle(object):
         asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
 
         self.update_qtable()
-
         def _callback():
             # doubling the interval
             #
