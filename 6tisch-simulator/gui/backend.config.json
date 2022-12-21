@@ -1,0 +1,5 @@
+{
+    "simulator_path": "..",
+    "trace_dir_path": "../traces",
+    "host": "127.0.0.1"
+}
