@@ -51,7 +51,7 @@ class QTrickle(object):
         # =======================
         
         self.alpha = self.settings.ql_learning_rate
-        self.gamma = self.settings.ql_discount_rate
+        self.betha = self.settings.ql_discount_rate
         self.epsilon = self.settings.ql_epsilon
 
         self.i_max = i_max
@@ -134,10 +134,12 @@ class QTrickle(object):
         self.pstable = 1 - self.preset
     
     def calculate_k(self):
-        # print("aaaa")
-        # self.Nnbr = len(self.mote.rpl.getNeighbors())
+        a = len(self.mote.rpl.getNeighbors())
+        b = len(self.mote.rpl.neighbors)
+        print('neighbors', a, b)
+
         self.Nnbr = 3
-        k = 1 + math.ceil( min(self.Nnbr, self.kmax) * self.preset) - 1
+        k = 1 + math.ceil( min(self.Nnbr, self.kmax - 1) * self.preset)
         return k
 
     # TODO DZAKY increase collision
@@ -165,16 +167,6 @@ class QTrickle(object):
         self.pcollision[self.m] = self.num_collision_busy[self.m] / self.Ncell[self.m]
         self.psuccess[self.m] =  1 - self.pcollision[self.m]
 
-    def calculate_interval_t(self):
-        # t = old_div((1 + random.random()) * self.interval, 2)
-        # t_start = old_div(self.interval, 2)
-        # t_end = self.interval
-
-        half_interval = old_div(self.interval, 2)
-        self.t_start = half_interval * (self.ptransmit * self.prev_psuccess)
-        self.t_end = half_interval + (self.pstable * half_interval)
-        t = random.randint(self.t_start, self.t_end)
-        return t
 
     def _start_next_interval(self):
         if self.state == self.STATE_STOPPED:
@@ -182,20 +174,11 @@ class QTrickle(object):
 
         # reset the counter
         self.counter = 0
-
-        self.m += 1
-        if self.i_max < self.m:
-            self.m = self.i_max
-        
-        self.Nstates += 1
-
         self.redundancy_constant = self.calculate_k()
-        t = self.calculate_interval_t()
-
-        self._schedule_event_at_t(t)
+        self._schedule_event_at_t()
         self._schedule_event_at_end_of_interval()
 
-    def _schedule_event_at_t(self, t):
+    def _schedule_event_at_t(self):
         # select t in the range [I/2, I), where I == self.current_interval
         #
         # Section 4.2:
@@ -204,40 +187,58 @@ class QTrickle(object):
         #       that is, values greater than or equal to I/2 and less than I.
         #       The interval ends at I.
         slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
+
+        # # Calculate T
+        half_interval = old_div(self.interval, 2)
+        self.t_start = half_interval * (self.ptransmit * self.prev_psuccess)
+        self.t_end = half_interval + (self.pstable * half_interval)
+        t = random.randint(self.t_start, self.t_end)
+
         asn = self.engine.getAsn() + int(math.ceil(old_div(t, slot_len)))
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
             # the current ASN
             asn = self.engine.getAsn() + 1
 
+        def _transmit():
+            self.calculate_ptransmit()
+            self.current_action = 1
+            self.DIOtransmit += 1
+
         def _callback():
-            # if random.uniform(0, 1) <= self.epsilon:
-            # Explore action space
-            if self.counter < self.redundancy_constant:
-                #  Section 4.2:
-                #    4.  At time t, Trickle transmits if and only if the
-                #        counter c is less than the redundancy constant k.
-                self.user_callback()
-                self.calculate_ptransmit()
-                self.current_action = 1
-                self.DIOtransmit += 1
+            if random.uniform(0, 1) <= self.epsilon:
+                # Explore action space
+                if self.counter < self.redundancy_constant:
+                    #  Section 4.2:
+                    #    4.  At time t, Trickle transmits if and only if the
+                    #        counter c is less than the redundancy constant k.
+                    self.user_callback()
+                    _transmit()
+                else:
+                    # do nothing
+                    self.current_action = 0
+
             else:
-                # do nothing
-                self.current_action = 0
+                # Exploit learned values
+                action = np.argmax(self.q_table[self.m])
 
-            # else:
-            #     # Exploit learned values
-            #     action = np.argmax(self.q_table[self.m])
+                if action == 1:
+                    self.user_callback()
+                    _transmit()
+                else:
+                    # do nothing
+                    self.current_action = 0
 
-            #     if action == 1:
-            #         self.user_callback()
-            #         self.calculate_ptransmit()
-            #         self.current_action = 1
-            #         self.DIOtransmit += 1
-            #     else:
-            #         # do nothing
-            #         self.current_action = 0
-
+        # log
+        self.log(
+            SimEngine.SimLog.LOG_DEBUG_ASN,
+            {
+                u'_mote_id':        self.mote.id,
+                u'position':        2,
+                u'asn':             asn,
+            }
+        )
+        
         self.engine.scheduleAtAsn(
             asn            = asn,
             cb             = _callback,
@@ -254,7 +255,7 @@ class QTrickle(object):
 
         next_max = np.max(self.q_table[next_m])
         old_value = self.q_table[self.m][self.current_action]
-        td_learning = (reward + self.gamma * next_max) - old_value
+        td_learning = (reward + self.betha * next_max) - old_value
 
         new_value = (1 - self.alpha) * old_value + self.alpha * td_learning
         self.q_table[self.m][self.current_action] = new_value
@@ -275,6 +276,8 @@ class QTrickle(object):
             #       the time specified by Imax, Trickle sets the interval
             #       length I to be the time specified by Imax.
             self.interval = self.interval * 2
+            self.m += 1
+            self.Nstates += 1
             if self.max_interval < self.interval:
                 self.interval = self.max_interval
                 self.m = self.i_max
