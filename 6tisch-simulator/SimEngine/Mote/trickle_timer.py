@@ -46,7 +46,7 @@ class TrickleTimer(object):
         self.state = self.STATE_STOPPED
         self.start_t_record = None
         self.end_t_record = None
-        self.ncells = None
+        self.Ncells = None
         self.is_dio_sent = False
 
     @property
@@ -133,14 +133,14 @@ class TrickleTimer(object):
         t = random.uniform(t_min, t_max)
 
         l_e = slot_len * self.settings.tsch_slotframeLength
-        self.ncells = int(math.ceil(old_div(t_range, l_e)))
+        self.Ncells = int(math.ceil(old_div(t_range, l_e)))
 
         cur_asn = self.engine.getAsn()
         asn_start = cur_asn + int(math.ceil(old_div(t_min, slot_len)))
         asn_end = cur_asn + int(math.ceil(old_div(t_max, slot_len)))
         asn = cur_asn + int(math.ceil(old_div(t, slot_len)))
         # if self.mote.id == 0:
-        #     print("T", self.mote.id, cur_asn, t_range, self.ncells)
+        #     print("T", self.mote.id, cur_asn, t_range, self.Ncells)
 
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
@@ -201,7 +201,7 @@ class TrickleTimer(object):
             if self.end_t_record is not None and self.start_t_record is not None:
                 dio_sent = int(self.mote.tsch.is_dio_sent) * int(self.is_dio_sent)
                 used = max((self.end_t_record - self.start_t_record) - dio_sent, 0)
-                occ = round(used/self.ncells, 2)
+                occ = round(used/self.Ncells, 2)
 
             # if self.counter > 0:
             #     print("E", self.mote.id, self.end_t_record, used, occ, self.counter, self.redundancy_constant)

@@ -47,7 +47,6 @@ class QTrickle(object):
         self.state = self.STATE_STOPPED
         self.start_t_record = None
         self.end_t_record = None
-        self.ncells = None
         self.is_dio_sent = False
 
         self.alpha = self.settings.ql_learning_rate
@@ -169,7 +168,7 @@ class QTrickle(object):
         t = random.uniform(self.t_start, self.t_end)
 
         l_e = slot_len * self.settings.tsch_slotframeLength
-        self.ncells = int(math.ceil(old_div(t_range, l_e)))
+        self.Ncells = int(math.ceil(old_div(t_range, l_e)))
 
         cur_asn = self.engine.getAsn()
         asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_len)))
@@ -275,7 +274,7 @@ class QTrickle(object):
             if self.end_t_record is not None and self.start_t_record is not None:
                 dio_sent = int(self.mote.tsch.is_dio_sent) * int(self.is_dio_sent)
                 used = max((self.end_t_record - self.start_t_record) - dio_sent, 0)
-                occ = round(used/self.ncells, 2)            
+                occ = round(used/self.Ncells, 2)            
                 self.poccupancy = occ
                 self.pfree = 1 - self.poccupancy
 

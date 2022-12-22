@@ -14,11 +14,6 @@ import SimEngine
 from . import MoteDefines as d
 
 import numpy as np
-import random
-
-# DEFAULT_DIO_INTERVAL_MIN = 14
-# DEFAULT_DIO_INTERVAL_DOUBLINGS = 9
-# DEFAULT_DIO_REDUNDANCY_CONSTANT = 3
 
 class RiataTrickle(object):
     STATE_STOPPED = u'stopped'
@@ -30,10 +25,11 @@ class RiataTrickle(object):
         assert isinstance(k, (int, int))
         assert callback is not None
 
+        self.mote = mote
+
         # shorthand to singletons
         self.engine   = SimEngine.SimEngine.SimEngine()
         self.settings = SimEngine.SimSettings.SimSettings()
-        self.mote = mote
 
         # constants of this timer instance
         # min_interval is expected to given in milliseconds
@@ -50,23 +46,20 @@ class RiataTrickle(object):
         self.user_callback = callback
         self.state = self.STATE_STOPPED
 
-        # =======================
-        
-        self.alpha = 0.5
-        self.gamma = 0.5
-        self.epsilon = 0.5
-        self.kmax = 10
+        self.alpha = self.settings.ql_learning_rate
+        self.betha = self.settings.ql_discount_rate
+        self.epsilon = self.settings.ql_epsilon
 
         self.i_max = i_max
-        self.m = -1
-        self.q_table = np.zeros([self.i_max, 2])
-        self.prev_psuccess = 1
+        self.m = 0
+        self.q_table = np.zeros([self.i_max + 1, 2])
+        self.pfree = 1
 
-        self.Nreset = np.zeros(self.i_max)
-        self.Ndio = np.zeros(self.i_max)
-
+        self.Nreset = np.zeros(self.i_max + 1)
+        self.Ndio = np.zeros(self.i_max + 1)
         self.DIOtransmit = 0
-        self.Nstates = 0
+        self.Nstates = 1
+        self.kmax = self.settings.k_max
         self.current_action = -1
         self.t_start = 0
         self.t_end = 0
@@ -75,15 +68,15 @@ class RiataTrickle(object):
     def is_running(self):
         return self.state == self.STATE_RUNNING
 
-    def start(self):
+    def start(self, note=None):
         # Section 4.2:
         #   1.  When the algorithm starts execution, it sets I to a value in
         #       the range of [Imin, Imax] -- that is, greater than or equal to
         #       Imin and less than or equal to Imax.  The algorithm then begins
         #       the first interval.
         self.state = self.STATE_RUNNING
+        self.m = 0
         self.interval = self.min_interval
-        # self.interval = random.randint(self.min_interval, self.max_interval)
         self._start_next_interval()
 
     def stop(self):
@@ -91,7 +84,8 @@ class RiataTrickle(object):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_t')
         self.state = self.STATE_STOPPED
 
-    def reset(self):
+    def reset(self, note=None):
+        # print(self.mote.id, f'reset {note}')
         if self.state == self.STATE_STOPPED:
             return
 
@@ -105,11 +99,11 @@ class RiataTrickle(object):
         #       "inconsistent" transmission, Trickle does nothing.  Trickle can
         #       also reset its timer in response to external "events".
 
+        self.m = 0
         self.Nreset[self.m] += 1
+        self.Ndio[self.m] = 0
         if self.min_interval < self.interval:
             self.interval = self.min_interval
-            self.m = -1
-            self.Ndio[self.m+1] = 0
             self._start_next_interval()
         else:
             # if the interval is equal to the minimum value, do nothing
@@ -122,54 +116,32 @@ class RiataTrickle(object):
         # Section 4.2:
         #   3.  Whenever Trickle hears a transmission that is "consistent", it
         #       increments the counter c.
-        self.counter += 1
         self.Ndio[self.m] += 1
-    
+        self.counter += 1
+
     def calculate_k(self):
         if self.Nstates == 0:
             return self.kmax
 
         total = 0
-        for i in range(0, self.m+1):
+        for i in range(self.m + 1):
             total += self.Ndio[i]
-        k = old_div(total, self.m+1)
-
+        k = int(math.ceil(old_div(total, self.m + 1)))
         return k
-
-    def calculate_interval_t(self):
-        # t = old_div((1 + random.random()) * self.interval, 2)
-        # t_start = old_div(self.interval, 2)
-        # t_end = self.interval
-
-        I = old_div(self.interval, (self.m + 1 + self.Nreset[self.m]))
-        self.t_start = self.DIOtransmit * I
-        self.t_end = (self.DIOtransmit + 1)  * I
-        t = random.randint(self.t_start, self.t_end)
-        return t
 
     def _start_next_interval(self):
         if self.state == self.STATE_STOPPED:
             return
 
         # reset the counter
-        self.counter = 0
-
-        self.m += 1
-        if self.i_max < self.m:
-            self.m = self.i_max
-        assert self.m > -1 and self.m <= self.i_max
-        
+        self.counter = 0        
         self.Nreset[self.m] = 0
         self.Ndio[self.m] = 0
-        self.Nstates += 1
-
         self.redundancy_constant = self.calculate_k()
-        t = self.calculate_interval_t()
-
-        self._schedule_event_at_t(t)
+        self._schedule_event_at_t()
         self._schedule_event_at_end_of_interval()
 
-    def _schedule_event_at_t(self, t):
+    def _schedule_event_at_t(self):
         # select t in the range [I/2, I), where I == self.current_interval
         #
         # Section 4.2:
@@ -178,6 +150,14 @@ class RiataTrickle(object):
         #       that is, values greater than or equal to I/2 and less than I.
         #       The interval ends at I.
         slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
+
+        I = old_div(self.interval, (self.m + 1 + self.Nreset[self.m]))
+        self.t_start = self.DIOtransmit * I
+        self.t_end = (self.DIOtransmit + 1)  * I
+        self.t_start = int(math.ceil(self.t_start))
+        self.t_end = int(math.ceil(self.t_end))
+
+        t = random.uniform(self.t_start, self.t_end)
         asn = self.engine.getAsn() + int(math.ceil(old_div(t, slot_len)))
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
@@ -185,7 +165,6 @@ class RiataTrickle(object):
             asn = self.engine.getAsn() + 1
 
         def _callback():
-
             if random.uniform(0, 1) <= self.epsilon:
                 # Explore action space
                 if self.counter < self.redundancy_constant:
@@ -218,7 +197,7 @@ class RiataTrickle(object):
             intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
 
     def update_qtable(self):
-        # next m
+        # clip m
         if self.i_max < (self.m + 1):
             next_m = self.m
         else:
@@ -229,22 +208,19 @@ class RiataTrickle(object):
         else:
             reward = self.Nreset[self.m]
 
-        next_max = np.max(self.q_table[next_m])
+        next_action = np.max(self.q_table[next_m])
         old_value = self.q_table[self.m][self.current_action]
-        td_learning = (reward + self.gamma * next_max) - old_value
+        td_learning = (reward + self.betha * next_action) - old_value
 
         new_value = (1 - self.alpha) * old_value + self.alpha * td_learning
         self.q_table[self.m][self.current_action] = new_value
-        
-        self.prev_psuccess = self.psuccess[self.m]
 
     def _schedule_event_at_end_of_interval(self):
         slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
         asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
 
-        self.update_qtable()
-
         def _callback():
+            self.update_qtable()
             # doubling the interval
             #
             # Section 4.2:
@@ -253,6 +229,8 @@ class RiataTrickle(object):
             #       the time specified by Imax, Trickle sets the interval
             #       length I to be the time specified by Imax.
             self.interval = self.interval * 2
+            self.m += 1
+            self.Nstates += 1
             if self.max_interval < self.interval:
                 self.interval = self.max_interval
                 self.m = self.i_max
