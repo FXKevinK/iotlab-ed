@@ -63,7 +63,8 @@
             
             "ql_epsilon":                                  0.5,
             "ql_learning_rate":                            0.05,
-            "ql_discount_rate":                            0.99
+            "ql_discount_rate":                            0.99,
+            "k_max":                                       10
         }
     },
     "logging":                                             "all",
