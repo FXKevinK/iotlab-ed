@@ -37,7 +37,6 @@ class RiataTrickle(object):
         # minimum interval size
         self.min_interval = i_min
         self.max_interval = self.min_interval * pow(2, i_max)
-        self.redundancy_constant = k
         self.unique_tag_base = str(id(self))
 
         # variables
@@ -58,8 +57,8 @@ class RiataTrickle(object):
         self.Nreset = np.zeros(self.i_max + 1)
         self.Ndio = np.zeros(self.i_max + 1)
         self.DIOtransmit = 0
-        self.Nstates = 1
         self.kmax = self.settings.k_max
+        self.redundancy_constant = self.kmax
         self.current_action = -1
         self.t_start = 0
         self.t_end = 0
@@ -99,15 +98,14 @@ class RiataTrickle(object):
         #       "inconsistent" transmission, Trickle does nothing.  Trickle can
         #       also reset its timer in response to external "events".
 
-        self.m = 0
         self.Nreset[self.m] += 1
         self.Ndio[self.m] = 0
-        if self.min_interval < self.interval:
-            self.interval = self.min_interval
-            self._start_next_interval()
-        else:
-            # if the interval is equal to the minimum value, do nothing
-            pass
+
+        self.m = 0
+        self.DIOtransmit = 0
+        self.counter = 0
+        self.interval = self.min_interval
+        self._start_next_interval()
 
     def increment_counter(self):
         # this method is expected to be called when a "consistent" transmission
@@ -116,13 +114,9 @@ class RiataTrickle(object):
         # Section 4.2:
         #   3.  Whenever Trickle hears a transmission that is "consistent", it
         #       increments the counter c.
-        self.Ndio[self.m] += 1
         self.counter += 1
 
     def calculate_k(self):
-        if self.Nstates == 0:
-            return self.kmax
-
         total = 0
         for i in range(self.m + 1):
             total += self.Ndio[i]
@@ -134,10 +128,6 @@ class RiataTrickle(object):
             return
 
         # reset the counter
-        self.counter = 0        
-        self.Nreset[self.m] = 0
-        self.Ndio[self.m] = 0
-        self.redundancy_constant = self.calculate_k()
         self._schedule_event_at_t()
         self._schedule_event_at_end_of_interval()
 
@@ -167,7 +157,7 @@ class RiataTrickle(object):
         def _callback():
             if random.uniform(0, 1) <= self.epsilon:
                 # Explore action space
-                if self.counter < self.redundancy_constant:
+                if self.counter < self.redundancy_constant: 
                     #  Section 4.2:
                     #    4.  At time t, Trickle transmits if and only if the
                     #        counter c is less than the redundancy constant k.
@@ -197,16 +187,16 @@ class RiataTrickle(object):
             intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
 
     def update_qtable(self):
+        if self.current_action == 0:
+            reward = 1 - self.Nreset[self.m]
+        else:
+            reward = self.Nreset[self.m]
+
         # clip m
         if self.i_max < (self.m + 1):
             next_m = self.m
         else:
             next_m = self.m + 1
-
-        if self.current_action == 0:
-            reward = 1 - self.Nreset[self.m]
-        else:
-            reward = self.Nreset[self.m]
 
         next_action = np.max(self.q_table[next_m])
         old_value = self.q_table[self.m][self.current_action]
@@ -228,12 +218,17 @@ class RiataTrickle(object):
             #       length.  If this new interval length would be longer than
             #       the time specified by Imax, Trickle sets the interval
             #       length I to be the time specified by Imax.
+            if self.Ndio[self.m] == 0:
+                self.redundancy_constant = self.kmax
+            else:
+                self.redundancy_constant = self.calculate_k()
             self.interval = self.interval * 2
             self.m += 1
-            self.Nstates += 1
             if self.max_interval < self.interval:
                 self.interval = self.max_interval
                 self.m = self.i_max
+            self.Ndio[self.m] += self.redundancy_constant
+            self.Nreset[self.m] = 0
             self._start_next_interval()
 
         self.engine.scheduleAtAsn(
