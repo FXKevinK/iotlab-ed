@@ -64,7 +64,7 @@ class Rpl(object):
             trickle_class = QTrickle
         elif trickle_method == 'riata':    
             trickle_class = RiataTrickle
-        elif trickle_method == 'acpb':
+        elif trickle_method == 'ac':
             trickle_class = ACPBTrickle
         else:
             trickle_class = TrickleTimer

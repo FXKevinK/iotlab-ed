@@ -24,8 +24,10 @@ class ACPBTrickle(object):
         assert isinstance(k, (int, int))
         assert callback is not None
 
+        self.mote = mote
+
         # shorthand to singletons
-        self.engine = SimEngine.SimEngine.SimEngine()
+        self.engine   = SimEngine.SimEngine.SimEngine()
         self.settings = SimEngine.SimSettings.SimSettings()
 
         # constants of this timer instance
@@ -44,25 +46,28 @@ class ACPBTrickle(object):
         self.state = self.STATE_STOPPED
 
         self.i_max = i_max
-        self.flag = self.m = -1
+        self.flag = None
+        self.m = 0
         self.Nnbr = 0
-        self.mote = mote
-        self.kmax = 10
+        self.Ncells = 0
+        self.kmax = self.settings.k_max
 
-        self.transmitted = self.suppressed = 0
+        self.transmitted = 0
+        self.suppressed = 0
 
     @property
     def is_running(self):
         return self.state == self.STATE_RUNNING
 
-    def start(self):
+    def start(self, note=None):
         # Section 4.2:
         #   1.  When the algorithm starts execution, it sets I to a value in
         #       the range of [Imin, Imax] -- that is, greater than or equal to
         #       Imin and less than or equal to Imax.  The algorithm then begins
         #       the first interval.
         self.state = self.STATE_RUNNING
-        self.interval = random.randint(self.min_interval, self.max_interval)
+        self.m = 0
+        self.interval = self.min_interval
         self._start_next_interval()
 
     def stop(self):
@@ -70,7 +75,8 @@ class ACPBTrickle(object):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_t')
         self.state = self.STATE_STOPPED
 
-    def reset(self):
+    def reset(self, note=None):
+        # print(self.mote.id, f'reset {note}')
         if self.state == self.STATE_STOPPED:
             return
 
@@ -83,12 +89,18 @@ class ACPBTrickle(object):
         #       step 2.  If I is equal to Imin when Trickle hears an
         #       "inconsistent" transmission, Trickle does nothing.  Trickle can
         #       also reset its timer in response to external "events".
-        if self.min_interval < self.interval:
+        # Algorithm 1
+        if self.flag:
+            self.interval = self.min_interval * pow(2, self.flag)
+            self.m = self.flag
+            self.flag = None
+            self._start_next_interval()
+        elif self.min_interval < self.interval:
             self.interval = self.min_interval
-            # Algorithm 1 (a)
             self.flag = self.m
-            self.m = -1
-            self.transmitted = self.suppressed = 0
+            self.m = 0
+            self.transmitted = 0
+            self.suppressed = 0
             self._start_next_interval()
         else:
             # if the interval is equal to the minimum value, do nothing
@@ -103,36 +115,18 @@ class ACPBTrickle(object):
         #       increments the counter c.
         self.counter += 1
 
-        # Algorithm 1 (b)
-        if self.flag != -1:
-            self.interval = self.min_interval * pow(2, self.flag)
-            self.m = self.flag
-            self.flag = -1
+    def calculate_k(self):
+        # Algorithm 2
+        if hasattr(self.mote.rpl.of, 'neighbors'):
+            self.Nnbr = len(self.mote.rpl.of.neighbors)
 
-    # Algoritma 3
-    def calculate_interval_t(self):
-        # t = old_div((1 + random.random()) * self.interval, 2)
-        # t_start = old_div(self.interval, 2)
-        # t_end = self.interval
-
-        slotframe_len = self.settings.tsch_slotframeLength * \
-            self.settings.tsch_slotDuration * 1000  # convert to ms
-        self.Ncell = int(math.ceil(old_div(self.interval, slotframe_len)))
-        self.Nnbr = len(self.mote.rpl.of.neighbors)
-
-        if self.interval == self.min_interval or self.suppressed != 0:
-            self.t_start = 0
-            self.t_end = old_div(
-                self.Ncell, 2) - (old_div(old_div(self.Ncell, 2), self.Nnbr + 1) * self.suppressed)
-        elif self.transmitted != 0:
-            self.t_start = old_div(
-                self.Ncell, 2) + (old_div(self.Nnbr + 1, old_div(self.Ncell, 2)) * self.transmitted)
-            self.t_end = self.Ncell
-
-        t = random.randint(self.t_start, self.t_end)
-        interval = (t + 1) * slotframe_len
-
-        return interval
+        if self.interval == self.min_interval:
+            k = min(self.Nnbr + 1, self.kmax)
+        elif self.interval > self.min_interval and self.m <= int(math.ceil(old_div(self.i_max, 2))):
+            k = min(math.ceil((self.Nnbr + 1) / 2), self.kmax)
+        else:
+            k = min(self.Nnbr + 1, self.kmax)
+        return k
 
     def _start_next_interval(self):
         if self.state == self.STATE_STOPPED:
@@ -140,29 +134,11 @@ class ACPBTrickle(object):
 
         # reset the counter
         self.counter = 0
-
-        self.m += 1
-        if self.i_max < self.m:
-            self.m = self.i_max
-        assert self.m > -1 and self.m <= self.i_max
-
-        t = self.calculate_interval_t()
-
-        self._schedule_event_at_t(t)
+        self.redundancy_constant = self.calculate_k()
+        self._schedule_event_at_t()
         self._schedule_event_at_end_of_interval()
 
-    # Algorithm 2
-    def calculate_k(self):
-        self.Nnbr = len(self.mote.rpl.of.neighbors)
-        if self.interval == self.min_interval:
-            k = min(self.Nnbr + 1, self.kmax)
-        elif self.interval > self.min_interval and self.m <= old_div(self.i_max, 2):
-            k = min(math.ceil(self.Nnbr + 1 / 2), self.kmax)
-        else:
-            k = min(self.Nnbr + 1, self.kmax)
-        return k
-
-    def _schedule_event_at_t(self, t):
+    def _schedule_event_at_t(self):
         # select t in the range [I/2, I), where I == self.current_interval
         #
         # Section 4.2:
@@ -170,7 +146,26 @@ class ACPBTrickle(object):
         #       random point in the interval, taken from the range [I/2, I),
         #       that is, values greater than or equal to I/2 and less than I.
         #       The interval ends at I.
-        slot_len = self.settings.tsch_slotDuration * 1000  # convert to ms
+        slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
+        l_e = slot_len * self.settings.tsch_slotframeLength
+        self.Ncells = int(math.ceil(old_div(self.interval, l_e)))
+
+        if hasattr(self.mote.rpl.of, 'neighbors'):
+            self.Nnbr = len(self.mote.rpl.of.neighbors)
+
+        if self.interval == self.min_interval or self.suppressed != 0:
+            self.t_start = 0
+            self.t_end = old_div(
+                self.Ncells, 2) - (old_div(old_div(self.Ncells, 2), self.Nnbr + 1) * self.suppressed)
+        elif self.transmitted != 0:
+            self.t_start = old_div(
+                self.Ncells, 2) + (old_div(self.Nnbr + 1, old_div(self.Ncells, 2)) * self.transmitted)
+            self.t_end = self.Ncells
+
+        self.t_start = int(math.ceil(self.t_start))
+        self.t_end = int(math.ceil(self.t_end))
+        t = random.randint(self.t_start, self.t_end) * l_e
+
         asn = self.engine.getAsn() + int(math.ceil(old_div(t, slot_len)))
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
@@ -178,7 +173,6 @@ class ACPBTrickle(object):
             asn = self.engine.getAsn() + 1
 
         def _callback():
-            self.redundancy_constant = self.calculate_k()
             if self.counter < self.redundancy_constant:
                 #  Section 4.2:
                 #    4.  At time t, Trickle transmits if and only if the
@@ -190,13 +184,13 @@ class ACPBTrickle(object):
                 self.suppressed += 1
 
         self.engine.scheduleAtAsn(
-            asn=asn,
-            cb=_callback,
-            uniqueTag=self.unique_tag_base + u'_at_t',
-            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
+            asn            = asn,
+            cb             = _callback,
+            uniqueTag      = self.unique_tag_base + u'_at_t',
+            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
 
     def _schedule_event_at_end_of_interval(self):
-        slot_len = self.settings.tsch_slotDuration * 1000  # convert to ms
+        slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
         asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
 
         def _callback():
@@ -208,13 +202,14 @@ class ACPBTrickle(object):
             #       the time specified by Imax, Trickle sets the interval
             #       length I to be the time specified by Imax.
             self.interval = self.interval * 2
+            self.m += 1
             if self.max_interval < self.interval:
                 self.interval = self.max_interval
                 self.m = self.i_max
             self._start_next_interval()
 
         self.engine.scheduleAtAsn(
-            asn=asn,
-            cb=_callback,
-            uniqueTag=self.unique_tag_base + u'_at_i',
-            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
+            asn            = asn,
+            cb             = _callback,
+            uniqueTag      = self.unique_tag_base + u'_at_i',
+            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)

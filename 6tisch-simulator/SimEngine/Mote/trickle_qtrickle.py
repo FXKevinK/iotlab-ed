@@ -14,7 +14,6 @@ import SimEngine
 from . import MoteDefines as d
 
 import numpy as np
-import random
 
 class QTrickle(object):
     STATE_STOPPED = u'stopped'
@@ -87,7 +86,6 @@ class QTrickle(object):
         #       Imin and less than or equal to Imax.  The algorithm then begins
         #       the first interval.
         self.state = self.STATE_RUNNING
-        # ok
         self.m = 0
         self.interval = self.min_interval
         self._start_next_interval()
@@ -114,10 +112,10 @@ class QTrickle(object):
         #       "inconsistent" transmission, Trickle does nothing.  Trickle can
         #       also reset its timer in response to external "events".
         
-        # ok
         self.m = 0
         self.Nreset += 1
-        self.calculate_reset_stable_prob()
+        self.preset = self.Nreset / self.Nstates
+        self.pstable = 1 - self.preset
         
         if self.min_interval < self.interval:
             self.interval = self.min_interval
@@ -135,12 +133,6 @@ class QTrickle(object):
         #       increments the counter c.
         self.counter += 1
 
-    # ok
-    def calculate_reset_stable_prob(self):
-        self.preset = self.Nreset / self.Nstates
-        self.pstable = 1 - self.preset
-    
-    # ok
     def calculate_k(self):
         self.Nnbr = self.kmax
         if hasattr(self.mote.rpl.of, 'neighbors'):

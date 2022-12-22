@@ -59,7 +59,7 @@
 
             "motes_eui64":                                 [],
 
-            "trickle_method":                              "ori",
+            "trickle_method":                              "ac",
             
             "ql_epsilon":                                  0.5,
             "ql_learning_rate":                            0.05,

@@ -109,6 +109,7 @@ def runSimCombinations(params):
                run_id+1-first_run,
                numRuns
             )
+            print(simconfig.settings.regular["trickle_method"])
             printOrLog(cpuID, pid, output, verbose)
 
             # create singletons
