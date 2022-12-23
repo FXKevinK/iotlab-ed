@@ -36,7 +36,8 @@ from . import SimSettings
 from . import SimLog
 from .Mote.Mote import Mote
 from .Mote import MoteDefines as d
-
+from matplotlib import pyplot as plt
+import numpy as np
 # =========================== defines =========================================
 
 CONN_TYPE_TRACE         = u'trace'
@@ -977,6 +978,21 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
                         )
                     # try another random coordinate
                     continue
+        
+        pos = self.coordinates
+        data = [list(x) for x in pos.values()]
+        data = np.array(data)
+        x, y = data.T
+        plt.scatter(x,y)
+        plt.savefig(
+            '../coordinates.png',
+            bbox_inches     = 'tight',
+            pad_inches      = 0,
+            format          = 'png',
+        )
+        plt.close()
+        with open('../coordinates.json', 'w') as f:
+            f.write(json.dumps(self.coordinates, indent=4))
 
     def _get_mote(self, mote_id):
         # there must be a mote having mote_id. otherwise, the following line

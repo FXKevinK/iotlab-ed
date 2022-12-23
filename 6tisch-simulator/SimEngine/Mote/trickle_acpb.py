@@ -29,6 +29,7 @@ class ACPBTrickle(object):
         # shorthand to singletons
         self.engine   = SimEngine.SimEngine.SimEngine()
         self.settings = SimEngine.SimSettings.SimSettings()
+        self.log      = SimEngine.SimLog.SimLog().log
 
         # constants of this timer instance
         # min_interval is expected to given in milliseconds
@@ -55,6 +56,19 @@ class ACPBTrickle(object):
         self.transmitted = 0
         self.suppressed = 0
 
+        self.Nreset = 0
+        self.Nstates = 1
+        self.pfree = 1
+        self.poccupancy = 0
+        self.t_pos = 0
+        self.preset = 0
+        self.pstable = 1
+        self.DIOsurpress = 0
+        self.DIOtransmit = 0
+        self.start_t_record = None
+        self.end_t_record = None
+        self.is_dio_sent = False
+
     @property
     def is_running(self):
         return self.state == self.STATE_RUNNING
@@ -73,6 +87,8 @@ class ACPBTrickle(object):
     def stop(self):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_i')
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_t')
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_start_t')
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
         self.state = self.STATE_STOPPED
 
     def reset(self, note=None):
@@ -89,6 +105,10 @@ class ACPBTrickle(object):
         #       step 2.  If I is equal to Imin when Trickle hears an
         #       "inconsistent" transmission, Trickle does nothing.  Trickle can
         #       also reset its timer in response to external "events".
+        self.Nreset += 1
+        self.preset = self.Nreset / self.Nstates
+        self.pstable = 1 - self.preset
+
         # Algorithm 1
         if self.flag:
             self.interval = self.min_interval * pow(2, self.flag)
@@ -166,22 +186,68 @@ class ACPBTrickle(object):
         self.t_end = int(math.ceil(self.t_end))
         t = random.randint(self.t_start, self.t_end) * l_e
 
-        asn = self.engine.getAsn() + int(math.ceil(old_div(t, slot_len)))
+        t_range = (self.t_end  - self.t_start) * l_e
+        self.t_pos = round(t / self.interval, 1)
+        self.Ncells = max(int(math.ceil(old_div(t_range, l_e))), 1)
+
+        cur_asn = self.engine.getAsn()
+        asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_len)))
+        asn_end = cur_asn + int(math.ceil(old_div(self.t_end, slot_len)))
+        asn = cur_asn + int(math.ceil(old_div(t, slot_len)))
+
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
             # the current ASN
             asn = self.engine.getAsn() + 1
 
+        if asn_start == self.engine.getAsn():
+            # schedule the event at the next ASN since we cannot schedule it at
+            # the current ASN
+            asn_start = self.engine.getAsn() + 1
+
+        if asn_end == self.engine.getAsn():
+            # schedule the event at the next ASN since we cannot schedule it at
+            # the current ASN
+            asn_end = self.engine.getAsn() + 1
+
+
         def _callback():
+            self.mote.tsch.set_is_dio_sent(False)
+            self.is_dio_sent = False
             if self.counter < self.redundancy_constant:
                 #  Section 4.2:
                 #    4.  At time t, Trickle transmits if and only if the
                 #        counter c is less than the redundancy constant k.
                 self.transmitted += 1
                 self.user_callback()
+                self.is_dio_sent = True
             else:
                 # do nothing
                 self.suppressed += 1
+
+        def start_t():
+            minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
+            self.start_t_record = None
+            if minimal_cell:
+                self.start_t_record = minimal_cell.all_ops
+
+        def end_t():
+            minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
+            self.end_t_record = None
+            if minimal_cell:
+                self.end_t_record = minimal_cell.all_ops
+
+        self.engine.scheduleAtAsn(
+            asn            = asn_start,
+            cb             = start_t,
+            uniqueTag      = self.unique_tag_base + u'_at_start_t',
+            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+
+        self.engine.scheduleAtAsn(
+            asn            = asn_end,
+            cb             = end_t,
+            uniqueTag      = self.unique_tag_base + u'_at_end_t',
+            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
 
         self.engine.scheduleAtAsn(
             asn            = asn,
@@ -189,11 +255,50 @@ class ACPBTrickle(object):
             uniqueTag      = self.unique_tag_base + u'_at_t',
             intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
 
+    def log_result(self):
+        result = {
+            'state': self.Nstates,
+            'm': self.m,
+            'pfree': self.pfree,
+            'poccupancy': self.poccupancy,
+            'DIOtransmit': self.DIOtransmit,
+            'DIOsurpress': self.DIOsurpress,
+            'Nreset': self.Nreset,
+            'preset': self.preset,
+            'pstable': self.pstable,
+            't_pos': self.t_pos,
+            'counter': self.counter,
+            'k': self.redundancy_constant,
+        }
+
+        self.log(
+            SimEngine.SimLog.LOG_TRICKLE,
+            {
+                u'_mote_id':       self.mote.id,
+                u'result':         result,
+            }
+        )
+
     def _schedule_event_at_end_of_interval(self):
         slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
         asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
 
         def _callback():
+            used = None
+            occ = None
+            if self.end_t_record is not None and self.start_t_record is not None:
+                dio_sent = int(self.mote.tsch.is_dio_sent) * int(self.is_dio_sent)
+                used = max((self.end_t_record - self.start_t_record) - dio_sent, 0)
+                occ = used / self.Ncells
+                self.poccupancy = occ
+                self.pfree = 1 - self.poccupancy
+
+            if self.is_dio_sent:
+                self.DIOtransmit += 1
+            else:
+                self.DIOsurpress += 1
+
+            self.log_result()
             # doubling the interval
             #
             # Section 4.2:
@@ -203,6 +308,7 @@ class ACPBTrickle(object):
             #       length I to be the time specified by Imax.
             self.interval = self.interval * 2
             self.m += 1
+            self.Nstates += 1
             if self.max_interval < self.interval:
                 self.interval = self.max_interval
                 self.m = self.i_max

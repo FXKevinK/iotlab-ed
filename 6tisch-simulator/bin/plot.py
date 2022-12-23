@@ -66,14 +66,14 @@ def main(options):
                             data[curr_combination].append(mote[key])
 
         # plot
-        try:
-            if key in ['lifetime_AA_years', 'latencies']:
-                plot_cdf(data, key, subfolder)
-            else:
-                plot_box(data, key, subfolder)
+        # try:
+        if key in ['lifetime_AA_years', 'latencies']:
+            plot_cdf(data, key, subfolder)
+        else:
+            plot_box(data, key, subfolder)
 
-        except TypeError as e:
-            print("Cannot create a plot for {0}: {1}.".format(key, e))
+        # except TypeError as e:
+        #     print("Cannot create a plot for {0}: {1}.".format(key, e))
     print("Plots are saved in the {0} folder.".format(subfolder))
 
 # =========================== helpers =========================================
@@ -85,6 +85,8 @@ def plot_cdf(data, key, subfolder):
             values = sum(values, [])
 
         values = [None if value == 'N/A' else value for value in values]
+        values = [v for v in values if v]
+
         # compute CDF
         sorted_data = np.sort(values)
         yvals = np.arange(len(sorted_data)) / float(len(sorted_data) - 1)
@@ -97,7 +99,15 @@ def plot_cdf(data, key, subfolder):
     plt.clf()
 
 def plot_box(data, key, subfolder):
-    plt.boxplot(list(data.values()))
+    temp_data = []
+    for d in list(data.values()):
+        temp_d = []
+        for i in d:
+            if i:
+                temp_d.append(i)
+        temp_data.append(temp_d)
+
+    plt.boxplot(temp_data)
     plt.xticks(list(range(1, len(data) + 1)), list(data.keys()))
     plt.ylabel(key)
     savefig(subfolder, key)

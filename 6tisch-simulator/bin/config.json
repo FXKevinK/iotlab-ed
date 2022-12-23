@@ -2,16 +2,16 @@
     "version":                                             0,
     "execution": {
         "numCPUs":                                         1,
-        "numRuns":                                         1
+        "numRuns":                                         2
     },
     "settings": {
         "combination": {
-            "exec_numMotes":                               [50]
+            "exec_numMotes":                               [100]
         },
         "regular": {
             "exec_numSlotframesPerRun":                    2000,
             "exec_minutesPerRun":                          null,
-            "exec_randomSeed":                             "random",
+            "exec_randomSeed":                             1997,
 
             "secjoin_enabled":                             true,
 
@@ -59,7 +59,7 @@
 
             "motes_eui64":                                 [],
 
-            "trickle_method":                              "riata",
+            "trickle_method":                              "ac",
             
             "ql_epsilon":                                  0.5,
             "ql_learning_rate":                            0.05,

@@ -6,6 +6,8 @@ from __future__ import print_function
 import os
 import sys
 
+from scipy import stats as st
+
 import netaddr
 
 if __name__ == '__main__':
@@ -56,6 +58,7 @@ def init_mote():
         'charge': None,
         'lifetime_AA_years': None,
         'avg_current_uA': None,
+        'trickle': {},
     }
 
 # =========================== KPIs ============================================
@@ -66,6 +69,8 @@ def kpis_all(inputfile):
     allstats = {} # indexed by run_id, mote_id
 
     file_settings = json.loads(inputfile.readline())  # first line contains settings
+
+    trickle_keys = []
 
     # === gather raw stats
 
@@ -158,6 +163,30 @@ def kpis_all(inputfile):
             )
             allstats[run_id][mote_id]['upstream_pkts'][appcounter]['rx_asn'] = asn
 
+        elif logline['_type'] == SimLog.LOG_TRICKLE['type']:
+            # trickle result
+
+            # shorthands
+            mote_id = logline['_mote_id']
+
+            # only log non-dagRoot
+            if mote_id == DAGROOT_ID:
+                continue
+
+            state = logline['result']['state']
+            # populate
+            if state not in allstats[run_id][mote_id]['trickle']:
+                allstats[run_id][mote_id]['trickle'][state] = {}
+                
+            for key in logline['result'].keys():
+                if key == 'state':
+                    continue
+                if key not in trickle_keys:
+                    trickle_keys.append(key)
+
+                value = logline['result'][key]
+                allstats[run_id][mote_id]['trickle'][state][key] = value
+
         elif logline['_type'] == SimLog.LOG_RADIO_STATS['type']:
             # shorthands
             mote_id    = logline['_mote_id']
@@ -211,6 +240,8 @@ def kpis_all(inputfile):
                         motestats['latency_max_s'] = max(motestats['latencies'])
                         motestats['upstream_reliability'] = motestats['upstream_num_rx']/float(motestats['upstream_num_tx'])
                         motestats['avg_hops'] = sum(motestats['hops'])/float(len(motestats['hops']))
+                    for (state, stats) in list(allstats[run_id][mote_id]['trickle'].items()):
+                        motestats['trickle'][state] = stats
 
     # === network stats
     for (run_id, per_mote_stats) in list(allstats.items()):
@@ -225,6 +256,8 @@ def kpis_all(inputfile):
         current_consumed = []
         lifetimes = []
         slot_duration = file_settings['tsch_slotDuration']
+
+        trickle_stats = {}
 
         #-- compute stats
 
@@ -243,6 +276,15 @@ def kpis_all(inputfile):
             if motestats['join_asn'] is not None:
                 joining_times.append(motestats['join_asn'])
 
+            for key in trickle_keys:
+                val = [motestats['trickle'][x][key] for x in motestats['trickle']]
+
+                # populate
+                if key not in trickle_stats:
+                    trickle_stats[key] = []
+
+                trickle_stats[key].extend(val)
+
             # latency
 
             us_latencies += motestats['latencies']
@@ -257,6 +299,8 @@ def kpis_all(inputfile):
             ]
 
         #-- save stats
+
+        temp_lifetimes = [i for i in lifetimes if type(i) is not str]
 
         allstats[run_id]['global-stats'] = {
             'e2e-upstream-delivery': [
@@ -338,8 +382,8 @@ def kpis_all(inputfile):
                     'name': 'Network Lifetime',
                     'unit': 'years',
                     'min': (
-                        min(lifetimes)
-                        if lifetimes else 'N/A'
+                        min(temp_lifetimes)
+                        if temp_lifetimes else 'N/A'
                     ),
                     'total_capacity_mAh': BATTERY_AA_CAPACITY_mAh,
                 }
@@ -385,6 +429,43 @@ def kpis_all(inputfile):
                 }
             ]
         }
+
+        for key in trickle_keys:
+            val = trickle_stats[key]
+            stat = [
+                {
+                    'name': key,
+                    'min': (
+                        min(val)
+                        if val else 'N/A'
+                    ),
+                    'max': (
+                        max(val)
+                        if val else 'N/A'
+                    ),
+                    'mean': (
+                        mean(val)
+                        if val else 'N/A'
+                    ),
+                    'mode': (
+                        int(st.mode(val)[0])
+                        if val else 'N/A'
+                    ),
+                    'std': (
+                        np.std(val)
+                        if val else 'N/A'
+                    ),
+                    '75%': (
+                        np.percentile(val, 75)
+                        if val else 'N/A'
+                    ),
+                    '99%': (
+                        np.percentile(val, 99)
+                        if val else 'N/A'
+                    )
+                }
+            ]
+            allstats[run_id]['global-stats'][key] = stat
 
     # === remove unnecessary stats
 

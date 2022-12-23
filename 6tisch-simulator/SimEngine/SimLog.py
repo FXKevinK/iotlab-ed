@@ -40,6 +40,9 @@ DROPREASON_VRB_TABLE_FULL         = u'vrb_table_full'
 DROPREASON_TIME_EXCEEDED          = u'time_exceeded'
 DROPREASON_RANK_ERROR             = u'rank_error'
 
+# === q-trickle
+LOG_TRICKLE                       = {u'type': u'log.trickle', u'keys': [u'_mote_id', u'result']}
+
 # === app
 LOG_APP_TX                        = {u'type': u'app.tx',                    u'keys': [u'_mote_id',u'packet']}
 LOG_APP_RX                        = {u'type': u'app.rx',                    u'keys': [u'_mote_id',u'packet']}

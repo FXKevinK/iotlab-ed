@@ -30,6 +30,7 @@ class QTrickle(object):
         # shorthand to singletons
         self.engine   = SimEngine.SimEngine.SimEngine()
         self.settings = SimEngine.SimSettings.SimSettings()
+        self.log      = SimEngine.SimLog.SimLog().log
 
         # constants of this timer instance
         # min_interval is expected to given in milliseconds
@@ -61,6 +62,7 @@ class QTrickle(object):
         self.Ncells = 0
 
         self.Nreset = 0
+        self.DIOsurpress = 0
         self.DIOtransmit = 0
         self.DIOtransmit_collision = 0
         self.Nstates = 1
@@ -73,6 +75,8 @@ class QTrickle(object):
         self.ptransmit_collision = 0
         self.t_start = 0
         self.t_end = 0
+
+        self.t_pos = 0
 
     @property
     def is_running(self):
@@ -167,8 +171,10 @@ class QTrickle(object):
         t_range = self.t_end - self.t_start
         t = random.uniform(self.t_start, self.t_end)
 
+        self.t_pos = round(t / self.interval, 1)
+
         l_e = slot_len * self.settings.tsch_slotframeLength
-        self.Ncells = int(math.ceil(old_div(t_range, l_e)))
+        self.Ncells = max(int(math.ceil(old_div(t_range, l_e))), 1)
 
         cur_asn = self.engine.getAsn()
         asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_len)))
@@ -264,6 +270,32 @@ class QTrickle(object):
         new_value = (1 - self.alpha) * old_value + self.alpha * td_learning
         self.q_table[self.m][self.current_action] = new_value
 
+    def log_result(self):
+        result = {
+            'state': self.Nstates,
+            'm': self.m,
+            'Nnbr': self.Nnbr,
+            'pfree': self.pfree,
+            'poccupancy': self.poccupancy,
+            'DIOtransmit': self.DIOtransmit,
+            'DIOsurpress': self.DIOsurpress,
+            'DIOtransmit_collision': self.DIOtransmit_collision,
+            'Nreset': self.Nreset,
+            'preset': self.preset,
+            'pstable': self.pstable,
+            't_pos': self.t_pos,
+            'counter': self.counter,
+            'k': self.redundancy_constant,
+        }
+
+        self.log(
+            SimEngine.SimLog.LOG_TRICKLE,
+            {
+                u'_mote_id':       self.mote.id,
+                u'result':         result,
+            }
+        )
+
     def _schedule_event_at_end_of_interval(self):
         slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
         asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
@@ -274,26 +306,26 @@ class QTrickle(object):
             if self.end_t_record is not None and self.start_t_record is not None:
                 dio_sent = int(self.mote.tsch.is_dio_sent) * int(self.is_dio_sent)
                 used = max((self.end_t_record - self.start_t_record) - dio_sent, 0)
-                occ = round(used/self.Ncells, 2)            
+                occ = used / self.Ncells
                 self.poccupancy = occ
                 self.pfree = 1 - self.poccupancy
 
             # ok
-            self.current_action = 0
             if self.is_dio_sent:
                 self.current_action = 1
                 self.DIOtransmit += 1
                 if not self.mote.tsch.is_dio_sent:
                     self.DIOtransmit_collision += 1
+            else:
+                self.current_action = 0
+                self.DIOsurpress += 1
 
             # ok
             self.ptransmit = self.DIOtransmit / self.Nstates
             self.ptransmit_collision = (self.DIOtransmit_collision / self.DIOtransmit) if self.DIOtransmit else 0
 
-            # if self.counter > 0:
-            #     print("E", self.mote.id, self.end_t_record, used, occ, self.counter, self.redundancy_constant)
-
             self.update_qtable()
+            self.log_result()
 
             # ok
             self.mote.tsch.set_is_dio_sent(False)
@@ -311,6 +343,7 @@ class QTrickle(object):
             if self.max_interval < self.interval:
                 self.interval = self.max_interval
                 self.m = self.i_max
+            
             self._start_next_interval()
 
         self.engine.scheduleAtAsn(
