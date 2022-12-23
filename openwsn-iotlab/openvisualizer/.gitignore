@@ -1,0 +1,11 @@
+# cache files
+*.pyc
+.sconsign.dblite
+
+# folders
+venv/
+openvisualizer.egg-info
+
+# IDE files
+.idea/
+*.log
