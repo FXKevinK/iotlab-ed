@@ -211,6 +211,11 @@ void schedule_getSlotInfo(slotOffset_t slotOffset, slotinfo_element_t *info) {
             info->slotOffset = slotOffset;
             info->channelOffset = slotContainer->channelOffset;
             info->isAutoCell = slotContainer->isAutoCell;
+            info->numRx = slotContainer->numRx;
+            info->numTx = slotContainer->numTx;
+            info->numTxACK = slotContainer->numTxACK;
+            info->allOps = slotContainer->allOps;
+            info->found = TRUE;
             memcpy(&(info->address), &(slotContainer->neighbor), sizeof(open_addr_t));
             return; //as this is an update. No need to re-insert as it is in the same position on the list.
         }
@@ -221,6 +226,11 @@ void schedule_getSlotInfo(slotOffset_t slotOffset, slotinfo_element_t *info) {
     info->shared = FALSE;
     info->channelOffset = 0;        //set to zero if not set.
     info->isAutoCell = FALSE;
+    info->numRx = 0;
+    info->numTx = 0;
+    info->numTxACK = 0;
+    info->allOps = 0;
+    info->found = FALSE;
     memset(&(info->address), 0, sizeof(open_addr_t));
 }
 
@@ -1140,6 +1150,7 @@ void schedule_indicateRx(asn_t *asnTimestamp) {
 
     // increment usage statistics
     schedule_vars.currentScheduleEntry->numRx++;
+    schedule_vars.currentScheduleEntry->allOps++;
 
     // update last used timestamp
     memcpy(&(schedule_vars.currentScheduleEntry->lastUsedAsn), asnTimestamp, sizeof(asn_t));
@@ -1161,8 +1172,10 @@ void schedule_indicateTx(asn_t *asnTimestamp, bool succesfullTx) {
         schedule_vars.currentScheduleEntry->numTxACK /= 2;
     }
     schedule_vars.currentScheduleEntry->numTx++;
+    schedule_vars.currentScheduleEntry->allOps++;
     if (succesfullTx == TRUE) {
         schedule_vars.currentScheduleEntry->numTxACK++;
+        schedule_vars.currentScheduleEntry->allOps++;
     }
 
     // update last used timestamp
@@ -1251,6 +1264,7 @@ void schedule_resetEntry(scheduleEntry_t *e) {
     e->numRx = 0;
     e->numTx = 0;
     e->numTxACK = 0;
+    e->allOps = 0;
     e->lastUsedAsn.bytes0and1 = 0;
     e->lastUsedAsn.bytes2and3 = 0;
     e->lastUsedAsn.byte4 = 0;
@@ -1269,6 +1283,7 @@ void schedule_resetBackupEntry(backupEntry_t *e) {
     e->numRx = 0;
     e->numTx = 0;
     e->numTxACK = 0;
+    e->allOps = 0;
     e->lastUsedAsn.bytes0and1 = 0;
     e->lastUsedAsn.bytes2and3 = 0;
     e->lastUsedAsn.byte4 = 0;

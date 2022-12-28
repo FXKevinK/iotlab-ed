@@ -912,7 +912,7 @@ owerror_t iphc_retrieveIphcHeader(open_addr_t *temp_addr_16b,
             switch (*dam) {
                 case IPHC_DAM_ELIDED:
                     ipv6_header->dest.type = ADDR_128B;
-                    memcpy(&(ipv6_header->dest.addr_128b[0]), all_routers_multicast, sizeof(all_routers_multicast));
+                    memcpy(&(ipv6_header->dest.addr_128b[0]), all_rpl_nodes_multicast_lls, sizeof(all_rpl_nodes_multicast_lls));
                     ipv6_header->dest.addr_128b[15] = *(msg->payload + ipv6_header->header_length + previousLen);
                     ipv6_header->header_length += sizeof(uint8_t);
                     break;

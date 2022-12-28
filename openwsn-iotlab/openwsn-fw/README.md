@@ -2,31 +2,8 @@ OpenWSN firmware: stuff that runs on a mote
 
 Part of UC Berkeley's OpenWSN project, http://www.openwsn.org/.
 
-
-# Notes
-
-For this version of openwsn-fw, please use the companion repositories:
-
-* [openvisualizer](https://github.com/ftheoleyre/openvisualizer): enriched statistics, etc.
-
-* [openwsn-iotlab](https://github.com/ftheoleyre/openwsn-iotlab): compilation, flashing motes, running experiments, etc.
-
-* [openwsn-data](https://github.com/ftheoleyre/openwsn-data): analyzing data produced by an openwsn experiment.
-
-
-
-
-You may also follow the tutorials for the compilation on m3 nodes of FIT IoT-Lab:
-
-* https://www.iot-lab.info/legacy/tutorials/openwsn-compilation/index.html
-
-
-
-
-
-
-# Build status
-
+Build status
+------------
 
 |              builder                                                                                                                 |      build                   | outcome
 | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- | ------- 
@@ -42,8 +19,8 @@ You may also follow the tutorials for the compilation on m3 nodes of FIT IoT-Lab
 | [OpenWSN builder](http://builder.openwsn.org/job/Firmware/board=Python,label=master,project=oos_openwsn,toolchain=gcc/)              | compile (Python, simulation) | [![Build Status](http://builder.openwsn.org/job/Firmware/board=python,label=master,project=oos_openwsn,toolchain=gcc/badge/icon)](http://builder.openwsn.org/job/Firmware/board=python,label=master,project=oos_openwsn,toolchain=gcc/)
 | [OpenWSN builder](http://builder.openwsn.org/job/Docs/)                                                                              | publish documentation        | [![Build Status](http://builder.openwsn.org/job/Docs/badge/icon)](http://builder.openwsn.org/job/Docs/)
 
-
-# Documentation
+Documentation
+-------------
 
 - overview: https://openwsn.atlassian.net/wiki/
 - source code: http://openwsn-berkeley.github.io/firmware/

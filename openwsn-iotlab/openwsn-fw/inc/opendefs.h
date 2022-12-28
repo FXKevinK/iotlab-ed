@@ -98,7 +98,7 @@ enum {
 // warning: first 4 MSB of 2° octet may coincide with previous protocol number
 enum {
     //UDP
-    WKP_UDP_COAP = 5683,
+    WKP_UDP_COAP = OPENWSN_COAP_PORT_DEFAULT,
     WKP_UDP_ECHO = 7,
     WKP_UDP_EXPIRATION = 5,
     WKP_UDP_MONITOR = 3,
@@ -188,6 +188,7 @@ enum {
    COMPONENT_UEXPIRATION               = 0x2b,
    COMPONENT_UMONITOR                  = 0x2c,
    COMPONENT_CINFRARED                 = 0x2d,
+   COMPONENT_OPENTRICKLETIMERS         = 0x2e,
 };
 
 /**
@@ -289,12 +290,13 @@ enum {
    ERR_INVALID_PARAM                   = 0x53, // received an invalid parameter
    ERR_COPY_TO_SPKT                    = 0x54, // copy packet content to small packet (pkt len {} < max len {})
    ERR_COPY_TO_BPKT                    = 0x55, // copy packet content to big packet (pkt len {} > max len {})
+   ERR_DEBUG_1                         = 0x56, // debug {0} - {1}
 };
 
 //=========================== typedef =========================================
 
 
-typedef uint16_t errorparameter_t;
+typedef uint32_t errorparameter_t;
 typedef uint16_t dagrank_t;
 typedef uint8_t owerror_t;
 
@@ -437,6 +439,10 @@ typedef struct {
 } neighborRow_t;
 END_PACK
 
+static const uint8_t all_rpl_nodes_multicast_lls[] = {
+   0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1a
+};
 
 //=========================== variables =======================================
 

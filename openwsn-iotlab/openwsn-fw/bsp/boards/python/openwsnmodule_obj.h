@@ -13,6 +13,7 @@
 // OpenWSN
 #include "openserial_obj.h"
 #include "opentimers_obj.h"
+#include "opentrickletimers_obj.h"
 #include "ccms_obj.h"
 #include "aes128_obj.h"
 #include "scheduler_obj.h"
@@ -223,6 +224,7 @@ struct OpenMote {
     openqueue_vars_t openqueue_vars;
     // drivers
     opentimers_vars_t opentimers_vars;
+    opentrickletimers_vars_t opentrickletimers_vars;
     random_vars_t random_vars;
     openserial_vars_t openserial_vars;
     // kernel

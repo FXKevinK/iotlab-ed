@@ -214,7 +214,7 @@ class ACPBTrickle(object):
         def _callback():
             self.mote.tsch.set_is_dio_sent(False)
             self.is_dio_sent = False
-            if self.counter < self.redundancy_constant:
+            if self.counter < self.redundancy_constant or self.redundancy_constant == 0:
                 #  Section 4.2:
                 #    4.  At time t, Trickle transmits if and only if the
                 #        counter c is less than the redundancy constant k.

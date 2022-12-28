@@ -11,6 +11,7 @@
 #include "udp.h"
 #include "debugpins.h"
 #include "scheduler.h"
+#include "opentrickletimers.h"
 
 //=========================== variables =======================================
 
@@ -367,6 +368,7 @@ void forwarding_receive(
                 LOG_ERROR(COMPONENT_FORWARDING, ERR_WRONG_DIRECTION,
                           (errorparameter_t) flags,
                           (errorparameter_t) senderRank);
+                icmpv6rpl_start_or_reset_trickle_timer();
             }
             if (senderRank < icmpv6rpl_getMyDAGrank()) {
                 // loop detected
@@ -376,6 +378,7 @@ void forwarding_receive(
                 LOG_ERROR(COMPONENT_FORWARDING, ERR_LOOP_DETECTED,
                           (errorparameter_t) senderRank,
                           (errorparameter_t) icmpv6rpl_getMyDAGrank());
+                icmpv6rpl_start_or_reset_trickle_timer();
             }
             forwarding_createRplOption(rpl_option, rpl_option->flags);
 
@@ -773,6 +776,7 @@ owerror_t forwarding_send_internal_SourceRouting(
             LOG_ERROR(COMPONENT_FORWARDING, ERR_WRONG_DIRECTION,
                       (errorparameter_t) flags,
                       (errorparameter_t) senderRank);
+            icmpv6rpl_start_or_reset_trickle_timer();
         }
         if (senderRank > icmpv6rpl_getMyDAGrank()) {
             // loop detected
@@ -782,6 +786,7 @@ owerror_t forwarding_send_internal_SourceRouting(
             LOG_ERROR(COMPONENT_FORWARDING, ERR_LOOP_DETECTED,
                       (errorparameter_t) senderRank,
                       (errorparameter_t) icmpv6rpl_getMyDAGrank());
+            icmpv6rpl_start_or_reset_trickle_timer();
         }
         forwarding_createRplOption(rpl_option, rpl_option->flags);
 

@@ -123,6 +123,7 @@ typedef struct {
     uint8_t numRx;
     uint8_t numTx;
     uint8_t numTxACK;
+    uint32_t allOps;
     asn_t lastUsedAsn;
     void *next;
 } backupEntry_t;
@@ -137,6 +138,7 @@ typedef struct {
     uint8_t numRx;
     uint8_t numTx;
     uint8_t numTxACK;
+    uint8_t allOps;
     asn_t lastUsedAsn;
     backupEntry_t backupEntries[MAXBACKUPSLOTS];
     void *next;
@@ -153,6 +155,7 @@ typedef struct {
     uint8_t numRx;
     uint8_t numTx;
     uint8_t numTxACK;
+    uint8_t allOps;
     asn_t lastUsedAsn;
 } debugScheduleEntry_t;
 END_PACK
@@ -164,6 +167,11 @@ typedef struct {
     slotOffset_t slotOffset;
     channelOffset_t channelOffset;
     bool isAutoCell;
+    uint8_t numRx;
+    uint8_t numTx;
+    uint8_t numTxACK;
+    uint32_t allOps;
+    bool found;
 } slotinfo_element_t;
 
 //=========================== variables =======================================

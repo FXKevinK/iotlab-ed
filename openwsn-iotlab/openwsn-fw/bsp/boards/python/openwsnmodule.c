@@ -66,6 +66,7 @@ static PyObject* OpenMote_getState(OpenMote* self) {
    PyObject* idmanager_vars;
    PyObject* openqueue_vars;
    PyObject* opentimers_vars;
+   PyObject* opentrickletimers_vars;
    PyObject* random_vars;
    PyObject* openserial_vars;
    PyObject* scheduler_vars;
@@ -166,6 +167,11 @@ static PyObject* OpenMote_getState(OpenMote* self) {
    opentimers_vars = PyDict_New();
    // TODO
    PyDict_SetItemString(returnVal, "opentimers_vars", opentimers_vars);
+
+   // opentrickletimers_vars
+   opentrickletimers_vars = PyDict_New();
+   // TODO
+   PyDict_SetItemString(returnVal, "opentrickletimers_vars", opentrickletimers_vars);
    
    // random_vars
    random_vars = PyDict_New();

@@ -8,7 +8,7 @@
 #include "opendefs.h"
 //===== drivers
 #include "openserial.h"
-
+#include "opentrickletimers.h"
 //===== stack
 #include "openstack.h"
 //-- cross-layer
@@ -56,6 +56,7 @@ void openstack_init(void) {
     //===== drivers
     opentimers_init();
     openserial_init();
+    opentrickletimers_init();
 
     //===== stack
     //-- cross-layer

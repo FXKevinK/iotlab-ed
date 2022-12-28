@@ -338,7 +338,7 @@ owerror_t sixtop_request(
     outcome = sixtop_send(pkt);
 
     if (outcome == E_SUCCESS) {
-        LOG_INFO(COMPONENT_SIXTOP, ERR_SIXTOP_REQUEST, (errorparameter_t) code, (errorparameter_t) 0);
+        // LOG_INFO(COMPONENT_SIXTOP, ERR_SIXTOP_REQUEST, (errorparameter_t) code, (errorparameter_t) 0);
         //update states
         switch (code) {
             case IANA_6TOP_CMD_ADD:

@@ -124,92 +124,11 @@ class TrickleTimer(object):
 
         # reset the counter
         self.counter = 0
-        self._schedule_event_at_t()
-        self._schedule_event_at_end_of_interval()
-
-    def _schedule_event_at_t(self):
-        # select t in the range [I/2, I), where I == self.current_interval
-        #
-        # Section 4.2:
-        #   2.  When an interval begins, Trickle resets c to 0 and sets t to a
-        #       random point in the interval, taken from the range [I/2, I),
-        #       that is, values greater than or equal to I/2 and less than I.
-        #       The interval ends at I.
-        slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
-
-        t_min = old_div(self.interval, 2)
-        t_max = self.interval
-        t_range = t_max - t_min
-        t = random.uniform(t_min, t_max)
-
-        self.t_pos = round(t / self.interval, 1)
-
-        l_e = slot_len * self.settings.tsch_slotframeLength
-        self.Ncells = max(int(math.ceil(old_div(t_range, l_e))), 1)
-
-        cur_asn = self.engine.getAsn()
-        asn_start = cur_asn + int(math.ceil(old_div(t_min, slot_len)))
-        asn_end = cur_asn + int(math.ceil(old_div(t_max, slot_len)))
-        asn = cur_asn + int(math.ceil(old_div(t, slot_len)))
-
-        if asn == self.engine.getAsn():
-            # schedule the event at the next ASN since we cannot schedule it at
-            # the current ASN
-            asn = self.engine.getAsn() + 1
-
-        if asn_start == self.engine.getAsn():
-            # schedule the event at the next ASN since we cannot schedule it at
-            # the current ASN
-            asn_start = self.engine.getAsn() + 1
-
-        if asn_end == self.engine.getAsn():
-            # schedule the event at the next ASN since we cannot schedule it at
-            # the current ASN
-            asn_end = self.engine.getAsn() + 1
-
-        def _callback():
-            self.mote.tsch.set_is_dio_sent(False)
-            self.is_dio_sent = False
-            if self.counter < self.redundancy_constant:
-                #  Section 4.2:
-                #    4.  At time t, Trickle transmits if and only if the
-                #        counter c is less than the redundancy constant k.
-                self.is_dio_sent = True
-                self.user_callback()
-            else:
-                # print('do nothing')
-                # do nothing
-                pass
-
-        def start_t():
-            minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
-            self.start_t_record = None
-            if minimal_cell:
-                self.start_t_record = minimal_cell.all_ops
-
-        def end_t():
-            minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
-            self.end_t_record = None
-            if minimal_cell:
-                self.end_t_record = minimal_cell.all_ops
-
-        self.engine.scheduleAtAsn(
-            asn            = asn_start,
-            cb             = start_t,
-            uniqueTag      = self.unique_tag_base + u'_at_start_t',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
-
-        self.engine.scheduleAtAsn(
-            asn            = asn_end,
-            cb             = end_t,
-            uniqueTag      = self.unique_tag_base + u'_at_end_t',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
-
-        self.engine.scheduleAtAsn(
-            asn            = asn,
-            cb             = _callback,
-            uniqueTag      = self.unique_tag_base + u'_at_t',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_i')
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_t')
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_start_t')
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
+        self._schedule_event_at_t_and_i()
 
     def log_result(self):
         result = {
@@ -235,11 +154,97 @@ class TrickleTimer(object):
             }
         )
 
-    def _schedule_event_at_end_of_interval(self):
+    def _schedule_event_at_t_and_i(self):
+        # select t in the range [I/2, I), where I == self.current_interval
+        #
+        # Section 4.2:
+        #   2.  When an interval begins, Trickle resets c to 0 and sets t to a
+        #       random point in the interval, taken from the range [I/2, I),
+        #       that is, values greater than or equal to I/2 and less than I.
+        #       The interval ends at I.
         slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
+
+        t_min = old_div(self.interval, 2)
+        t_max = self.interval
+        t_range = t_max - t_min
+        t = random.uniform(t_min, t_max)
+
+        self.t_pos = round(t / self.interval, 1)
+
+        l_e = slot_len * self.settings.tsch_slotframeLength
+        self.Ncells = max(int(math.ceil(old_div(t_range, l_e))), 1)
+
+        cur_asn = self.engine.getAsn()
+        asn_start = cur_asn + int(math.ceil(old_div(t_min, slot_len)))
+        asn = cur_asn + int(math.ceil(old_div(t, slot_len)))
+
+        if asn == self.engine.getAsn():
+            # schedule the event at the next ASN since we cannot schedule it at
+            # the current ASN
+            asn = self.engine.getAsn() + 1
+
+        if asn_start == self.engine.getAsn():
+            # schedule the event at the next ASN since we cannot schedule it at
+            # the current ASN
+            asn_start = self.engine.getAsn() + 1
+
+        def t_callback():
+            self.mote.tsch.set_is_dio_sent(False)
+            self.is_dio_sent = False
+            if self.counter < self.redundancy_constant or self.redundancy_constant == 0:
+                #  Section 4.2:
+                #    4.  At time t, Trickle transmits if and only if the
+                #        counter c is less than the redundancy constant k.
+                self.is_dio_sent = True
+                self.user_callback()
+            else:
+                # print('do nothing')
+                # do nothing
+                pass
+
+        def start_t():
+            minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
+            self.start_t_record = None
+            if minimal_cell:
+                self.start_t_record = minimal_cell.all_ops
+
+        def end_t():
+            minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
+            self.end_t_record = None
+            if minimal_cell:
+                self.end_t_record = minimal_cell.all_ops
+
+        self.engine.scheduleAtAsn(
+            asn            = asn,
+            cb             = t_callback,
+            uniqueTag      = self.unique_tag_base + u'_at_t',
+            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+
+        self.engine.scheduleAtAsn(
+            asn            = asn_start,
+            cb             = start_t,
+            uniqueTag      = self.unique_tag_base + u'_at_start_t',
+            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+
+        if t_max < self.interval:
+            asn_end = cur_asn + int(math.ceil(old_div(t_max, slot_len)))
+            if asn_end == self.engine.getAsn():
+                # schedule the event at the next ASN since we cannot schedule it at
+                # the current ASN
+                asn_end = self.engine.getAsn() + 1
+
+            self.engine.scheduleAtAsn(
+                asn            = asn_end,
+                cb             = end_t,
+                uniqueTag      = self.unique_tag_base + u'_at_end_t',
+                intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+
+
+        # ======================== 
+
         asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
 
-        def _callback():
+        def i_callback():
             used = None
             occ = None
             if self.end_t_record is not None and self.start_t_record is not None:
@@ -274,8 +279,12 @@ class TrickleTimer(object):
                 self.m = self.i_max
             self._start_next_interval()
 
+        def end_t_i_callback():
+            end_t()
+            i_callback()
+
         self.engine.scheduleAtAsn(
             asn            = asn,
-            cb             = _callback,
+            cb             = i_callback if t_max < self.interval else end_t_i_callback,
             uniqueTag      = self.unique_tag_base + u'_at_i',
             intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)

@@ -577,10 +577,15 @@ owerror_t internal_openserial_print(
     outputHdlcWrite(idmanager_getMyID(ADDR_16B)->addr_16b[1]);
     outputHdlcWrite(calling_component);
     outputHdlcWrite(error_code);
-    outputHdlcWrite((uint8_t)((arg1 & 0xff00) >> 8));
-    outputHdlcWrite((uint8_t)(arg1 & 0x00ff));
-    outputHdlcWrite((uint8_t)((arg2 & 0xff00) >> 8));
-    outputHdlcWrite((uint8_t)(arg2 & 0x00ff));
+    outputHdlcWrite((uint8_t)((arg1 & 0xff000000) >> 24));
+    outputHdlcWrite((uint8_t)((arg1 & 0x00ff0000) >> 16));
+    outputHdlcWrite((uint8_t)((arg1 & 0x0000ff00) >> 8));
+    outputHdlcWrite((uint8_t)(arg1 & 0x000000ff));
+    outputHdlcWrite((uint8_t)((arg2 & 0xff000000) >> 24));
+    outputHdlcWrite((uint8_t)((arg2 & 0x00ff0000) >> 16));
+    outputHdlcWrite((uint8_t)((arg2 & 0x0000ff00) >> 8));
+    outputHdlcWrite((uint8_t)(arg2 & 0x000000ff));
+    
     outputHdlcClose();
 
     // start TX'ing

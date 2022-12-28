@@ -33,7 +33,7 @@ static const uint8_t uinject_dst_addr[] = {
 
 //=========================== prototypes ======================================
 
-void _sock_handler(sock_udp_t *sock, sock_async_flags_t type, void *arg);
+void uinject_sock_handler(sock_udp_t *sock, sock_async_flags_t type, void *arg);
 
 void _uinject_timer_cb(opentimers_id_t id);
 
@@ -58,7 +58,7 @@ void uinject_init(void) {
 
     openserial_printf("Created a UDP socket\n");
 
-    sock_udp_set_cb(&_sock, _sock_handler, NULL);
+    sock_udp_set_cb(&_sock, uinject_sock_handler, NULL);
 
     // start periodic timer
     uinject_vars.period = UINJECT_PERIOD_MS;
@@ -76,7 +76,7 @@ void uinject_init(void) {
 
 
 
-void _sock_handler(sock_udp_t *sock, sock_async_flags_t type, void *arg) {
+void uinject_sock_handler(sock_udp_t *sock, sock_async_flags_t type, void *arg) {
     (void) arg;
 
     char buf[50];
@@ -178,9 +178,9 @@ void _uinject_task_cb(void) {
     uint32_t ticksOn;
     uint32_t ticksInTotal;
     ieee154e_getTicsInfo(&ticksOn, &ticksInTotal);
-    memcpy(&payload[len], (uint8_t*) ticksOn, sizeof(ticksOn));
+    memcpy(&payload[len],  &ticksOn, sizeof(ticksOn));
     len += sizeof(ticksOn);
-    memcpy(&payload[len], (uint8_t*) ticksInTotal, sizeof(ticksInTotal));
+    memcpy(&payload[len],  &ticksInTotal, sizeof(ticksInTotal));
     len += sizeof(ticksInTotal);
 
     if (sock_udp_send(&_sock, payload, len, &remote) > 0) {

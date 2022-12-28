@@ -841,6 +841,7 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
         # additional local variables
         self.coordinates = {}  # (x, y) indexed by mote_id
         self.pister_hack = PisterHackModel(self.engine)
+        path = "../coordinates"
 
         # ConnectivityRandom doesn't need the connectivity matrix. Instead, it
         # initializes coordinates of the motes. Its algorithm is:
@@ -864,24 +865,65 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
         square_side        = self.settings.conn_random_square_side
         init_min_pdr       = self.settings.conn_random_init_min_pdr
         init_min_neighbors = self.settings.conn_random_init_min_neighbors
+        topology           = self.settings.conn_topology
 
         assert init_min_neighbors <= self.settings.exec_numMotes
 
+        nodes_len = len(self.mote_id_list)
+        position = []
+        available_position = [x for x in range(nodes_len - 1)]
+
+        if topology == 'grid':
+            loop_n = int(np.sqrt(nodes_len))
+            assert loop_n**2 == nodes_len
+            center_ = loop_n // 2
+            center = (square_side * center_) / loop_n
+            for row in range(1, loop_n + 1):
+                for col in range(1, loop_n + 1):
+                    if row == center_ and col == center_:
+                        continue
+                    row_ = (square_side * row) / loop_n
+                    col_ = (square_side * col) / loop_n
+                    position.append((row_, col_))
+        elif topology == "random":
+            center = square_side // 2
+        elif topology == "saved":
+            # reading the data from the file
+            with open(f"{path}.json") as f:
+                data = f.read()
+            js = json.loads(data)
+
+            assert nodes_len == len(js.keys())
+
+            position = {}
+            # convert to set
+            for key in js.keys():
+                row, col = js[key]
+                position[int(key)] = (row, col)
+            center = position[0][0]
+
         # determine coordinates of the motes
-        for target_mote_id in self.mote_id_list:
+        for _, target_mote_id in enumerate(self.mote_id_list):
             mote_is_deployed = False
             while mote_is_deployed is False:
 
                 # select a tentative coordinate
                 if target_mote_id == 0:
-                    self.coordinates[target_mote_id] = (0, 0)
+                    self.coordinates[target_mote_id] = (center, center)
                     mote_is_deployed = True
                     continue
 
-                coordinate = (
-                    square_side * random.random(),
-                    square_side * random.random()
-                )
+                if topology == 'grid':
+                    choice = random.choice(available_position)
+                    coordinate = position[choice]
+                elif topology == 'random':
+                    coordinate = (
+                        square_side * random.random(),
+                        square_side * random.random()
+                    )
+                elif topology == 'saved':
+                    choice = target_mote_id
+                    coordinate = position[choice]
 
                 # count deployed motes who have enough PDR values to this
                 # mote
@@ -963,6 +1005,8 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
                                 )
 
                     mote_is_deployed = True
+                    if topology == 'grid':
+                        available_position.remove(choice)
                 else:
                     # remove memorized values at channel 0
                     for deployed_mote_id in self.coordinates:
@@ -979,20 +1023,22 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
                     # try another random coordinate
                     continue
         
-        pos = self.coordinates
-        data = [list(x) for x in pos.values()]
-        data = np.array(data)
-        x, y = data.T
-        plt.scatter(x,y)
-        plt.savefig(
-            '../coordinates.png',
-            bbox_inches     = 'tight',
-            pad_inches      = 0,
-            format          = 'png',
-        )
-        plt.close()
-        with open('../coordinates.json', 'w') as f:
-            f.write(json.dumps(self.coordinates, indent=4))
+        if topology != "saved":
+            pos = self.coordinates
+            data = [list(x) for x in pos.values()]
+            data = np.array(data)
+            x, y = data.T
+            plt.scatter(x,y)
+            plt.scatter(center,center,color='r')
+            plt.savefig(
+                "{path}.png",
+                bbox_inches     = 'tight',
+                pad_inches      = 0,
+                format          = 'png',
+            )
+            plt.close()
+            with open(f"{path}.json", 'w') as f:
+                f.write(json.dumps(self.coordinates, indent=4))
 
     def _get_mote(self, mote_id):
         # there must be a mote having mote_id. otherwise, the following line

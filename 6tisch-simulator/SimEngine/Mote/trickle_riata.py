@@ -198,7 +198,7 @@ class RiataTrickle(object):
 
             if random.uniform(0, 1) <= self.epsilon:
                 # Explore action space
-                if self.counter < self.redundancy_constant: 
+                if self.counter < self.redundancy_constant or self.redundancy_constant == 0:
                     #  Section 4.2:
                     #    4.  At time t, Trickle transmits if and only if the
                     #        counter c is less than the redundancy constant k.

@@ -42,7 +42,7 @@ from .trickle_acpb import ACPBTrickle
 class Rpl(object):
 
     DEFAULT_DIO_INTERVAL_MIN = 14
-    DEFAULT_DIO_INTERVAL_DOUBLINGS = 9
+    DEFAULT_DIO_INTERVAL_DOUBLINGS = 8
     DEFAULT_DIO_REDUNDANCY_CONSTANT = 10
 
     # locally-defined constants
