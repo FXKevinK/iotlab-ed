@@ -18,19 +18,19 @@ class TrickleTimer(object):
     STATE_STOPPED = u'stopped'
     STATE_RUNNING = u'running'
 
-    def __init__(self, i_min, i_max, k, callback, mote):
-        assert isinstance(i_min, (int, int))
-        assert isinstance(i_max, (int, int))
-        assert isinstance(k, (int, int))
+    def __init__(self, callback, mote):
         assert callback is not None
 
-        self.mote = mote
-        self.i_max = i_max
-
         # shorthand to singletons
-        self.engine   = SimEngine.SimEngine.SimEngine()
+        self.engine = SimEngine.SimEngine.SimEngine()
         self.settings = SimEngine.SimSettings.SimSettings()
-        self.log      = SimEngine.SimLog.SimLog().log
+        self.log = SimEngine.SimLog.SimLog().log
+
+        self.mote = mote
+        i_min = pow(2, self.settings.dio_interval_min)
+        i_max = self.settings.dio_interval_doublings
+        self.redundancy_constant = self.settings.k_max
+        self.i_max = i_max
 
         # constants of this timer instance
         # min_interval is expected to given in milliseconds
@@ -38,7 +38,6 @@ class TrickleTimer(object):
         # minimum interval size
         self.min_interval = i_min
         self.max_interval = self.min_interval * pow(2, i_max)
-        self.redundancy_constant = self.settings.k_max
         self.unique_tag_base = str(id(self))
 
         # variables
@@ -48,18 +47,18 @@ class TrickleTimer(object):
         self.state = self.STATE_STOPPED
         self.start_t_record = None
         self.end_t_record = None
-        self.Ncells = None
         self.is_dio_sent = False
         self.Nstates = 1
+        self.Ncells = 0
+        self.Nreset = 0
         self.pfree = 1
         self.poccupancy = 0
-        self.m = 0
-        self.Nreset = 0
-        self.DIOsurpress = 0
-        self.DIOtransmit = 0
-        self.t_pos = 0
         self.preset = 0
         self.pstable = 1
+        self.DIOsurpress = 0
+        self.DIOtransmit = 0
+        self.m = 0
+        self.t_pos = 0
 
     @property
     def is_running(self):
@@ -123,36 +122,12 @@ class TrickleTimer(object):
             return
 
         # reset the counter
-        self.counter = 0
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_i')
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_t')
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_start_t')
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
+        self.counter = 0
         self._schedule_event_at_t_and_i()
-
-    def log_result(self):
-        result = {
-            'state': self.Nstates,
-            'm': self.m,
-            'pfree': self.pfree,
-            'poccupancy': self.poccupancy,
-            'DIOtransmit': self.DIOtransmit,
-            'DIOsurpress': self.DIOsurpress,
-            'Nreset': self.Nreset,
-            'preset': self.preset,
-            'pstable': self.pstable,
-            't_pos': self.t_pos,
-            'counter': self.counter,
-            'k': self.redundancy_constant,
-        }
-
-        self.log(
-            SimEngine.SimLog.LOG_TRICKLE,
-            {
-                u'_mote_id':       self.mote.id,
-                u'result':         result,
-            }
-        )
 
     def _schedule_event_at_t_and_i(self):
         # select t in the range [I/2, I), where I == self.current_interval
@@ -162,7 +137,7 @@ class TrickleTimer(object):
         #       random point in the interval, taken from the range [I/2, I),
         #       that is, values greater than or equal to I/2 and less than I.
         #       The interval ends at I.
-        slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
+        slot_len = self.settings.tsch_slotDuration * 1000  # convert to ms
 
         t_min = old_div(self.interval, 2)
         t_max = self.interval
@@ -198,7 +173,6 @@ class TrickleTimer(object):
                 self.is_dio_sent = True
                 self.user_callback()
             else:
-                # print('do nothing')
                 # do nothing
                 pass
 
@@ -215,16 +189,16 @@ class TrickleTimer(object):
                 self.end_t_record = minimal_cell.all_ops
 
         self.engine.scheduleAtAsn(
-            asn            = asn,
-            cb             = t_callback,
-            uniqueTag      = self.unique_tag_base + u'_at_t',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+            asn=asn,
+            cb=t_callback,
+            uniqueTag=self.unique_tag_base + u'_at_t',
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         self.engine.scheduleAtAsn(
-            asn            = asn_start,
-            cb             = start_t,
-            uniqueTag      = self.unique_tag_base + u'_at_start_t',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+            asn=asn_start,
+            cb=start_t,
+            uniqueTag=self.unique_tag_base + u'_at_start_t',
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         if t_max < self.interval:
             asn_end = cur_asn + int(math.ceil(old_div(t_max, slot_len)))
@@ -234,13 +208,12 @@ class TrickleTimer(object):
                 asn_end = self.engine.getAsn() + 1
 
             self.engine.scheduleAtAsn(
-                asn            = asn_end,
-                cb             = end_t,
-                uniqueTag      = self.unique_tag_base + u'_at_end_t',
-                intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+                asn=asn_end,
+                cb=end_t,
+                uniqueTag=self.unique_tag_base + u'_at_end_t',
+                intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
-
-        # ======================== 
+        # ========================
 
         asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
 
@@ -248,13 +221,14 @@ class TrickleTimer(object):
             used = None
             occ = None
             if self.end_t_record is not None and self.start_t_record is not None:
-                dio_sent = int(self.mote.tsch.is_dio_sent) * int(self.is_dio_sent)
-                used = max((self.end_t_record - self.start_t_record) - dio_sent, 0)
+                dio_sent = int(self.mote.tsch.is_dio_sent) * \
+                    int(self.is_dio_sent)
+                used = max(
+                    (self.end_t_record - self.start_t_record) - dio_sent, 0)
                 occ = used / self.Ncells
                 self.poccupancy = occ
                 self.pfree = 1 - self.poccupancy
 
-            # ok
             if self.is_dio_sent:
                 self.DIOtransmit += 1
             else:
@@ -284,7 +258,31 @@ class TrickleTimer(object):
             i_callback()
 
         self.engine.scheduleAtAsn(
-            asn            = asn,
-            cb             = i_callback if t_max < self.interval else end_t_i_callback,
-            uniqueTag      = self.unique_tag_base + u'_at_i',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+            asn=asn,
+            cb=i_callback if t_max < self.interval else end_t_i_callback,
+            uniqueTag=self.unique_tag_base + u'_at_i',
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
+
+    def log_result(self):
+        result = {
+            'state': self.Nstates,
+            'm': self.m,
+            'pfree': self.pfree,
+            'poccupancy': self.poccupancy,
+            'DIOtransmit': self.DIOtransmit,
+            'DIOsurpress': self.DIOsurpress,
+            'Nreset': self.Nreset,
+            'preset': self.preset,
+            'pstable': self.pstable,
+            't_pos': self.t_pos,
+            'counter': self.counter,
+            'k': self.redundancy_constant,
+        }
+
+        self.log(
+            SimEngine.SimLog.LOG_TRICKLE,
+            {
+                u'_mote_id':       self.mote.id,
+                u'result':         result,
+            }
+        )

@@ -394,10 +394,6 @@ void task_openserial_debugPrint(void) {
             if (debugPrint_joined() == TRUE) {
                 break;
             }
-        case STATUS_MSF:
-            if (debugPrint_msf() == TRUE) {
-                break;
-            }
         default:
             debugPrintCounter = 0;
     }

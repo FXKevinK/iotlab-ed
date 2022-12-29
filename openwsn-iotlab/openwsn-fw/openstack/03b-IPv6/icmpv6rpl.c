@@ -16,9 +16,9 @@
 #include "msf.h"
 
 //=========================== definition ======================================
-// #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
 #define DIS_PORTION 40
-// #endif
+#endif
 #define DIO_PORTION 1
 #define DAO_PORTION 30
 
@@ -28,12 +28,12 @@ icmpv6rpl_vars_t icmpv6rpl_vars;
 
 //=========================== prototypes ======================================
 
-// #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
 // DIS-related
 void icmpv6rpl_timer_DIS_cb(opentimers_id_t id);
 void icmpv6rpl_timer_DIS_task(void);
 void sendDIS(void);
-// #endif // RPL_DIS_TRANSMISSION == TRUE
+#endif // RPL_DIS_TRANSMISSION == TRUE
 
 // DIO-related
 void icmpv6rpl_timer_DIO_cb(opentimers_id_t id);
@@ -80,16 +80,16 @@ void icmpv6rpl_init(void)
         icmpv6rpl_vars.lowestRankInHistory = MAXDAGRANK;
     }
 
-    //=== admin
-    // #if RPL_DIS_TRANSMISSION == TRUE
+//=== admin
+#if RPL_DIS_TRANSMISSION == TRUE
     icmpv6rpl_vars.busySendingDIS = FALSE;
     icmpv6rpl_vars.creatingDIS = FALSE;
-    // #endif
+#endif
     icmpv6rpl_vars.busySendingDIO = FALSE;
     icmpv6rpl_vars.busySendingDAO = FALSE;
     icmpv6rpl_vars.fDodagidWritten = 0;
 
-    // #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
     //=== DIS
     icmpv6rpl_vars.dis.flags = 0x00;
     icmpv6rpl_vars.dis.reserved = 0x00;
@@ -108,7 +108,7 @@ void icmpv6rpl_init(void)
             TIMER_PERIODIC,
             icmpv6rpl_timer_DIS_cb);
     }
-    // #endif
+#endif
 
     //=== DIO
 
@@ -169,12 +169,7 @@ void icmpv6rpl_init(void)
     icmpv6rpl_vars.conf.defLifetime = DEFAULT_RPL_DEFAULTLIFETIME;
     icmpv6rpl_vars.conf.lifetimeUnit = DEFAULT_RPL_LIFETIMEUNIT;
 
-    opentrickletimers_initialize(
-        icmpv6rpl_vars.timerIdDIO,
-        DEFAULT_DIO_IMIN_MS,
-        DEFAULT_DIO_IMAX,
-        DEFAULT_DIO_REDUNDANCY_CONSTANT,
-        icmpv6rpl_timer_DIO_cb);
+    opentrickletimers_initialize(icmpv6rpl_vars.timerIdDIO, icmpv6rpl_timer_DIO_cb);
 
     if (idmanager_getIsDAGroot() == TRUE)
     {
@@ -301,9 +296,9 @@ void icmpv6rpl_sendDone(OpenQueueEntry_t *msg, owerror_t error)
     if (packetfunctions_isBroadcastMulticast(&(msg->l2_nextORpreviousHop)))
     {
         icmpv6rpl_vars.busySendingDIO = FALSE;
-        // #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
         icmpv6rpl_vars.busySendingDIS = FALSE;
-        // #endif
+#endif
     }
     else
     {
@@ -666,7 +661,7 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection(void)
         icmpv6rpl_vars.lowestRankInHistory = MAXDAGRANK;
     }
 
-    // #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
     if (icmpv6rpl_vars.haveParent == FALSE || icmpv6rpl_vars.myDAGrank == MAXDAGRANK)
     {
         opentrickletimers_stop(icmpv6rpl_vars.timerIdDIO);
@@ -677,7 +672,7 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection(void)
             TIMER_PERIODIC,
             icmpv6rpl_timer_DIS_cb);
     }
-    // #endif
+#endif
 }
 
 /**
@@ -805,10 +800,11 @@ void icmpv6rpl_indicateRxDIO(OpenQueueEntry_t *msg)
             if (packetfunctions_sameAddress(&(msg->l2_nextORpreviousHop), &NeighborAddress))
             { // matching address
                 neighborRank = neighbors_getNeighborRank(i);
-                if(icmpv6rpl_vars.incomingDio->rank == neighborRank){
+                if (icmpv6rpl_vars.incomingDio->rank == neighborRank)
+                {
                     opentrickletimers_recvConsistent(icmpv6rpl_vars.timerIdDIO);
                 }
-    
+
                 if (
                     (icmpv6rpl_vars.incomingDio->rank > neighborRank) &&
                     (icmpv6rpl_vars.incomingDio->rank - neighborRank) >
@@ -861,7 +857,7 @@ void icmpv6rpl_killPreferredParent(void)
     icmpv6rpl_vars.busySendingDAO = FALSE;
 }
 
-// #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
 // DIS
 /*
 \brief Returns whether the current DIS message is being created.
@@ -871,11 +867,11 @@ bool icmpv6rpl_isCreatingDIS(void)
 {
     return icmpv6rpl_vars.creatingDIS;
 }
-// #endif
+#endif
 
 //=========================== private =========================================
 
-// #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
 //===== DIS-related
 
 /**
@@ -997,7 +993,7 @@ void sendDIS(void)
     }
     icmpv6rpl_vars.creatingDIS = FALSE;
 }
-// #endif  // RPL_DIS_TRANSMISSION == TRUE
+#endif // RPL_DIS_TRANSMISSION == TRUE
 
 //===== DIO-related
 
@@ -1552,10 +1548,10 @@ void icmpv6rpl_resetAll(void)
 
     icmpv6rpl_vars.daoSent = FALSE;
     icmpv6rpl_vars.dioSent = FALSE;
-    // #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
     icmpv6rpl_vars.busySendingDIS = FALSE;
     icmpv6rpl_vars.creatingDIS = FALSE;
-    // #endif
+#endif
     icmpv6rpl_vars.busySendingDIO = FALSE;
     icmpv6rpl_vars.busySendingDAO = FALSE;
 

@@ -12,18 +12,6 @@
 
 //=========================== define ==========================================
 
-// DIO trickle timer parameters
-#define DEFAULT_DIO_INTERVAL_MIN_LARGE 19       // in Large Net. The DIO trickle timer Imin value is defined as 2 to the power of this value in millseconds.
-#define DEFAULT_DIO_INTERVAL_MIN_SMALL 14       // in Small Net. The DIO trickle timer Imin value is defined as 2 to the power of this value in millseconds.
-#define DEFAULT_DIO_INTERVAL_DOUBLINGS_LARGE 2  // The default value for the DIO Trickle Timer Interval Max in Large Network - 1 (max Trickle interval = approximately 16 minutes)                 
-#define DEFAULT_DIO_INTERVAL_DOUBLINGS_SMALL 3  // The default value for the DIO Trickle Timer Interval Max in Small Network - 2 (max Trickle interval = approximately 128 sec)                 
-#define DEFAULT_DIO_REDUNDANCY_CONSTANT 3      // The default value for the DIO  redundancy constant
-
-#define DEFAULT_DIO_INTERVAL_DOUBLINGS    DEFAULT_DIO_INTERVAL_DOUBLINGS_SMALL
-#define DEFAULT_DIO_IMAX                  DEFAULT_DIO_INTERVAL_DOUBLINGS
-#define DEFAULT_DIO_INTERVAL_MIN          DEFAULT_DIO_INTERVAL_MIN_SMALL
-#define DEFAULT_DIO_IMIN_MS               (1 << DEFAULT_DIO_INTERVAL_MIN)  // milliseconds, DIO_IMIN = 2 ^ DEFAULT_DIO_INTERVAL_MIN
-
 #define DEFAULT_RPL_MAXRANKINCREASE         0
 #define DEFAULT_RPL_OCP                     1  // MRHOF
 #define DEFAULT_RPL_DEFAULTLIFETIME         120
@@ -216,20 +204,20 @@ END_PACK
 
 typedef struct {
    // admin
-// #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
    bool                      busySendingDIS;          ///< currently sending DIS.
    bool                      creatingDIS;             ///< currently creating DIS.
-// #endif
+#endif
    bool                      busySendingDIO;          ///< currently sending DIO.
    bool                      busySendingDAO;          ///< currently sending DAO.
    uint8_t                   fDodagidWritten;         ///< is DODAGID already written to DIO/DAO?
 
-// #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
    // DIS-related
    icmpv6rpl_dis_ht          dis;
    open_addr_t               disDestination;
    opentimers_id_t           timerIdDIS;
-// #endif
+#endif
 
    // DIO-related
    icmpv6rpl_dio_ht          dio;                     ///< pre-populated DIO packet.
@@ -281,10 +269,10 @@ bool     icmpv6rpl_allowSendingDIO(void);
 void     icmpv6rpl_start_or_reset_trickle_timer(void);
 bool     icmpv6rpl_getPreferredParentEui64(open_addr_t* addressToWrite);
 
-// #if RPL_DIS_TRANSMISSION == TRUE
+#if RPL_DIS_TRANSMISSION == TRUE
 // DIS
 bool     icmpv6rpl_isCreatingDIS(void);
-// #endif
+#endif
 
 void     icmpv6rpl_updateNexthopAddress(open_addr_t* addressToWrite);
 bool     icmpv6rpl_isPreferredParent(open_addr_t* address);

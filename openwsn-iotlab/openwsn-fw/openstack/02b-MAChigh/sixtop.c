@@ -1597,9 +1597,9 @@ void sixtop_six2six_notifyReceive(
                     (errorparameter_t) code,
                     (errorparameter_t) sixtop_vars.six2six_state);
         } else {
-            LOG_ERROR(COMPONENT_SIXTOP, ERR_SIXTOP_RETURNCODE,
-                    (errorparameter_t) code,
-                    (errorparameter_t) sixtop_vars.six2six_state);
+            // LOG_ERROR(COMPONENT_SIXTOP, ERR_SIXTOP_RETURNCODE,
+            //         (errorparameter_t) code,
+            //         (errorparameter_t) sixtop_vars.six2six_state);
         }
 
         memset(&sixtop_vars.neighborToClearCells, 0, sizeof(open_addr_t));

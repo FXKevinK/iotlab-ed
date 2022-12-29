@@ -234,8 +234,6 @@ void icmpv6echo_setIsReplyEnabled(bool isEnabled) { return; }
 
 bool debugPrint_asn(void) { return TRUE; }
 
-bool debugPrint_msf(void) { return TRUE; }
-
 bool debugPrint_isSync(void) { return TRUE; }
 
 bool debugPrint_macStats(void) { return TRUE; }

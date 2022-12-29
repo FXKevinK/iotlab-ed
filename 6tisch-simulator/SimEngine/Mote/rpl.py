@@ -40,11 +40,6 @@ from .trickle_acpb import ACPBTrickle
 # =========================== body ============================================
 
 class Rpl(object):
-
-    DEFAULT_DIO_INTERVAL_MIN = 14
-    DEFAULT_DIO_INTERVAL_DOUBLINGS = 8
-    DEFAULT_DIO_REDUNDANCY_CONSTANT = 10
-
     # locally-defined constants
     DEFAULT_DIS_INTERVAL_SECONDS = 60
 
@@ -73,9 +68,6 @@ class Rpl(object):
         self.dodagId                   = None
         self.of                        = RplOFNone(self)
         self.trickle_timer             = trickle_class(
-            i_min    = pow(2, self.DEFAULT_DIO_INTERVAL_MIN),
-            i_max    = self.DEFAULT_DIO_INTERVAL_DOUBLINGS,
-            k        = self.DEFAULT_DIO_REDUNDANCY_CONSTANT,
             callback = self._send_DIO,
             mote     = self.mote
         )

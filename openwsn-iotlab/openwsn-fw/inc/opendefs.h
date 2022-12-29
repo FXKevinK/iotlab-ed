@@ -121,8 +121,7 @@ enum {
     STATUS_NEIGHBORS = 9,
     STATUS_KAPERIOD = 10,
     STATUS_JOINED = 11,
-    STATUS_MSF = 12,
-    STATUS_MAX = 13,
+    STATUS_MAX = 12,
 };
 
 // component identifiers, order is important

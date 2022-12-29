@@ -181,6 +181,3 @@ bool debugPrint_neighbors(void) {
 bool debugPrint_joined(void) {
     return FALSE;
 }
-bool debugPrint_msf(void) {
-    return FALSE;
-}

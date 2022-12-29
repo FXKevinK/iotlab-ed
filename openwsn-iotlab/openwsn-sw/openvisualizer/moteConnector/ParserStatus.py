@@ -127,7 +127,7 @@ class ParserStatus(Parser.Parser):
                                     3,
                                     6,
                                     'ScheduleRow',
-                                    '<BHBBBBQQBBBBHH',
+                                    '<BHBBBBQQBBBBBHH',
                                     [
                                         'row',                       # B
                                         'slotOffset',                # H 
@@ -140,6 +140,7 @@ class ParserStatus(Parser.Parser):
                                         'numRx',                     # B
                                         'numTx',                     # B
                                         'numTxACK',                  # B
+                                        'allOps',                    # B
                                         'lastUsedAsn_4',             # B
                                         'lastUsedAsn_2_3',           # H
                                         'lastUsedAsn_0_1',           # H
@@ -252,15 +253,6 @@ class ParserStatus(Parser.Parser):
                                         'joinedAsn_4',                     # B
                                         'joinedAsn_2_3',                   # H
                                         'joinedAsn_0_1',                   # H
-                                    ],
-                                )
-        self._addFieldsParser   (
-                                    3,
-                                    12,
-                                    'SixtopFSM',
-                                    '<B',
-                                    [
-                                        'SixtopFSM',                       # B
                                     ],
                                 )
         

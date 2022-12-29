@@ -9,28 +9,28 @@ from builtins import object
 from past.utils import old_div
 import math
 import random
-
+import numpy as np
 import SimEngine
 from . import MoteDefines as d
 
-import numpy as np
 
 class RiataTrickle(object):
     STATE_STOPPED = u'stopped'
     STATE_RUNNING = u'running'
 
-    def __init__(self, i_min, i_max, k, callback, mote):
-        assert isinstance(i_min, (int, int))
-        assert isinstance(i_max, (int, int))
-        assert isinstance(k, (int, int))
+    def __init__(self, callback, mote):
         assert callback is not None
 
-        self.mote = mote
-
         # shorthand to singletons
-        self.engine   = SimEngine.SimEngine.SimEngine()
+        self.engine = SimEngine.SimEngine.SimEngine()
         self.settings = SimEngine.SimSettings.SimSettings()
-        self.log      = SimEngine.SimLog.SimLog().log
+        self.log = SimEngine.SimLog.SimLog().log
+
+        self.mote = mote
+        i_min = pow(2, self.settings.dio_interval_min)
+        i_max = self.settings.dio_interval_doublings
+        self.redundancy_constant = self.settings.k_max
+        self.i_max = i_max
 
         # constants of this timer instance
         # min_interval is expected to given in milliseconds
@@ -45,36 +45,31 @@ class RiataTrickle(object):
         self.interval = 0
         self.user_callback = callback
         self.state = self.STATE_STOPPED
-
-        self.alpha = self.settings.ql_learning_rate
-        self.betha = self.settings.ql_discount_rate
-        self.epsilon = self.settings.ql_epsilon
-
-        self.i_max = i_max
+        self.start_t_record = None
+        self.end_t_record = None
+        self.is_dio_sent = False
+        self.Nstates = 1
+        self.Ncells = 0
+        self.Nreset = 0
+        self.pfree = 1
+        self.poccupancy = 0
+        self.preset = 0
+        self.pstable = 1
+        self.DIOsurpress_log = 0
+        self.DIOtransmit_log = 0
         self.m = 0
-        self.q_table = np.zeros([self.i_max + 1, 2])
-        self.riatareset = np.zeros(self.i_max + 1)
-        self.Ndio = np.zeros(self.i_max + 1)
+        self.t_pos = 0
         self.DIOtransmit = 0
         self.kmax = self.settings.k_max
-        self.redundancy_constant = self.kmax
         self.current_action = -1
         self.t_start = 0
         self.t_end = 0
-    
-        self.pfree = 1
-        self.poccupancy = 0
-        self.t_pos = 0
-        self.Nreset = 0
-        self.preset = 0
-        self.pstable = 1
-        self.Nstates = 1
-        self.DIOtransmit_log = 0
-        self.DIOsurpress_log = 0
-        self.Ncells = None
-        self.is_dio_sent = False
-        self.start_t_record = None
-        self.end_t_record = None
+        self.q_table = np.zeros([self.i_max + 1, 2])
+        self.alpha = self.settings.ql_learning_rate
+        self.betha = self.settings.ql_discount_rate
+        self.epsilon = self.settings.ql_epsilon
+        self.riatareset = np.zeros(self.i_max + 1)
+        self.Ndio = np.zeros(self.i_max + 1)
 
     @property
     def is_running(self):
@@ -112,15 +107,13 @@ class RiataTrickle(object):
         #       step 2.  If I is equal to Imin when Trickle hears an
         #       "inconsistent" transmission, Trickle does nothing.  Trickle can
         #       also reset its timer in response to external "events".
-
+        self.m = 0
         self.Nreset += 1
         self.preset = self.Nreset / self.Nstates
         self.pstable = 1 - self.preset
 
         self.riatareset[self.m] += 1
         self.Ndio[self.m] = 0
-
-        self.m = 0
         self.DIOtransmit = 0
         self.counter = 0
         self.interval = self.min_interval
@@ -135,22 +128,18 @@ class RiataTrickle(object):
         #       increments the counter c.
         self.counter += 1
 
-    def calculate_k(self):
-        total = 0
-        for i in range(self.m + 1):
-            total += self.Ndio[i]
-        k = int(math.ceil(old_div(total, self.m + 1)))
-        return k
-
     def _start_next_interval(self):
         if self.state == self.STATE_STOPPED:
             return
 
         # reset the counter
-        self._schedule_event_at_t()
-        self._schedule_event_at_end_of_interval()
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_i')
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_t')
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_start_t')
+        self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
+        self._schedule_event_at_t_and_i()
 
-    def _schedule_event_at_t(self):
+    def _schedule_event_at_t_and_i(self):
         # select t in the range [I/2, I), where I == self.current_interval
         #
         # Section 4.2:
@@ -158,15 +147,16 @@ class RiataTrickle(object):
         #       random point in the interval, taken from the range [I/2, I),
         #       that is, values greater than or equal to I/2 and less than I.
         #       The interval ends at I.
-        slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
+        slot_len = self.settings.tsch_slotDuration * 1000  # convert to ms
 
         I = old_div(self.interval, (self.m + 1 + self.riatareset[self.m]))
         self.t_start = self.DIOtransmit * I
-        self.t_end = (self.DIOtransmit + 1)  * I
+        self.t_end = (self.DIOtransmit + 1) * I
         self.t_start = int(math.ceil(self.t_start))
         self.t_end = int(math.ceil(self.t_end))
         t_range = self.t_end - self.t_start
         t = random.uniform(self.t_start, self.t_end)
+
         self.t_pos = round(t / self.interval, 1)
 
         l_e = slot_len * self.settings.tsch_slotframeLength
@@ -174,7 +164,6 @@ class RiataTrickle(object):
 
         cur_asn = self.engine.getAsn()
         asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_len)))
-        asn_end = cur_asn + int(math.ceil(old_div(self.t_end, slot_len)))
         asn = cur_asn + int(math.ceil(old_div(t, slot_len)))
 
         if asn == self.engine.getAsn():
@@ -187,15 +176,9 @@ class RiataTrickle(object):
             # the current ASN
             asn_start = self.engine.getAsn() + 1
 
-        if asn_end == self.engine.getAsn():
-            # schedule the event at the next ASN since we cannot schedule it at
-            # the current ASN
-            asn_end = self.engine.getAsn() + 1
-
-        def _callback():
+        def t_callback():
             self.mote.tsch.set_is_dio_sent(False)
             self.is_dio_sent = False
-
             if random.uniform(0, 1) <= self.epsilon:
                 # Explore action space
                 if self.counter < self.redundancy_constant or self.redundancy_constant == 0:
@@ -210,14 +193,13 @@ class RiataTrickle(object):
             else:
                 # Exploit learned values
                 action = np.argmax(self.q_table[self.m])
-
                 if action == 1:
                     self.is_dio_sent = True
                     self.user_callback()
                 else:
                     # do nothing
                     pass
-        
+
             if self.is_dio_sent:
                 self.current_action = 1
                 self.DIOtransmit += 1
@@ -239,41 +221,81 @@ class RiataTrickle(object):
                 self.end_t_record = minimal_cell.all_ops
 
         self.engine.scheduleAtAsn(
-            asn            = asn_start,
-            cb             = start_t,
-            uniqueTag      = self.unique_tag_base + u'_at_start_t',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+            asn=asn,
+            cb=t_callback,
+            uniqueTag=self.unique_tag_base + u'_at_t',
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         self.engine.scheduleAtAsn(
-            asn            = asn_end,
-            cb             = end_t,
-            uniqueTag      = self.unique_tag_base + u'_at_end_t',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+            asn=asn_start,
+            cb=start_t,
+            uniqueTag=self.unique_tag_base + u'_at_start_t',
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
+
+        if self.t_end < self.interval:
+            asn_end = cur_asn + int(math.ceil(old_div(self.t_end, slot_len)))
+            if asn_end == self.engine.getAsn():
+                # schedule the event at the next ASN since we cannot schedule it at
+                # the current ASN
+                asn_end = self.engine.getAsn() + 1
+
+            self.engine.scheduleAtAsn(
+                asn=asn_end,
+                cb=end_t,
+                uniqueTag=self.unique_tag_base + u'_at_end_t',
+                intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
+
+        # ========================
+
+        asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
+
+        def i_callback():
+            used = None
+            occ = None
+            if self.end_t_record is not None and self.start_t_record is not None:
+                dio_sent = int(self.mote.tsch.is_dio_sent) * \
+                    int(self.is_dio_sent)
+                used = max(
+                    (self.end_t_record - self.start_t_record) - dio_sent, 0)
+                occ = used / self.Ncells
+                self.poccupancy = occ
+                self.pfree = 1 - self.poccupancy
+
+            self.update_qtable()
+            self.log_result()
+
+            self.mote.tsch.set_is_dio_sent(False)
+            self.is_dio_sent = False
+            # doubling the interval
+            #
+            # Section 4.2:
+            #   5.  When the interval I expires, Trickle doubles the interval
+            #       length.  If this new interval length would be longer than
+            #       the time specified by Imax, Trickle sets the interval
+            #       length I to be the time specified by Imax.
+            if self.Ndio[self.m] == 0:
+                self.redundancy_constant = self.kmax
+            else:
+                self.redundancy_constant = self.calculate_k()
+            self.interval = self.interval * 2
+            self.m += 1
+            self.Nstates += 1
+            if self.max_interval < self.interval:
+                self.interval = self.max_interval
+                self.m = self.i_max
+            self.Ndio[self.m] += self.redundancy_constant
+            self.riatareset[self.m] = 0
+            self._start_next_interval()
+
+        def end_t_i_callback():
+            end_t()
+            i_callback()
 
         self.engine.scheduleAtAsn(
-            asn            = asn,
-            cb             = _callback,
-            uniqueTag      = self.unique_tag_base + u'_at_t',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
-
-    def update_qtable(self):
-        if self.current_action == 0:
-            reward = 1 - self.riatareset[self.m]
-        else:
-            reward = self.riatareset[self.m]
-
-        # clip m
-        if self.i_max < (self.m + 1):
-            next_m = self.m
-        else:
-            next_m = self.m + 1
-
-        next_action = np.max(self.q_table[next_m])
-        old_value = self.q_table[self.m][self.current_action]
-        td_learning = (reward + self.betha * next_action) - old_value
-
-        new_value = (1 - self.alpha) * old_value + self.alpha * td_learning
-        self.q_table[self.m][self.current_action] = new_value
+            asn=asn,
+            cb=i_callback if self.t_end < self.interval else end_t_i_callback,
+            uniqueTag=self.unique_tag_base + u'_at_i',
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
     def log_result(self):
         result = {
@@ -299,47 +321,28 @@ class RiataTrickle(object):
             }
         )
 
-    def _schedule_event_at_end_of_interval(self):
-        slot_len = self.settings.tsch_slotDuration * 1000 # convert to ms
-        asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
+    def update_qtable(self):
+        if self.current_action == 0:
+            reward = 1 - self.riatareset[self.m]
+        else:
+            reward = self.riatareset[self.m]
 
-        def _callback():
-            used = None
-            occ = None
-            if self.end_t_record is not None and self.start_t_record is not None:
-                dio_sent = int(self.mote.tsch.is_dio_sent) * int(self.is_dio_sent)
-                used = max((self.end_t_record - self.start_t_record) - dio_sent, 0)
-                occ = used / self.Ncells
-                self.poccupancy = occ
-                self.pfree = 1 - self.poccupancy
+        # clip m
+        if self.i_max < (self.m + 1):
+            next_m = self.m
+        else:
+            next_m = self.m + 1
 
-            self.update_qtable()
-            self.log_result()
+        next_action_value = np.max(self.q_table[next_m])
+        old_value = self.q_table[self.m][self.current_action]
+        td_learning = (reward + self.betha * next_action_value) - old_value
 
-            self.mote.tsch.set_is_dio_sent(False)
-            self.is_dio_sent = False
-            # doubling the interval
-            #
-            # Section 4.2:
-            #   5.  When the interval I expires, Trickle doubles the interval
-            #       length.  If this new interval length would be longer than
-            #       the time specified by Imax, Trickle sets the interval
-            #       length I to be the time specified by Imax.
-            if self.Ndio[self.m] == 0:
-                self.redundancy_constant = self.kmax
-            else:
-                self.redundancy_constant = self.calculate_k()
-            self.interval = self.interval * 2
-            self.m += 1
-            if self.max_interval < self.interval:
-                self.interval = self.max_interval
-                self.m = self.i_max
-            self.Ndio[self.m] += self.redundancy_constant
-            self.riatareset[self.m] = 0
-            self._start_next_interval()
+        new_value = (1 - self.alpha) * old_value + self.alpha * td_learning
+        self.q_table[self.m][self.current_action] = new_value
 
-        self.engine.scheduleAtAsn(
-            asn            = asn,
-            cb             = _callback,
-            uniqueTag      = self.unique_tag_base + u'_at_i',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS)
+    def calculate_k(self):
+        total = 0
+        for i in range(self.m + 1):
+            total += self.Ndio[i]
+        k = int(math.ceil(old_div(total, self.m + 1)))
+        return k
