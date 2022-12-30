@@ -20,10 +20,10 @@ def find(env):
     try:
         if env['mingw_prefer_amd64']:
             prefixes.insert(0, 'x86_64-w64-mingw32-')
-            print("Inserted amd64 prefix")
+            print "Inserted amd64 prefix"
     except KeyError:
         pass
-    print("prefixes list len {0}".format(len(prefixes)))
+    print "prefixes list len {0}".format(len(prefixes))
         
     for prefix in prefixes:
         # First search in the SCons path and then the OS path:

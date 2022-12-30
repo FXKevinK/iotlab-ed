@@ -142,10 +142,10 @@ class TimeLine(threading.Thread):
             assert(self.currentTime<=atTime)
         except AssertionError:
             self.engine.pause()
-            print("currentTime: "+str(self.currentTime))
-            print("atTime:      "+str(atTime))
-            print("moteId:      "+str(moteId))
-            print("desc:        "+str(desc))
+            print "currentTime: "+str(self.currentTime)
+            print "atTime:      "+str(atTime)
+            print "moteId:      "+str(moteId)
+            print "desc:        "+str(desc)
             raise
         
         # create a new event

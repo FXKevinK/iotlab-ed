@@ -280,7 +280,7 @@ class RPL(eventBusClient.eventBusClient):
         output               = '\n'.join(output)
         if log.isEnabledFor(logging.DEBUG):
             log.debug(output)
-        # print(output)
+        # print output
         
         node = u.formatIPv6Addr(source)
         if not (node in self.parentsDaoSeq.keys()):

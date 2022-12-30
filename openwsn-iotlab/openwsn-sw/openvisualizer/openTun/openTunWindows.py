@@ -94,14 +94,14 @@ class TunReadThread(threading.Thread):
                     win32event.WaitForSingleObject(self.overlappedRx.hEvent, win32event.INFINITE)
                     self.overlappedRx.Offset = self.overlappedRx.Offset + len(p)
                 except Exception as err:
-                    print(err)
+                    print err
                     log.error(err)
                     raise ValueError('Error writing to TUN')
                 else:    
                     # convert input from a string to a byte list
                     p = [ord(b) for b in p]
-                    #print("tun input")
-                    #print(p)
+                    #print "tun input"
+                    #print p
                     # make sure it's an IPv6 packet (starts with 0x6x)
                     if (p[0]&0xf0)!=0x60:
                        # this is not an IPv6 packet
@@ -115,7 +115,7 @@ class TunReadThread(threading.Thread):
                     self.callback(p)
         except Exception as err:
             errMsg=u.formatCrashMessage(self.name,err)
-            print(errMsg)
+            print errMsg
             log.critical(errMsg)
             sys.exit(1)
                  
@@ -167,7 +167,7 @@ class OpenTunWindows(openTun.OpenTun):
                 log.debug("data dispatched to tun correctly {0}, {1}".format(signal,sender))
         except Exception as err:
             errMsg=u.formatCriticalMessage(err)
-            print(errMsg)
+            print errMsg
             log.critical(errMsg)
     
     def _createTunIf(self):

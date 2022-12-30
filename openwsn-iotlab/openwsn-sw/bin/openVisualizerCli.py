@@ -23,8 +23,8 @@ try:
     from openvisualizer.moteState import moteState
 except ImportError:
     # Debug failed lookup on first library import
-    print('ImportError: cannot find openvisualizer.moteState module')
-    print('sys.path:\n\t{0}'.format('\n\t'.join(str(p) for p in sys.path)))
+    print 'ImportError: cannot find openvisualizer.moteState module'
+    print 'sys.path:\n\t{0}'.format('\n\t'.join(str(p) for p in sys.path))
 
 from   cmd         import Cmd
 import openVisualizerApp
@@ -118,7 +118,7 @@ class OpenVisualizerCli(Cmd):
                     except ValueError as err:
                         self.stdout.write(err)
             except ValueError as err:
-                print("{0}:{1}".format(type(err),err))
+                print "{0}:{1}".format(type(err),err)
 
     def help_all(self):
         """Lists first line of help for all documented commands"""

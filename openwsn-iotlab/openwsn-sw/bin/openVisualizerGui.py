@@ -23,8 +23,8 @@ try:
     from openvisualizer.moteState import moteState
 except ImportError:
     # Debug failed lookup on first library import
-    print('ImportError: cannot find openvisualizer.moteState module')
-    print('sys.path:\n\t{0}'.format('\n\t'.join(str(p) for p in sys.path)))
+    print 'ImportError: cannot find openvisualizer.moteState module'
+    print 'sys.path:\n\t{0}'.format('\n\t'.join(str(p) for p in sys.path))
 
 import openVisualizerApp
 from openvisualizer.openUI import OpenWindow

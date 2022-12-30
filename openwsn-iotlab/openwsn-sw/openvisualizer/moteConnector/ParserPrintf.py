@@ -49,11 +49,11 @@ class ParserPrintf(Parser.Parser):
         str = ''
         i = 0
 
-        # print bytes
+        #print bytes
 
         for byte in bytes:
             str = format(eval('{0} + {1} * 256 ** {2}'.format(str, byte, i)))
-            # print ('{0}:{1}'.format(i, str)) 
+            #print ('{0}:{1}'.format(i, str)) 
             i = i + 1      
 
         return(str)

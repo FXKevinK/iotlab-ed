@@ -3,7 +3,6 @@ import threading
 import struct
 import binascii
 import socket
-import time
 
 #============================ defines =========================================
 
@@ -81,7 +80,7 @@ class moteProbe(threading.Thread):
                     try:
                         rxByte = self.serial.read(1)
                     except Exception as err:
-                        print(err)
+                        print err
                         time.sleep(1)
                         break
                     else:
@@ -114,7 +113,7 @@ class moteProbe(threading.Thread):
                                 tempBuf              = self.inputBuf
                                 self.inputBuf        = self.hdlc.dehdlcify(self.inputBuf)
                             except Exception as err:
-                                print('{0}: invalid serial frame: {1}'.format(self.name, buf2hex(tempBuf)))
+                                print '{0}: invalid serial frame: {1}'.format(self.name, buf2hex(tempBuf))
                             else:
                                 if self.inputBuf[0]==ord('D'):
                                     
@@ -124,15 +123,15 @@ class moteProbe(threading.Thread):
                                         self.sock.sendto(dataForMatlab, ('127.0.0.1', 3001))
                                         #print 'sent to Matlab: {0}'.format(dataForMatlab)
                                     else:
-                                        print('dropped DATA frame of length {0}: {1}'.format(len(self.inputBuf),buf2hex(self.inputBuf)))
+                                        print 'dropped DATA frame of length {0}: {1}'.format(len(self.inputBuf),buf2hex(self.inputBuf))
                                 
                                 elif self.inputBuf[0]==ord('E'):
-                                    print(inputBuf)
+                                    print inputBuf
                                 
                         self.lastRxByte = rxByte
                     
         except Exception as err:
-            print(err)
+            print err
     
     #======================== public ==========================================
     

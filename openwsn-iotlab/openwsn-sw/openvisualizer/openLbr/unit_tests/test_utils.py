@@ -140,6 +140,6 @@ def test_formatIPv6Addr(expectedformatipv6):
     
     (ipv6_list,ipv6_string) = json.loads(expectedformatipv6)
     
-    print(ipv6_string)
+    print ipv6_string
     
     assert u.formatIPv6Addr(ipv6_list)==ipv6_string

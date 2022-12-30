@@ -101,10 +101,10 @@ class serialTesterCli(OpenCli):
         for k in ['numSent','numOk','numCorrupted','numTimeout']:
             output += ['- {0:<15} : {1}'.format(k,stats[k])]
         output  = '\n'.join(output)
-        print(output)
+        print output
     
     def _indicate_trace(self,debugText):
-        print(debugText)
+        print debugText
     
     #===== helpers
     

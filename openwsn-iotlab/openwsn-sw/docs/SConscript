@@ -25,6 +25,6 @@ Clean(targets, htmlDir)
 AlwaysBuild(htmlDir)
     
 if 'docs' in BUILD_TARGETS:
-    print("HTML docs generated in build{0}html directory.\n".format(os.sep))
+    print "HTML docs generated in build{0}html directory.\n".format(os.sep)
 
 Alias('docs', targets)

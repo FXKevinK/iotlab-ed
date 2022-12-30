@@ -191,11 +191,11 @@ class moteConnector(eventBusClient.eventBusClient):
 
         # check avaliability of command
         if commandIndex == len(moteState.moteState.COMMAND_ALL):
-            print("=============================================")
-            print("Wrong Command Type! Available Command Type: {")
+            print "============================================="
+            print "Wrong Command Type! Available Command Type: {"
             for cmd in moteState.moteState.COMMAND_ALL:
-                print(" {0}".format(cmd[0]))
-            print(" }")
+                print " {0}".format(cmd[0])
+            print " }"
             return [outcome,dataToSend]
 
         if data[0][:2] == '6p':
@@ -213,8 +213,8 @@ class moteConnector(eventBusClient.eventBusClient):
                     elif paramList[0] == 'shared':
                         cellOptions = 1<<0 | 1<<1 | 1<<2
                     else:
-                        print("unsupport cellOptions!")
-                        
+                        print "unsupport cellOptions!"
+                        assert TRUE
                 else:
                     dataToSend[2] = len(dataToSend)-3
                     outcome       = True
@@ -232,8 +232,8 @@ class moteConnector(eventBusClient.eventBusClient):
                     celllist_add['slotoffset']    = paramList[ptr+1].split('-')
                     celllist_add['channeloffset'] = paramList[ptr+2].split('-')
                     if len(celllist_add['slotoffset']) != len(celllist_add['channeloffset']) or len(celllist_add['slotoffset']) < int(paramList[ptr]):
-                        print("the length of slotoffset list and channeloffset list for candidate cell should be equal!")
-                        
+                        print "the length of slotoffset list and channeloffset list for candidate cell should be equal!"
+                        assert TRUE
                     dataToSend += map(int,celllist_add['slotoffset'])
                     dataToSend += map(int,celllist_add['channeloffset'])
                 if data[0] == '6pDelete':
@@ -243,8 +243,8 @@ class moteConnector(eventBusClient.eventBusClient):
                     celllist_delete['slotoffset']    = paramList[ptr+1].split('-')
                     celllist_delete['channeloffset'] = paramList[ptr+2].split('-')
                     if int(paramList[ptr]) != len(celllist_delete['slotoffset']) or int(paramList[ptr]) != len(celllist_delete['channeloffset']):
-                        print("length of celllist (slotoffset/channeloffset) to delete doesn't match numCell!")
-                        
+                        print "length of celllist (slotoffset/channeloffset) to delete doesn't match numCell!"
+                        assert TRUE
                     dataToSend += map(int,celllist_delete['slotoffset'])
                     dataToSend += map(int,celllist_delete['channeloffset'])
                 if data[0] == '6pRelocate':
@@ -253,8 +253,8 @@ class moteConnector(eventBusClient.eventBusClient):
                     celllist_delete['slotoffset']    = paramList[ptr+1].split('-')
                     celllist_delete['channeloffset'] = paramList[ptr+2].split('-')
                     if int(paramList[ptr]) != len(celllist_delete['slotoffset']) or int(paramList[ptr]) != len(celllist_delete['channeloffset']):
-                        print("length of celllist (slotoffset/channeloffset) to delete doesn't match numCell!")
-                        
+                        print "length of celllist (slotoffset/channeloffset) to delete doesn't match numCell!"
+                        assert TRUE
                     dataToSend += map(int,celllist_delete['slotoffset'])
                     dataToSend += map(int,celllist_delete['channeloffset'])
                     ptr += 3
@@ -262,24 +262,24 @@ class moteConnector(eventBusClient.eventBusClient):
                     celllist_add['slotoffset']    = paramList[ptr].split('-')
                     celllist_add['channeloffset'] = paramList[ptr+1].split('-')
                     if len(celllist_add['slotoffset']) != len(celllist_add['channeloffset']) or len(celllist_add['slotoffset']) < len(celllist_delete['slotoffset']):
-                        print("the length of slotoffset list and channeloffset list for candidate cell should be equal and the length of candidate celllist must no less than numCell!")
-                        
+                        print "the length of slotoffset list and channeloffset list for candidate cell should be equal and the length of candidate celllist must no less than numCell!"
+                        assert TRUE
                     dataToSend += map(int,celllist_add['slotoffset'])
                     dataToSend += map(int,celllist_add['channeloffset'])
                 dataToSend[2] = len(dataToSend)-3
                 outcome       = True
                 return [outcome,dataToSend]
             except:
-                print("=============================================")
-                print("Wrong 6p parameter format.")
-                print("                           command    cellOptions numCell     celllist_delete         celllist_add       listoffset maxListLen addition")
-                print("                                                          (slotlist,channellist)  (slotlist,channellist)")
-                print("comma. e.g. set <portname> 6pAdd      tx,         1,                                  5-6-7,4-4-4")
-                print("comma. e.g. set <portname> 6pDelete   rx,         1,              5,4")
-                print("comma. e.g. set <portname> 6pRelocate tx,         1,              5,4,                6-7-8,4-4-4")
-                print("comma. e.g. set <portname> 6pCount    shared")
-                print("comma. e.g. set <portname> 6pList     tx,                                                                 5,         3")
-                print("comma. e.g. set <portname> 6pClear                                                                                              all")
+                print "============================================="
+                print "Wrong 6p parameter format."
+                print "                           command    cellOptions numCell     celllist_delete         celllist_add       listoffset maxListLen addition"
+                print "                                                          (slotlist,channellist)  (slotlist,channellist)"
+                print "comma. e.g. set <portname> 6pAdd      tx,         1,                                  5-6-7,4-4-4"
+                print "comma. e.g. set <portname> 6pDelete   rx,         1,              5,4"
+                print "comma. e.g. set <portname> 6pRelocate tx,         1,              5,4,                6-7-8,4-4-4"
+                print "comma. e.g. set <portname> 6pCount    shared"
+                print "comma. e.g. set <portname> 6pList     tx,                                                                 5,         3"
+                print "comma. e.g. set <portname> 6pClear                                                                                              all"
                 return [outcome,dataToSend]
         elif data[0] == 'joinKey':
             try:
@@ -292,8 +292,8 @@ class moteConnector(eventBusClient.eventBusClient):
                 ]
                 dataToSend += [ord(b) for b in payload]
             except:
-                print("=============================================")
-                print("Wrong joinKey format. Input 16-byte long hex string. e.g. cafebeefcafebeefcafebeefcafebeef")
+                print "============================================="
+                print "Wrong joinKey format. Input 16-byte long hex string. e.g. cafebeefcafebeefcafebeefcafebeef"
         else:
             parameter = int(data[1])
             if parameter <= 0xffff:
@@ -306,8 +306,8 @@ class moteConnector(eventBusClient.eventBusClient):
                 ]
             else:
                 # more than two bytes parameter, error
-                print("=============================================")
-                print("Paramter Wrong! (Available: 0x0000~0xffff)\n")
+                print "============================================="
+                print "Paramter Wrong! (Available: 0x0000~0xffff)\n"
                 return [outcome,dataToSend]
 
         # the command is legal if I got here

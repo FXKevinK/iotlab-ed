@@ -75,7 +75,7 @@ class OpenVisualizerApp(object):
                 topo = json.load(topoConfig)
                 self.numMotes = len(topo['motes'])
             except Exception as err:
-                print(err)
+                print err
                 app.close()
                 os.kill(os.getpid(), signal.SIGTERM)
 
@@ -491,7 +491,7 @@ def _forceSlashSep(ospath, debug):
             
     pathstr = '/'.join(pathlist)
     if debug:
-        print(pathstr)
+        print pathstr
     return pathstr
     
 def _initExternalDirs(appdir, debug):    
@@ -515,13 +515,13 @@ def _initExternalDirs(appdir, debug):
         if not _verifyConfpath(appdir):
             raise RuntimeError('Config file not in expected directory: {0}'.format(appdir))
         if debug:
-            print('App data found via appdir')
+            print 'App data found via appdir'
         return appdir, appdir, appdir
     
     filedir = os.path.dirname(__file__)
     if _verifyConfpath(filedir):
         if debug:
-            print('App data found via openVisualizerApp.py')
+            print 'App data found via openVisualizerApp.py'
         return filedir, filedir, filedir
         
     confdir      = appdirs.site_config_dir('openvisualizer', 'OpenWSN')
@@ -537,7 +537,7 @@ def _initExternalDirs(appdir, debug):
             if not os.path.exists(logdir):
                 os.mkdir(logdir)
             if debug:
-                print('App data found via native OS')
+                print 'App data found via native OS'
             return confdir, datadir, logdir
         else:
             raise RuntimeError('Cannot find expected data directory: {0}'.format(datadir))
@@ -552,7 +552,7 @@ def _initExternalDirs(appdir, debug):
             # Must make intermediate directories on Windows
             os.makedirs(logdir)
         if debug:
-            print('App data found via openvisualizer package')
+            print 'App data found via openvisualizer package'
             
         return datadir, datadir, logdir
     else:

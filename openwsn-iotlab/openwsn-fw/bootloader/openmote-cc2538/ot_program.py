@@ -95,7 +95,7 @@ class program_over_testbed(object):
             # wait maxmium MESSAGE_RESP_TIMEOUT seconds before return
             self.cmd_response_success_queue.get(timeout=self.MESSAGE_RESP_TIMEOUT)
         except Queue.Empty as error:
-            print("Getting Response messages timeout in {0} seconds".format(self.MESSAGE_RESP_TIMEOUT))
+            print "Getting Response messages timeout in {0} seconds".format(self.MESSAGE_RESP_TIMEOUT)
         finally:
             self.is_response_success()
             self.mqttclient.loop_stop()
@@ -133,16 +133,16 @@ class program_over_testbed(object):
         
     #======================== public ==========================================
     def is_response_success(self):
-        print("--------------------------------------------------------------")
-        print("Try to program {0} motes, {1} motes report with success".format(
+        print "--------------------------------------------------------------"
+        print "Try to program {0} motes, {1} motes report with success".format(
             self.response_success['message_counter'],
             self.response_success['success_counter']
-        ))
+        )
         if self.response_success['message_counter'] > self.response_success['success_counter']:
-            print("failed_messages_topic :")
+            print "failed_messages_topic :"
             for topic in self.response_success['failed_messages_topic']:
-                print("    {0}".format(topic))
-        print("--------------------------------------------------------------")
+                print "    {0}".format(topic)
+        print "--------------------------------------------------------------"
 
 #============================ helper ==========================================
 def usage():

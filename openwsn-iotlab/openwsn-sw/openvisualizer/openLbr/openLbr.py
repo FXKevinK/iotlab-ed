@@ -261,8 +261,8 @@ class OpenLbr(eventBusClient.eventBusClient):
                 return
             
 
-            # print "output:"
-            # print lowpan_bytes
+            #print "output:"
+            #print lowpan_bytes
             # dispatch
             self.dispatch(
                 signal       = 'bytesToMesh',
@@ -325,7 +325,7 @@ class OpenLbr(eventBusClient.eventBusClient):
                 #icmp header
                 if len(ipv6dic['payload'])<5:
                     log.critical("wrong payload lenght on ICMPv6 packet {0}".format(",".join(str(c) for c in data)))
-                    print("wrong payload lenght on ICMPv6 packet {0}".format(",".join(str(c) for c in data)))
+                    print "wrong payload lenght on ICMPv6 packet {0}".format(",".join(str(c) for c in data))
                     return
 
 
@@ -341,7 +341,7 @@ class OpenLbr(eventBusClient.eventBusClient):
                 #udp header -- can be compressed.. assume first it is not compressed.
                 if len(ipv6dic['payload'])<5:
                     log.critical("wrong payload lenght on UDP packet {0}".format(",".join(str(c) for c in data)))
-                    print("wrong payload lenght on UDP packet {0}".format(",".join(str(c) for c in data)))
+                    print "wrong payload lenght on UDP packet {0}".format(",".join(str(c) for c in data))
                     return
 
                 if ipv6dic['payload'][0] & self.NHC_UDP_MASK==self.NHC_UDP_ID:
@@ -539,7 +539,7 @@ class OpenLbr(eventBusClient.eventBusClient):
 
 
         if self.usePageZero:
-            print('Page dispatch page number zero is not supported!\n')
+            print 'Page dispatch page number zero is not supported!\n'
             raise SystemError()
 
         # the 6lowpan packet contains 4 parts
@@ -838,7 +838,7 @@ class OpenLbr(eventBusClient.eventBusClient):
                             output              += ['org_time is {0}'.format(u.formatAddr(o_time))]
                         output               = '\n'.join(output)
                         log.error(output)
-                        print(output)
+                        print output
 
                     ptr += length+1
             else:

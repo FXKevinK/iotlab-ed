@@ -44,7 +44,7 @@ if __name__=='__main__':
     import OpenWindow
     
     def examplecallback(msg):
-        print('button pressed! msg={0}'.format(msg))
+        print 'button pressed! msg={0}'.format(msg)
     
     examplewindow            = OpenWindow.OpenWindow("OpenFrameState")
     
