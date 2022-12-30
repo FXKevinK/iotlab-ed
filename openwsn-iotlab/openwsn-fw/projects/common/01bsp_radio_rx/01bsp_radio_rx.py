@@ -18,7 +18,7 @@ banner += ["`___'|  _/\___.|_|_||__/_/ <___/|_\_|"]
 banner += ["     |_|                  openwsn.org"]
 banner += [""]
 banner  = '\n'.join(banner)
-print banner
+print(banner)
 
 XOFF           = 0x13
 XON            = 0x11

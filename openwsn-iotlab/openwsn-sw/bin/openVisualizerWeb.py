@@ -19,6 +19,7 @@ if __name__=="__main__":
 import logging
 log = logging.getLogger('openVisualizerWeb')
 
+
 try:
     from openvisualizer.moteState import moteState
 except ImportError:

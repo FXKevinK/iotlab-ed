@@ -1,2 +1,2 @@
-from moteState import moteState
-from moteProbe import *
+from openvisualizer.moteState import moteState
+from openvisualizer.moteProbe import *
