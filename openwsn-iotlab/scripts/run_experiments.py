@@ -36,7 +36,7 @@ def configuration_set():
 
     #paths
     config['path_initial'] = os.getcwd()
-    print ("Inital path: {0}".format(config['path_initial']))
+    print("Inital path: {0}".format(config['path_initial']))
     
     config['path_results_root'] = "/home/theoleyre/openwsn/results/"
     config['path_results_root_crash'] = config['path_results_root'] + "/crash"

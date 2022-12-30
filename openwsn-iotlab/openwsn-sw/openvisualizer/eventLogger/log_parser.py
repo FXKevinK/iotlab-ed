@@ -45,7 +45,7 @@ def time_translate(asn_string):
 # get result
 
 for file in input_files:
-    print "processing with file {0}...".format(file)
+    print("processing with file {0}...".format(file))
     with open(log_file_path+file, 'r') as f:
         
         node_id                     = file.split('.')[-2][-5:]
@@ -67,7 +67,7 @@ for file in input_files:
             try:
                 eval_line = eval(line)
             except SyntaxError as s_error:
-                print "error happened when parsing {0} file at line {1}, errorMessage: {2}".format(file,lineCounter,s_error)
+                print("error happened when parsing {0} file at line {1}, errorMessage: {2}".format(file,lineCounter,s_error))
                 
             # get the lastest asn
             

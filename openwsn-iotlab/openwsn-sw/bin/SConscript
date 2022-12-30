@@ -91,7 +91,7 @@ def uiRunner(target, source, env):
                 result = 0
         else:
             # Display PID to make it easier to kill if necessary.
-            print 'Child PID is {0}'.format(p.pid)
+            print('Child PID is {0}'.format(p.pid))
     except:
         result = 1
         

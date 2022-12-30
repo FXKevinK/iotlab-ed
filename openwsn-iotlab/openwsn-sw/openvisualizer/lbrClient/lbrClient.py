@@ -114,7 +114,7 @@ class lbrClient(threading.Thread):
                    self.disconnect("socket error while listening: {0}".format(err))
         except Exception as err:
             errMsg=u.formatCrashMessage(self.name,err)
-            print errMsg
+            print(errMsg)
             log.critical(errMsg)
             sys.exit(1)
             

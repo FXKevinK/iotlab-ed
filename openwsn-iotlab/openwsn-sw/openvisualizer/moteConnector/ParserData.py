@@ -157,7 +157,7 @@ class ParserData(Parser.Parser):
 
                 pkt_info['dutyCycle']    = float(numTicksOn)/float(numTicksInTotal)    # duty cycle
                 
-                print pkt_info
+                print(pkt_info)
                 with open('pkt_info.log'.format(),'a') as f:
                     f.write(str(pkt_info)+'\n')
                 
@@ -247,7 +247,7 @@ class ParserData(Parser.Parser):
         payload['avg_pdr']         = avg_pdr_all
         payload['src_id']          = src_id
 
-        print payload
+        print(payload)
 
         # publish the cmd message
         self.mqttclient.publish(

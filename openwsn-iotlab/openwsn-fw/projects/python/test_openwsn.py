@@ -27,19 +27,19 @@ def notifId(s):
 import oos_openwsn
 
 def default_callback(id):
-   print "P: {0}() (callback {1})".format(notifString[id],id)
+   print("P: {0}() (callback {1})".format(notifString[id],id))
    raw_input("press Enter for next")
 
 def eui64_get():
-   print "P: eui64_get()"
+   print("P: eui64_get()")
    return range(8)
 
 def sctimer_setCompare(delay):
-   print "P: sctimer_setCompare({0})".format(delay)
+   print("P: sctimer_setCompare({0})".format(delay))
    
 # create instance
 mote = oos_openwsn.OpenMote()
-print str(mote)
+print(str(mote))
 
 # install default callback
 for i in range(len(notifString)-1):

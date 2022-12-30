@@ -100,7 +100,7 @@ class ReadThread(eventBusClient.eventBusClient):
                 # IPv6 echo request
                 
                 # print
-                print 'Received IPv6 echo request'
+                print('Received IPv6 echo request')
                 
                 # create echo reply
                 echoReply = self._createIpv6EchoReply(p)
@@ -112,12 +112,12 @@ class ReadThread(eventBusClient.eventBusClient):
                 )
                 
                 # print
-                print 'Transmitted IPv6 echo reply'
+                print('Transmitted IPv6 echo reply')
             
             elif p[40]==0x81:
                 
                 # print
-                print 'Received IPv6 echo reply'
+                print('Received IPv6 echo reply')
     
     def _createIpv6EchoReply(self,echoRequest):
         
@@ -190,7 +190,7 @@ class WriteThread(threading.Thread):
                 )
         except Exception as err:
             errMsg=u.formatCrashMessage(self.name,err)
-            print errMsg
+            print(errMsg)
             log.critical(errMsg)
             sys.exit(1)
         

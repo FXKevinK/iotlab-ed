@@ -154,7 +154,7 @@ class OpenFrameLbr(OpenFrame.OpenFrame):
 if __name__=='__main__':
 
     def _indicateConnectParams(connectParams):
-        print "_indicateConnectParams connectParams={0}".format(connectParams)
+        print("_indicateConnectParams connectParams={0}".format(connectParams))
 
     import OpenWindow
     

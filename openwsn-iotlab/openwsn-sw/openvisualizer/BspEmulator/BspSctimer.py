@@ -118,7 +118,7 @@ class BspSctimer(BspModule.BspModule):
         
         except Exception as err:
             errMsg=u.formatCriticalMessage(err)
-            print errMsg
+            print(errMsg)
             self.log.critical(errMsg)
     
     def cmd_readCounter(self):
@@ -221,7 +221,7 @@ class BspSctimer(BspModule.BspModule):
             desc=self.INTR_OVERFLOW,
         )
         
-        print "cycle cycle\n"
+        print("cycle cycle\n")
 
         # do NOT kick the scheduler
         return False

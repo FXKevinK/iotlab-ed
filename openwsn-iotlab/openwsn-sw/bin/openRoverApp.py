@@ -81,11 +81,11 @@ if __name__=="__main__":
     banner += ['OpenRover']
     banner += ['enter \'q\' to exit']
     banner  = '\n'.join(banner)
-    print banner
+    print(banner)
     while True:
         input = raw_input('> ')
         if input=='q':
-            print 'bye bye.'
+            print('bye bye.')
             app.close()
             os.kill(os.getpid(), signal.SIGTERM)
 

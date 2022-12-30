@@ -136,7 +136,7 @@ class eventBusClient(object):
         except TypeError as err:
             output = "ERROR could not call {0}, err={1}".format(callback,err)
             log.critical(output)
-            print output
+            print(output)
     
     def _signalsEquivalent(self,s1,s2):
         returnVal = True

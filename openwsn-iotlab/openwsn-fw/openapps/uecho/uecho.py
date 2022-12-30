@@ -21,15 +21,15 @@ def pretty_print(lst):
     return pld_str
 
 
-print "\n  UDP Echo Application"
-print "------------------------\n"
+print("\n  UDP Echo Application")
+print("------------------------\n")
 
 num_tries = raw_input("> Number of echoes [10]? ")
 pld_size = raw_input("> Payload size [50]? ")
 address = raw_input("> Destination address [bbbb::1415:92cc:0:2]? ")
 timeout = raw_input("> Set timeout value [10]? ")
 
-print '\n Starting ...\n'
+print('\n Starting ...\n')
 
 if num_tries == '':
     num_tries = 10
@@ -69,7 +69,7 @@ for i in range(num_tries):
     output += ['  - Address    [{0}]:{1} --> [{2}]:{3}'.format(myAddress, myPort, hisAddress, hisPort)]
     output += ['  - Payload    {0} ({1} bytes)'.format(pretty_print(request), len(request))]
     output = '\n'.join(output)
-    print output
+    print(output)
 
     # open socket
     socket_handler = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)

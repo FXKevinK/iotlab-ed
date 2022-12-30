@@ -24,7 +24,7 @@ class CommandInterface(object):
         
     def mdebug(self, message):
         if self.debugging:
-            print >> sys.stderr , message
+            print(sys.stderr, message)
     
     def quiet(self):
         self.debugging = False
@@ -200,7 +200,7 @@ class CommandInterface(object):
             self.sp.write(chr(0x00))
             tmp = self.sp.timeout
             self.sp.timeout = 30
-            print "Extended erase (0x44), this can take ten seconds or more"
+            print("Extended erase (0x44), this can take ten seconds or more")
             self._wait_for_ask("0x44 erasing failed")
             self.sp.timeout = tmp
             self.mdebug( "    Extended Erase memory done")

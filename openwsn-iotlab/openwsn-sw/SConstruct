@@ -20,7 +20,7 @@ banner += ["`___'|  _/\___.|_|_||__/_/ <___/|_\_|"]
 banner += ["     |_|                  openwsn.org"]
 banner += [""]
 
-print '\n'.join(banner)
+print('\n'.join(banner))
 
 #============================ SCons environment ===============================
 
@@ -114,7 +114,7 @@ env['ROOT_BUILD_DIR'] = os.path.join(os.getcwd(), 'build')
 env['FW_DIR']         = os.path.join('..', 'openwsn-fw')
 
 def default(env,target,source): 
-    print SCons.Script.help_text
+    print(SCons.Script.help_text)
     
 Default(env.Command('default', None, default))
 
@@ -284,7 +284,7 @@ def makeTreeSdist(env, target):
         # Must first run sdist before upload
         cmdlist.append(' '.join(sdistLines + ['upload']))
     else:
-        print 'Target "{0}" not supported'.format(target)
+        print('Target "{0}" not supported'.format(target))
                                 
     cmdlist.append(Delete(datadir))
     cmdlist.append(Delete('openVisualizer.egg-info'))

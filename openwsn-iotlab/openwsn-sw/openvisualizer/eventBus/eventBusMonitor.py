@@ -113,7 +113,7 @@ class eventBusMonitor(object):
                         output += ['- frequency: {0}'.format(frequency)]
                         output  = '\n'.join(output)
                         log.debug(output)
-                        print output # poipoi
+                        print(output) # poipoi
                     
                     assert len(frame)>=1+2 # 1 for length byte, 2 for CRC
                     

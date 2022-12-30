@@ -123,13 +123,13 @@ class OpentestbedMoteFinder (object):
         # close the client and return the motes list
         mqtt_client.loop_stop()
         
-        print "{0} motes are found".format(len(self.opentestbed_motelist))
+        print("{0} motes are found".format(len(self.opentestbed_motelist)))
         
         return self.opentestbed_motelist
 
     def _on_mqtt_connect(self, client, userdata, flags, rc):
         
-        print "connected to : {0}".format(self.mqtt_broker_address)
+        print("connected to : {0}".format(self.mqtt_broker_address))
         
         client.subscribe('opentestbed/deviceType/box/deviceId/+/resp/status')
         
@@ -310,7 +310,7 @@ class moteProbe(threading.Thread):
                         else:
                             raise SystemError()
                     except Exception as err:
-                        print err
+                        print(err)
                         log.warning(err)
                         time.sleep(1)
                         break
@@ -362,7 +362,7 @@ class moteProbe(threading.Thread):
                         self.serial.doneReading()
         except Exception as err:
             errMsg=u.formatCrashMessage(self.name,err)
-            print errMsg
+            print(errMsg)
             log.critical(errMsg)
             sys.exit(-1)
         finally:
@@ -428,9 +428,9 @@ class moteProbe(threading.Thread):
         try:
             serialbytes = json.loads(message.payload)['serialbytes']
         except:
-            print "Error: failed to parse message payload {0}".format(message.payload)
+            print("Error: failed to parse message payload {0}".format(message.payload))
         else:
             try:
                 self.serialbytes_queue.put(json.loads(message.payload)['serialbytes'], block = False)
             except:
-                print "queue overflow"
+                print("queue overflow")

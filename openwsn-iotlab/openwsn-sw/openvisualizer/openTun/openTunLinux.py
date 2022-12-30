@@ -96,7 +96,7 @@ class TunReadThread(threading.Thread):
                 self.callback(p)
         except Exception as err:
             errMsg=u.formatCrashMessage(self.name,err)
-            print errMsg
+            print(errMsg)
             log.critical(errMsg)
             sys.exit(1)
             
@@ -150,7 +150,7 @@ class OpenTunLinux(openTun.OpenTun):
                 log.debug("data dispatched to tun correctly {0}, {1}".format(signal,sender))
         except Exception as err:
             errMsg=u.formatCriticalMessage(err)
-            print errMsg
+            print(errMsg)
             log.critical(errMsg)
      
     def _createTunIf(self):
@@ -199,7 +199,7 @@ class OpenTunLinux(openTun.OpenTun):
         
         except IOError as err:
             # happens when not root
-            print 'WARNING: could not created tun interface. Are you root? ({0})'.format(err)
+            print('WARNING: could not created tun interface. Are you root? ({0})'.format(err))
             returnVal = None
         
         return returnVal

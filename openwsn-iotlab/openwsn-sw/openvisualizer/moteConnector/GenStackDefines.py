@@ -43,7 +43,7 @@ def genComponentCodes():
             try:
                 code = int(m.group(2),16)
             except ValueError:
-                print "WARNING: {0} is not a hex number".format(m.group(2))
+                print("WARNING: {0} is not a hex number".format(m.group(2)))
             else:
                 codesFound.append((code,name))
     
@@ -67,7 +67,7 @@ def genErrorDescriptions():
             try:
                 code = int(m.group(2),16)
             except ValueError:
-                print "WARNING: {0} is not a hex number".format(m.group(2))
+                print("WARNING: {0} is not a hex number".format(m.group(2)))
             else:
                 codesFound.append((code,desc))
     
@@ -91,7 +91,7 @@ def genSixtopReturnCodes():
             try:
                 code = int(m.group(2),16)
             except ValueError:
-                print "WARNING: {0} is not a hex number".format(m.group(2))
+                print("WARNING: {0} is not a hex number".format(m.group(2)))
             else:
                 codesFound.append((code,name))
     
@@ -114,7 +114,7 @@ def genSixtopStateMachine():
             try:
                 code = int(m.group(2),16)
             except ValueError:
-                print "WARNING: {0} is not a hex number".format(m.group(2))
+                print("WARNING: {0} is not a hex number".format(m.group(2)))
             else:
                 codesFound.append((code,name))
     
@@ -155,7 +155,7 @@ def main():
         file.write(output)
         file.close
         
-        print "{0} created successfully.".format(OUTPUT_FILE)
+        print("{0} created successfully.".format(OUTPUT_FILE))
         
     else:
         # we can NOT access the openwsn.h file
@@ -168,7 +168,7 @@ def main():
         output += ["Do you have the openwsn-fw and openwsn-sw repositories"]
         output += ["checked out side-by-side?"]
         output  = '\n'.join(output)
-        print output
+        print(output)
         
     raw_input('\nScript ended. Press enter to close.')
 
