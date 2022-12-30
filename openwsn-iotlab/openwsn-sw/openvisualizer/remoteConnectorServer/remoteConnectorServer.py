@@ -6,7 +6,11 @@
 import logging
 import threading
 import json
-from Queue import Queue
+
+try: 
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 
 import zmq
 from pydispatch import dispatcher

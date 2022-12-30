@@ -11,7 +11,10 @@ log.addHandler(logging.NullHandler())
 import threading
 import zmq
 import time
-import Queue
+try: 
+    import Queue
+except ImportError:
+    import queue as Queue
 
 from pydispatch import dispatcher
 

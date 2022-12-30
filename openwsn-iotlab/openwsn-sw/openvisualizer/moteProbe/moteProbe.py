@@ -23,7 +23,10 @@ import sys
 
 import paho.mqtt.client as mqtt
 import json
-import Queue
+try: 
+    import Queue
+except ImportError:
+    import queue as Queue
 
 from   pydispatch import dispatcher
 import OpenHdlc
