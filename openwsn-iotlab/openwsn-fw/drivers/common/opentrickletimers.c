@@ -542,6 +542,10 @@ void opentrickletimers_i_callback(opentimers_id_t id)
     opentrickletimers_calculate_epsilon();
 #endif
 
+    LOG_INFO(COMPONENT_OPENTRICKLETIMERS, ERR_DEBUG_1, 81, opentrickletimers_vars.is_dio_sent);
+    LOG_INFO(COMPONENT_OPENTRICKLETIMERS, ERR_DEBUG_1, 82, opentrickletimers_vars.DIOtransmit);
+    LOG_INFO(COMPONENT_OPENTRICKLETIMERS, ERR_DEBUG_1, 83, opentrickletimers_vars.DIOsurpress);
+
     icmpv6rpl_setdioSent(FALSE);
     opentrickletimers_vars.is_dio_sent = FALSE;
 

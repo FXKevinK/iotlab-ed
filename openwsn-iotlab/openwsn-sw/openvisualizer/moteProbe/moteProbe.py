@@ -68,8 +68,7 @@ def findSerialPorts(isIotMotes=False):
         if platform.system() == 'Darwin':
             portMask = ['/dev/tty.usbserial-*']
         else:
-            # portMask = ['/dev/ttyUSB*']
-            portMask = ['/dev/ttyUSB*', '/dev/ttyAMA*']
+            portMask = ['/dev/ttyUSB*']
         for mask in portMask :
             serialports += [(s,BAUDRATE_IOTLAB) for s in glob.glob(mask)]
 

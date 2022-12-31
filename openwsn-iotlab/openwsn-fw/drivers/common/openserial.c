@@ -394,6 +394,10 @@ void task_openserial_debugPrint(void) {
             if (debugPrint_joined() == TRUE) {
                 break;
             }
+        case STATUS_MSF:
+            if (debugPrint_msf() == TRUE) {
+                break;
+            }
         default:
             debugPrintCounter = 0;
     }
@@ -581,7 +585,6 @@ owerror_t internal_openserial_print(
     outputHdlcWrite((uint8_t)((arg2 & 0x00ff0000) >> 16));
     outputHdlcWrite((uint8_t)((arg2 & 0x0000ff00) >> 8));
     outputHdlcWrite((uint8_t)(arg2 & 0x000000ff));
-    
     outputHdlcClose();
 
     // start TX'ing

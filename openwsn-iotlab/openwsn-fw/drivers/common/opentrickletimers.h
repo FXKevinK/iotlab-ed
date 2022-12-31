@@ -21,8 +21,8 @@
 
 //=========================== define ==========================================
 
-#define use_qtrickle TRUE
-#define adaptive_epsilon TRUE
+#define use_qtrickle FALSE
+#define adaptive_epsilon FALSE
 
 // DIO trickle timer parameters
 #define DEFAULT_DIO_INTERVAL_MIN_SMALL 14

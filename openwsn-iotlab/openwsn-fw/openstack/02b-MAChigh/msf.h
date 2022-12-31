@@ -103,6 +103,7 @@ bool msf_getHashCollisionFlag(void);
 
 uint8_t msf_getPreviousNumCellsUsed(cellType_t cellType);
 
+bool debugPrint_msf(void);
 /**
 \}
 \}
