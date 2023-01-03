@@ -25,6 +25,7 @@
 #include "sixtop_obj.h"
 #include "msf_obj.h"
 #include "schedule_obj.h"
+#include "icmpv6periodic_obj.h"
 #include "icmpv6echo_obj.h"
 #include "icmpv6rpl_obj.h"
 #include "coap_obj.h"
@@ -203,6 +204,7 @@ struct OpenMote {
     radio_icb_t radio_icb;
     //===== openstack
     // l4
+    icmpv6periodic_vars_t icmpv6periodic_vars;
     icmpv6echo_vars_t icmpv6echo_vars;
     icmpv6rpl_vars_t icmpv6rpl_vars;
     // l3

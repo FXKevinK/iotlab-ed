@@ -2,6 +2,7 @@
 
 #include "opendefs.h"
 #include "icmpv6.h"
+#include "icmpv6periodic.h"
 #include "icmpv6echo.h"
 #include "icmpv6rpl.h"
 #include "forwarding.h"
@@ -32,14 +33,19 @@ void icmpv6_sendDone(OpenQueueEntry_t *msg, owerror_t error) {
             icmpv6echo_sendDone(msg, error);
             break;
 #endif
+#if OPENWSN_ICMPV6PERIODIC_C
+        case IANA_ICMPv6_PERIODIC:
+            icmpv6periodic_sendDone(msg, error);
+            break;
+#endif
         case IANA_ICMPv6_RPL:
             icmpv6rpl_sendDone(msg, error);
             break;
         default:
             // free the corresponding packet buffer
-            LOG_CRITICAL(COMPONENT_ICMPv6, ERR_UNSUPPORTED_ICMPV6_TYPE,
-                         (errorparameter_t) msg->l4_sourcePortORicmpv6Type,
-                         (errorparameter_t) 0);
+            // LOG_ERROR(COMPONENT_ICMPv6, ERR_UNSUPPORTED_ICMPV6_TYPE,
+            //              (errorparameter_t) msg->l4_sourcePortORicmpv6Type,
+            //              (errorparameter_t) 0);
             openqueue_freePacketBuffer(msg);
             break;
     }

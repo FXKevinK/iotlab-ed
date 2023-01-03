@@ -16,12 +16,12 @@ Module which coordinates rpl DIO and DAO messages.
 import logging
 import os
 import threading
-
+import struct
 from appdirs import user_data_dir
-
+from datetime import datetime
 from openvisualizer.eventbus import eventbusclient
 from openvisualizer.rpl import sourceroute
-from openvisualizer.utils import format_addr, format_buf, format_ipv6_addr
+from openvisualizer.utils import format_addr, format_buf, format_ipv6_addr, get_log_path, create_log_file, write_to_log
 
 log = logging.getLogger('RPL')
 log.setLevel(logging.ERROR)
@@ -32,24 +32,26 @@ class RPL(eventbusclient.EventBusClient):
     _TARGET_INFORMATION_TYPE = 0x05
     _TRANSIT_INFORMATION_TYPE = 0x06
 
-    # Period between successive DIOs, in seconds.
-    DIO_PERIOD = 10
+    # # Period between successive DIOs, in seconds.
+    # DIO_PERIOD = 10
 
-    ALL_RPL_NODES_MULTICAST = [0xff, 0x02] + [0x00] * 13 + [0x1a]
+    # ALL_RPL_NODES_MULTICAST = [0xff, 0x02] + [0x00] * 13 + [0x1a]
 
     # http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml
     IANA_ICMPv6_RPL_TYPE = 155
 
-    # rpl DIO (RFC6550)
-    DIO_OPT_GROUNDED = 1 << 7  # Grounded
-    # Non-Storing Mode of Operation (1)
-    MOP_DIO_A = 0 << 5
-    MOP_DIO_B = 0 << 4
-    MOP_DIO_C = 1 << 3
-    # most preferred (7) as I am DAGRoot
-    PRF_DIO_A = 1 << 2
-    PRF_DIO_B = 1 << 1
-    PRF_DIO_C = 1 << 0
+    APP_PERIODIC_TYPE = 160
+
+    # # rpl DIO (RFC6550)
+    # DIO_OPT_GROUNDED = 1 << 7  # Grounded
+    # # Non-Storing Mode of Operation (1)
+    # MOP_DIO_A = 0 << 5
+    # MOP_DIO_B = 0 << 4
+    # MOP_DIO_C = 1 << 3
+    # # most preferred (7) as I am DAGRoot
+    # PRF_DIO_A = 1 << 2
+    # PRF_DIO_B = 1 << 1
+    # PRF_DIO_C = 1 << 0
 
     def __init__(self):
 
@@ -87,6 +89,10 @@ class RPL(eventbusclient.EventBusClient):
         self.source_route = sourceroute.SourceRoute()
         self.latency_stats = {}
         self.parents_dao_seq = {}
+
+        self.filepath = get_log_path()
+        create_log_file(self.filepath)
+        log.info(self.filepath)
 
     # ======================== public ==========================================
 
@@ -133,6 +139,18 @@ class RPL(eventbusclient.EventBusClient):
                 callback=self._from_mote_data_local_notif,
             )
 
+            # ===== APP PERIODIC ===== #
+            # register APP PERIODIC
+            self.register(
+                sender=self.WILDCARD,
+                signal=(
+                    tuple(self.network_prefix + new_dagroot_eui64),
+                    self.PROTO_ICMPv6,
+                    self.APP_PERIODIC_TYPE,
+                ),
+                callback=self._icmpv6periodic_notif,
+            )
+
             # announce new DAG root
             self.dispatch(
                 signal='registerDagRoot',
@@ -159,6 +177,18 @@ class RPL(eventbusclient.EventBusClient):
                 callback=self._from_mote_data_local_notif,
             )
 
+            # ===== APP PERIODIC ===== #
+            # register APP PERIODIC
+            self.unregister(
+                sender=self.WILDCARD,
+                signal=(
+                    tuple(self.network_prefix + new_dagroot_eui64),
+                    self.PROTO_ICMPv6,
+                    self.APP_PERIODIC_TYPE,
+                ),
+                callback=self._icmpv6periodic_notif,
+            )
+
             # announce that node is no longer DAG root
             self.dispatch(
                 signal='unregisterDagRoot',
@@ -173,6 +203,10 @@ class RPL(eventbusclient.EventBusClient):
         """ Called when receiving fromMote.data.local, probably a DAO. """
         # indicate data to topology
         self._indicate_dao(data)
+        return True
+
+    def _icmpv6periodic_notif(self,sender,signal,data):   
+        self._indicatePeriodic(data)
         return True
 
     def _get_source_route_notif(self, sender, signal, data):
@@ -264,7 +298,7 @@ class RPL(eventbusclient.EventBusClient):
         for p in children:
             output += ['   {0}:{1}'.format(format_ipv6_addr(self.network_prefix), format_ipv6_addr(p))]
         output = '\n\t'.join(output)
-        log.info(output)
+        # log.info(output)
 
         node = format_ipv6_addr(source)
         if not (node in self.parents_dao_seq.keys()):
@@ -272,11 +306,11 @@ class RPL(eventbusclient.EventBusClient):
         else:
             self.parents_dao_seq[node].append(dao_header['RPL_DAO_Sequence'])
 
-        try:
-            with open(os.path.join(user_data_dir('openvisualizer'), 'dao_sequence.txt'), 'a') as f:
-                f.write(str(self.parents_dao_seq) + '\n')
-        except IOError as err:
-            log.error("Permission error: {}".format(err))
+        # try:
+        #     with open(os.path.join(user_data_dir('openvisualizer'), 'dao_sequence.txt'), 'a') as f:
+        #         f.write(str(self.parents_dao_seq) + '\n')
+        # except IOError as err:
+        #     log.error("Permission error: {}".format(err))
 
         # if you get here, the DAO was parsed correctly
 
@@ -285,3 +319,42 @@ class RPL(eventbusclient.EventBusClient):
 
         # with self.data_lock:
         #    self.parents.update({tuple(source):parents})
+
+    def ntohs(self, src):
+        val = (src[0] << 8) | src[1]
+        return val
+
+    def _indicatePeriodic(self,tup):
+
+        pkt = []
+        # retrieve source and destination
+        try:
+            source = tup[0]
+            if len(source) > 8:
+                source = source[len(source) - 8:]
+            pkt = tup[1]
+        except IndexError:
+            log.warning("packet too short ({0} bytes), no space for destination and source".format(len(pkt)))
+            return
+
+        # retrieve pkt header
+        pkt_header = {}
+        pkt_header["state"] = "receive"
+        pkt_header["source"] = format_addr(source)
+
+        header = pkt[-8:]
+        try:
+            val = struct.unpack('<HHI', ''.join([chr(c) for c in header]))
+        except BaseException as e:
+            log.info("Error parse {}".format(e))
+            return
+
+        # packet header
+        pkt_header['counter'] = val[0]
+        pkt_header['mote_id'] = val[1]
+        pkt_header['mote_duration'] = val[2]
+        pkt_header["time"] = datetime.now().strftime("%H:%M:%S.%f")
+
+        # # log
+        # log.info(pkt_header)
+        write_to_log(self.filepath, pkt_header)

@@ -15,6 +15,7 @@
 #include "neighbors.h"
 #include "sixtop.h"
 #include "icmpv6echo.h"
+#include "icmpv6periodic.h"
 #include "idmanager.h"
 #include "openqueue.h"
 #include "openbridge.h"
@@ -25,7 +26,6 @@
 #include "openhdlc.h"
 #include "schedule.h"
 #include "icmpv6rpl.h"
-#include "icmpv6echo.h"
 #include "msf.h"
 #include "debugpins.h"
 
@@ -585,6 +585,31 @@ owerror_t internal_openserial_print(
     outputHdlcWrite((uint8_t)((arg2 & 0x00ff0000) >> 16));
     outputHdlcWrite((uint8_t)((arg2 & 0x0000ff00) >> 8));
     outputHdlcWrite((uint8_t)(arg2 & 0x000000ff));
+    outputHdlcClose();
+
+    // start TX'ing
+    openserial_flush();
+
+    return E_SUCCESS;
+}
+
+owerror_t openserial_print_exp(
+        uint8_t calling_component,
+        uint8_t error_code,
+        uint8_t *buffer,
+        uint8_t length
+) {
+    uint16_t i;
+
+    outputHdlcOpen();
+    outputHdlcWrite(SERFRAME_MOTE2PC_INFO);
+    outputHdlcWrite(idmanager_getMyID(ADDR_16B)->addr_16b[0]);
+    outputHdlcWrite(idmanager_getMyID(ADDR_16B)->addr_16b[1]);
+    outputHdlcWrite(calling_component);
+    outputHdlcWrite(error_code);
+    for (i = 0; i < length; i++) {
+        outputHdlcWrite(buffer[i]);
+    }
     outputHdlcClose();
 
     // start TX'ing

@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "cexample.h": "c",
+        "uecho.h": "c",
+        "openqueue.h": "c",
+        "packetfunctions.h": "c",
+        "config.h": "c",
+        "opentrickletimers.h": "c",
+        "openserial.h": "c",
+        "ieee802154_security.h": "c",
+        "icmpv6periodic.h": "c",
+        "compare": "c",
+        "check_config.h": "c",
+        "idmanager.h": "c",
+        "board.h": "c"
+    }
+}

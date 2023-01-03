@@ -4,9 +4,12 @@
 # Released under the BSD 3-Clause license as published at the link below.
 # https://openwsn.atlassian.net/wiki/display/OW/License
 
+from appdirs import user_data_dir
 import logging
 import struct
-
+import os
+from datetime import datetime
+from openvisualizer.utils import get_log_path, write_to_log
 import verboselogs
 from enum import IntEnum
 
@@ -22,6 +25,7 @@ log.addHandler(logging.NullHandler())
 
 class ParserLogs(Parser):
     HEADER_LENGTH = 1
+    def_len = 2+1+1+4+4
 
     class LogSeverity(IntEnum):
         SEVERITY_VERBOSE = ord('V')
@@ -47,19 +51,34 @@ class ParserLogs(Parser):
         # store error info
         self.error_info = {}
 
+        self.filepath = get_log_path()
+
     # ======================== public ==========================================
+
+    def update_test(self, byte0_1, byte2_3, byte4):
+        asn = [
+            byte4,
+            byte2_3 >> 8,
+            byte2_3 % 256,
+            byte0_1 >> 8,
+            byte0_1 % 256,
+        ]
+        st = '0x{0}'.format(''.join(["%.2x" % b for b in asn]))
+        return asn, st
 
     def parse_input(self, data):
 
-        # log
-        log.debug("received data {0}".format(data))
+        # # log
+        # log.debug("received data {0}".format(data))
 
         # parse packet
+        data_arg = data[:self.def_len]
+        data_only = data[self.def_len-(4*2):]
         try:
-            mote_id, component, error_code, arg1, arg2 = struct.unpack('>HBBiI', ''.join([chr(c) for c in data]))
+            mote_id, component, error_code, arg1, arg2 = struct.unpack('>HBBiI', ''.join([chr(c) for c in data_arg]))
         except struct.error:
             raise ParserException(ParserException.ExceptionType.DESERIALIZE.value,
-                                  "could not extract data from {0}".format(data))
+                                  "could not extract data from {0}".format(data_arg))
 
         if (component, error_code) in self.error_info.keys():
             self.error_info[(component, error_code)] += 1
@@ -71,11 +90,84 @@ class ParserLogs(Parser):
             arg1 = self.stack_defines["sixtop_returncodes"][arg1]
             arg2 = self.stack_defines["sixtop_states"][arg2]
 
+        component_name = self._translate_component(component)
+        log_desc = self._translate_log_description(error_code, arg1, arg2)
+
+        exp_log = False
+        pkt_ = {}
+        co_name_low = component_name.lower()
+        desc_low = log_desc.lower()
+
+        if "periodic" in co_name_low and "periodic" in desc_low:
+            exp_log = True
+            pkt_["0_state"] = "send"
+            pkt_["counter"] = arg1
+            pkt_["is_failed"] = arg2
+            pkt_["mote_id"] = mote_id
+            pkt_["time"] = datetime.now().strftime("%H:%M:%S.%f")
+        elif "rpl" in co_name_low and "experiment" in desc_low:
+            exp_log = True
+            asn = None
+
+            try:
+                (prId2B, myDAGrank, slotDuration) = struct.unpack('<HHB', ''.join([chr(c) for c in data_only[:-5]]))
+            except struct.error:
+                log.info("Invalid debug RPL-1 {0}".format(data_only))
+
+            try:
+                (asn_4, asn_2_3, asn_0_1) = struct.unpack('<BHH', ''.join([chr(c) for c in data_only[-5:]]))
+                bytes, hex = self.update_test(byte0_1=asn_0_1, byte2_3=asn_2_3, byte4=asn_4)
+                asn = int(hex, 16)
+            except struct.error:
+                log.info("Invalid debug RPL-2 {0}".format(data_only))
+
+            if asn:
+                pkt_["0_state"] = "join"
+                pkt_["asn"] = asn
+                pkt_["parent_id"] = prId2B
+                pkt_["slot_duration"] = slotDuration
+                pkt_["mote_rank"] = myDAGrank
+                pkt_["mote_id"] = mote_id
+                pkt_["time"] = datetime.now().strftime("%H:%M:%S.%f")
+
+        elif "trickle" in co_name_low and "experiment" in desc_low:
+            exp_log = True
+            values = None
+            try:
+                values = struct.unpack('<BBBBHHHHHHHHH', ''.join([chr(c) for c in data_only]))
+            except struct.error:
+                log.info("could not extract data from {0}".format(data_only))
+
+            if values:
+                values = list(values)
+                if len(values) == 13:
+                    pkt_["m"] = values[0]
+                    pkt_["Nnbr"] = values[1]
+                    pkt_["k"] = values[2]
+                    pkt_["counter"] = values[3]
+                    pkt_["Nstates"] = values[4]
+                    pkt_["Nreset"] = values[5]
+                    pkt_["DIOtransmit"] = values[6]
+                    pkt_["DIOsurpress"] = values[7]
+                    pkt_["DIOtransmit_collision"] = values[8]
+                    pkt_["pfree"] = float(values[9])/10000
+                    pkt_["preset"] = float(values[10])/10000
+                    pkt_["t_pos"] = float(values[11])/10000
+                    pkt_["epsilon"] = float(values[12])/10000
+
+                    pkt_["0_state"] = "trickle"
+                    pkt_["mote_id"] = mote_id
+                    pkt_["time"] = datetime.now().strftime("%H:%M:%S.%f")
+
+        if exp_log:
+            if pkt_: write_to_log(self.filepath, pkt_)
+            return 'error', data
+
         # turn into string
         output = "{MOTEID:x} [{COMPONENT}] {ERROR_DESC}".format(
-            COMPONENT=self._translate_component(component),
+            COMPONENT=component_name,
             MOTEID=mote_id,
-            ERROR_DESC=self._translate_log_description(error_code, arg1, arg2),
+            ERROR_DESC=log_desc,
         )
 
         # log

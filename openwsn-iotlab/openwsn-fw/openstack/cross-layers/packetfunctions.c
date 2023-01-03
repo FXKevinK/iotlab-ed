@@ -700,4 +700,15 @@ void packetfunctions_reverseArrayByteOrder(uint8_t *start, uint8_t len) {
     }
 }
 
+uint32_t packetfunctions_mathCeil(float num)
+{
+    uint32_t inum = (uint32_t)num;
+    if (num == (float)inum)
+    {
+        return inum;
+    }
+    return inum + 1;
+}
+
+
 //=========================== private =========================================

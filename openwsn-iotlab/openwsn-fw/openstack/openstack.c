@@ -32,6 +32,7 @@
 #include "forwarding.h"
 #include "icmpv6.h"
 #include "icmpv6echo.h"
+#include "icmpv6periodic.h"
 #include "icmpv6rpl.h"
 //-- 04-TRAN
 #include "sock.h"
@@ -87,8 +88,12 @@ void openstack_init(void) {
     forwarding_init();
     icmpv6_init();
 
-#if OPENWSN_ICMPV6_ECHO_C
+#if OPENWSN_ICMPV6ECHO_C
     icmpv6echo_init();
+#endif
+
+#if OPENWSN_ICMPV6PERIODIC_C
+    icmpv6periodic_init();
 #endif
 
     icmpv6rpl_init();

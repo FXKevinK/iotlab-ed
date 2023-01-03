@@ -1586,21 +1586,21 @@ void sixtop_six2six_notifyReceive(
             sixtop_vars.cb_sf_handleRCError(code, &(pkt->l2_nextORpreviousHop));
         }
 
-        if (code == IANA_6TOP_RC_SUCCESS) {
-            LOG_SUCCESS(COMPONENT_SIXTOP, ERR_SIXTOP_RETURNCODE,
-                        (errorparameter_t)
-            code,
-                    (errorparameter_t)
-            sixtop_vars.six2six_state);
-        } else if (code == IANA_6TOP_RC_EOL || code == IANA_6TOP_RC_BUSY || code == IANA_6TOP_RC_LOCKED) {
-            LOG_INFO(COMPONENT_SIXTOP, ERR_SIXTOP_RETURNCODE,
-                    (errorparameter_t) code,
-                    (errorparameter_t) sixtop_vars.six2six_state);
-        } else {
-            LOG_ERROR(COMPONENT_SIXTOP, ERR_SIXTOP_RETURNCODE,
-                    (errorparameter_t) code,
-                    (errorparameter_t) sixtop_vars.six2six_state);
-        }
+        // if (code == IANA_6TOP_RC_SUCCESS) {
+        //     LOG_SUCCESS(COMPONENT_SIXTOP, ERR_SIXTOP_RETURNCODE,
+        //                 (errorparameter_t)
+        //     code,
+        //             (errorparameter_t)
+        //     sixtop_vars.six2six_state);
+        // } else if (code == IANA_6TOP_RC_EOL || code == IANA_6TOP_RC_BUSY || code == IANA_6TOP_RC_LOCKED) {
+        //     LOG_INFO(COMPONENT_SIXTOP, ERR_SIXTOP_RETURNCODE,
+        //             (errorparameter_t) code,
+        //             (errorparameter_t) sixtop_vars.six2six_state);
+        // } else {
+        //     LOG_ERROR(COMPONENT_SIXTOP, ERR_SIXTOP_RETURNCODE,
+        //             (errorparameter_t) code,
+        //             (errorparameter_t) sixtop_vars.six2six_state);
+        // }
 
         memset(&sixtop_vars.neighborToClearCells, 0, sizeof(open_addr_t));
         sixtop_vars.six2six_state = SIX_STATE_IDLE;

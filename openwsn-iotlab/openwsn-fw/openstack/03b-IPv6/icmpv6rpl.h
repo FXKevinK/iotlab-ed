@@ -8,6 +8,7 @@
 \{
 */
 
+#include "opendefs.h"
 #include "opentimers.h"
 
 //=========================== define ==========================================
@@ -252,6 +253,15 @@ typedef struct {
    bool                      dioSent;
 } icmpv6rpl_vars_t;
 
+
+BEGIN_PACK
+typedef struct {
+   uint16_t prId2B;
+   uint16_t myDAGrank;
+   uint8_t slotDuration;
+   asn_t asn;
+} icmpv6rpl_debug_t;
+END_PACK
 
 
 //=========================== prototypes ======================================

@@ -18,12 +18,14 @@
 #include "icmpv6rpl.h"
 #include "idmanager.h"
 #include "neighbors.h"
+#include "packetfunctions.h"
 
 //=========================== define ==========================================
 
 //=========================== variables =======================================
 
 opentrickletimers_vars_t opentrickletimers_vars;
+opentrickletimers_debug_t opentrickletimers_debug;
 
 //=========================== prototypes ======================================
 
@@ -37,7 +39,7 @@ void opentrickletimers_start_next_interval(void);
 void opentrickletimers_calculate_k(void);
 void opentrickletimers_update_qtable(void);
 void opentrickletimers_calculate_epsilon(void);
-uint16_t math_ceil(float num);
+void opentrickletimers_log_result(void);
 
 //=========================== public ==========================================
 
@@ -49,16 +51,6 @@ opentrickletimers_vars 초기화
 void opentrickletimers_init(void)
 {
     memset(&opentrickletimers_vars, 0, sizeof(opentrickletimers_vars_t));
-}
-
-uint16_t math_ceil(float num)
-{
-    uint16_t inum = (uint16_t)num;
-    if (num == (float)inum)
-    {
-        return inum;
-    }
-    return inum + 1;
 }
 
 /**
@@ -182,6 +174,8 @@ void opentrickletimers_schedule_event_at_t_and_i(void)
     uint32_t t_range;
     uint32_t rand_num;
     uint32_t half_interval;
+    uint8_t slot_time_ms;
+    uint16_t frameLength;
 
     INTERRUPT_DECLARATION();
 
@@ -218,10 +212,13 @@ void opentrickletimers_schedule_event_at_t_and_i(void)
     opentrickletimers_vars.t_pos = (float)opentrickletimers_vars.T / opentrickletimers_vars.I;
 
     t_range = opentrickletimers_vars.t_max - opentrickletimers_vars.t_min;
-    l_e = SLOTFRAME_LENGTH * SLOTDURATION;
+
+    slot_time_ms = (ieee154e_getSlotDuration() * 305) / 10000;
+    frameLength = schedule_getFrameLength();
+    l_e = frameLength * slot_time_ms;
 
     opentrickletimers_vars.Ncells = ((float)t_range / (float)l_e);
-    opentrickletimers_vars.Ncells = math_ceil(opentrickletimers_vars.Ncells);
+    opentrickletimers_vars.Ncells = packetfunctions_mathCeil(opentrickletimers_vars.Ncells);
     if (opentrickletimers_vars.Ncells < 1)
     {
         opentrickletimers_vars.Ncells = 1;
@@ -542,9 +539,7 @@ void opentrickletimers_i_callback(opentimers_id_t id)
     opentrickletimers_calculate_epsilon();
 #endif
 
-    LOG_INFO(COMPONENT_OPENTRICKLETIMERS, ERR_DEBUG_1, 81, opentrickletimers_vars.is_dio_sent);
-    LOG_INFO(COMPONENT_OPENTRICKLETIMERS, ERR_DEBUG_1, 82, opentrickletimers_vars.DIOtransmit);
-    LOG_INFO(COMPONENT_OPENTRICKLETIMERS, ERR_DEBUG_1, 83, opentrickletimers_vars.DIOsurpress);
+    opentrickletimers_log_result();
 
     icmpv6rpl_setdioSent(FALSE);
     opentrickletimers_vars.is_dio_sent = FALSE;
@@ -561,6 +556,32 @@ void opentrickletimers_i_callback(opentimers_id_t id)
     opentrickletimers_start_next_interval();
 
     ENABLE_INTERRUPTS();
+}
+
+void opentrickletimers_log_result(void)
+{
+
+    if (idmanager_getIsDAGroot() == TRUE)
+    {
+        return;
+    }
+    
+    bool result;
+
+    opentrickletimers_debug.state = opentrickletimers_vars.Nstates;
+    opentrickletimers_debug.m = opentrickletimers_vars.m;
+    opentrickletimers_debug.DIOtransmit = opentrickletimers_vars.DIOtransmit;
+    opentrickletimers_debug.DIOsurpress = opentrickletimers_vars.DIOsurpress;
+    opentrickletimers_debug.DIOtransmit_collision = opentrickletimers_vars.DIOtransmit_collision;
+    opentrickletimers_debug.Nreset = opentrickletimers_vars.Nreset;
+    opentrickletimers_debug.counter = opentrickletimers_vars.C;
+    opentrickletimers_debug.k = opentrickletimers_vars.K;
+    opentrickletimers_debug.Nnbr = opentrickletimers_vars.Nnbr;
+    opentrickletimers_debug.pfree = (uint16_t) (opentrickletimers_vars.pfree * 10000);
+    opentrickletimers_debug.preset = (uint16_t) (opentrickletimers_vars.preset * 10000);
+    opentrickletimers_debug.t_pos = (uint16_t) (opentrickletimers_vars.t_pos * 10000);
+    opentrickletimers_debug.epsilon = (uint16_t) (opentrickletimers_vars.epsilon * 10000);
+    result = openserial_print_exp(COMPONENT_OPENTRICKLETIMERS, ERR_EXPERIMENT, (uint8_t * ) & opentrickletimers_debug, sizeof(opentrickletimers_debug_t));
 }
 
 // ok
@@ -582,7 +603,7 @@ void opentrickletimers_calculate_k(void)
     }
     temp = temp * opentrickletimers_vars.preset;
 
-    opentrickletimers_vars.K = 1 + math_ceil(temp);
+    opentrickletimers_vars.K = 1 + packetfunctions_mathCeil(temp);
 }
 #endif
 
@@ -675,21 +696,16 @@ void opentrickletimers_end_t_i_callback(opentimers_id_t id)
     opentrickletimers_i_callback(opentrickletimers_vars.sc_at_i);
 }
 
-/**
-
-opentrickletimers가 만료됐을 때 실행될 callback 함수
-현재 틱 카운터를 이용해, 만료된 모든 opentrickletimer의 콜백 함수를 실행시키며
-interval을 재설정 후 다시 실행시킨다.
-
- */
 void opentrickletimers_t_callback(opentimers_id_t id)
 {
+#if use_qtrickle == TRUE
     uint8_t action;
     float val0;
     float val1;
     uint32_t rand_num;
     uint32_t temp;
     uint16_t multiplier;
+#endif
 
     INTERRUPT_DECLARATION();
     DISABLE_INTERRUPTS();

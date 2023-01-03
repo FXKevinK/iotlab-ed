@@ -74,6 +74,8 @@ uint32_t packetfunctions_ntohl(uint8_t *src);
 
 void packetfunctions_reverseArrayByteOrder(uint8_t *start, uint8_t len);
 
+uint32_t packetfunctions_mathCeil(float num);
+
 /**
 \}
 \}

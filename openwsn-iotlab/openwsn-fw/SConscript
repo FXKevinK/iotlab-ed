@@ -69,6 +69,8 @@ if 'fragmentation' in env['modules'].split(','):
     env.Append(CPPDEFINES='OPENWSN_6LO_FRAGMENTATION_C')
 if 'icmpv6echo' in env['modules'].split(','):
     env.Append(CPPDEFINES='OPENWSN_ICMPV6ECHO_C')
+if 'icmpv6periodic' in env['modules'].split(','):
+    env.Append(CPPDEFINES='OPENWSN_ICMPV6PERIODIC_C')
 
 # check which apps we have to include in the build
 if 'c6t' in env['apps'].split(','):

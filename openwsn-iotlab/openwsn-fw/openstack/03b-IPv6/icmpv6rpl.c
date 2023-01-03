@@ -25,6 +25,7 @@
 //=========================== variables =======================================
 
 icmpv6rpl_vars_t icmpv6rpl_vars;
+icmpv6rpl_debug_t icmpv6rpl_debug;
 
 //=========================== prototypes ======================================
 
@@ -644,6 +645,25 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection(void)
                 icmpv6rpl_start_or_reset_trickle_timer();
             }
         }
+
+        // Log
+        uint16_t prId2B;
+        bool result;
+        uint8_t asn[5];
+        asn_t curAsn;
+
+        prId2B = (newParent.addr_64b[6] << 8) | newParent.addr_64b[7];
+        icmpv6rpl_debug.prId2B = prId2B;
+        icmpv6rpl_debug.myDAGrank = icmpv6rpl_vars.myDAGrank;
+        icmpv6rpl_debug.slotDuration = (ieee154e_getSlotDuration() * 305) / 10000;
+
+        ieee154e_getAsn(&(asn[0]));
+        curAsn.bytes0and1 = 256 * asn[1] + asn[0];
+        curAsn.bytes2and3 = 256 * asn[3] + asn[2];
+        curAsn.byte4 = asn[4];
+        
+        memcpy(&icmpv6rpl_debug.asn, &curAsn, sizeof(asn_t));
+        result = openserial_print_exp(COMPONENT_ICMPv6RPL, ERR_EXPERIMENT, (uint8_t *) & icmpv6rpl_debug, sizeof(icmpv6rpl_debug_t));
     }
     else
     {

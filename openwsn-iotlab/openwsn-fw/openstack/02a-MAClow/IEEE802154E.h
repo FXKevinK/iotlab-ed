@@ -48,10 +48,14 @@ static const uint8_t ebIEsBytestream[] = {
 #ifndef MAXKAPERIOD
 #define MAXKAPERIOD               1000  // in slots: 1500@20ms per slot -> ~30 seconds. Max value used by adaptive synchronization.
 #endif
+
 // TODO 2000
-#ifndef DESYNCTIMEOUT
-#define DESYNCTIMEOUT             1750  // in slots: 1750@20ms per slot -> ~35 seconds. A larger DESYNCTIMEOUT is needed if using a larger KATIMEOUT.
+#if PYTHON_BOARD
+#define DESYNCTIMEOUT             2000  // in slots: 1750@20ms per slot -> ~35 seconds. A larger DESYNCTIMEOUT is needed if using a larger KATIMEOUT.
+#else
+#define DESYNCTIMEOUT             1750
 #endif
+
 #define LIMITLARGETIMECORRECTION     5  // threshold number of ticks to declare a timeCorrection "large"
 #define LENGTH_IEEE154_MAX         128  // max length of a valid radio packet
 #define DUTY_CYCLE_WINDOW_LIMIT    (0xFFFFFFFF>>1) // limit of the dutycycle window

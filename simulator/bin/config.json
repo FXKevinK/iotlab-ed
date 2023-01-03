@@ -16,7 +16,7 @@
             "exec_randomSeed": 1997,
             "secjoin_enabled": true,
             "app": "AppPeriodic",
-            "app_pkPeriod": 60,
+            "app_pkPeriod": 1,
             "app_pkPeriodVar": 0.05,
             "app_pkLength": 90,
             "app_burstTimestamp": null,

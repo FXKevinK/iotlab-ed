@@ -20,7 +20,7 @@ from ConfigParser import SafeConfigParser
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from argparse import ArgumentParser
 from xmlrpclib import Fault
-
+from datetime import datetime
 import appdirs
 import coloredlogs
 import pkg_resources
@@ -44,7 +44,7 @@ from openvisualizer.opentun.opentunnull import OpenTunNull
 from openvisualizer.rpl import topology, rpl
 from openvisualizer.simengine import simengine, motehandler
 from openvisualizer.utils import extract_component_codes, extract_log_descriptions, extract_6top_rcs, \
-    extract_6top_states
+    extract_6top_states, get_log_path, write_to_log
 
 verboselogs.install()
 
@@ -125,6 +125,7 @@ class OpenVisualizerServer(SimpleXMLRPCServer, EventBusClient):
 
         # store params
         self.host = host
+        self.filepath = get_log_path()
 
         try:
             self.port = int(port)
@@ -529,7 +530,15 @@ class OpenVisualizerServer(SimpleXMLRPCServer, EventBusClient):
                 if ms.mote_connector.serialport == port:
                     ms.trigger_action(MoteState.TRIGGER_DAGROOT)
                     self.dagroot = ms.get_state_elem(ms.ST_IDMANAGER).get_16b_addr()
-                    log.success('Setting mote {} as root'.format(''.join(['%02x' % b for b in self.dagroot])))
+                    root_id = ''.join(['%02x' % b for b in self.dagroot])
+                    log.success('Setting mote {} as root'.format(root_id))
+
+                    pkt_ = {}
+                    pkt_['0_state'] = 'root'
+                    pkt_['root_id'] = root_id
+                    pkt_["time"] = datetime.now().strftime("%H:%M:%S.%f")
+                    write_to_log(self.filepath, pkt_)
+                    
                     return True
             except ValueError as err:
                 log.error(err)

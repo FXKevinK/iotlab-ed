@@ -1,7 +1,7 @@
 /**
 \brief trickle timer
 
-\author Jeongbae Park <wjdqo94@gmail.com>
+\author Dzaky Zakiyal Fawwaz <dzakybd@gmail.com>
 */
 
 #ifndef __OPENTRICKLETIMERS_H
@@ -9,6 +9,7 @@
 
 #include "opendefs.h"
 #include "opentimers.h"
+#include "board.h"
 
 /**
 \addtogroup drivers
@@ -33,7 +34,15 @@
 #define DEFAULT_DIO_INTERVAL_DOUBLINGS DEFAULT_DIO_INTERVAL_DOUBLINGS_SMALL
 #define DEFAULT_DIO_IMAX DEFAULT_DIO_INTERVAL_DOUBLINGS_LARGE
 #define DEFAULT_DIO_INTERVAL_MIN DEFAULT_DIO_INTERVAL_MIN_SMALL
-#define DEFAULT_DIO_IMIN_MS (1 << DEFAULT_DIO_INTERVAL_MIN) // milliseconds, DIO_IMIN = 2 ^ DEFAULT_DIO_INTERVAL_MIN
+
+#define IMIN_1 (1 << DEFAULT_DIO_INTERVAL_MIN)
+// milliseconds, DIO_IMIN = 2 ^ DEFAULT_DIO_INTERVAL_MIN
+#if PYTHON_BOARD
+#define IMIN_2 (IMIN_1 * 60)
+#else
+#define IMIN_2 IMIN_1
+#endif
+#define DEFAULT_DIO_IMIN_MS IMIN_2
 
 #if use_qtrickle == TRUE
 #define ql_learning_rate 0.05
@@ -54,6 +63,27 @@
 //         T I = Imin                max_interval (Imin*2^Imax)
 
 //=========================== module variables ================================
+
+BEGIN_PACK
+typedef struct {
+    uint8_t m;
+    uint8_t Nnbr;
+    uint8_t k;
+    uint8_t counter;
+    uint16_t state;
+    uint16_t Nreset;
+    uint16_t DIOtransmit;
+    uint16_t DIOsurpress;
+    uint16_t DIOtransmit_collision;
+    uint16_t pfree; // in xxxx int
+    uint16_t preset; // in xxxx int
+    uint16_t t_pos; // in xxxx int
+    uint16_t epsilon; // in xxxx int
+    // int16_t poccupancy; // from 1 - pfree
+    // uint16_t pstable; // from 1 - preset
+    // size 4+(2*9) = 22
+} opentrickletimers_debug_t;
+END_PACK
 
 typedef struct
 {
@@ -88,12 +118,12 @@ typedef struct
     uint32_t t_min; // t_start
     uint32_t t_max; // t_end
 
+    uint16_t DIOtransmit_collision;
+    uint8_t Nnbr;
+    float epsilon;
 #if use_qtrickle == TRUE
     bool is_explore;
     uint8_t current_action;
-    uint8_t Nnbr;
-    uint16_t DIOtransmit_collision;
-    float epsilon;
     float ptransmit;
     float ptransmit_collision;
     // skip 0 index, since 0 * 0 and 0 * 1 will be the same

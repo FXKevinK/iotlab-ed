@@ -87,6 +87,7 @@ enum {
     IANA_ICMPv6_RA = 134,
     IANA_ICMPv6_RA_PREFIX_INFORMATION = 3,
     IANA_ICMPv6_RPL = 155,
+    IANA_ICMPv6_PERIODIC = 160,
     IANA_ICMPv6_RPL_DIS = 0x00,
     IANA_ICMPv6_RPL_DIO = 0x01,
     IANA_ICMPv6_RPL_DAO = 0x02,
@@ -189,6 +190,7 @@ enum {
    COMPONENT_UMONITOR                  = 0x2c,
    COMPONENT_CINFRARED                 = 0x2d,
    COMPONENT_OPENTRICKLETIMERS         = 0x2e,
+   COMPONENT_ICMPv6PERIODIC            = 0x2f,
 };
 
 /**
@@ -291,6 +293,8 @@ enum {
    ERR_COPY_TO_SPKT                    = 0x54, // copy packet content to small packet (pkt len {} < max len {})
    ERR_COPY_TO_BPKT                    = 0x55, // copy packet content to big packet (pkt len {} > max len {})
    ERR_DEBUG_1                         = 0x56, // debug {0} - {1}
+   ERR_PERIODIC_SEND                   = 0x57, // periodic {0} - {1}
+   ERR_EXPERIMENT                      = 0x58, // experiment
 };
 
 //=========================== typedef =========================================

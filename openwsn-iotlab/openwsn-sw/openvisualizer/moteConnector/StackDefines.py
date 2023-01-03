@@ -1,6 +1,6 @@
 # DO NOT EDIT DIRECTLY!
 # This file was generated automatically by GenStackDefines.py
-# on Thu, 29 Dec 2022 00:42:00
+# on Mon, 02 Jan 2023 06:47:00
 #
 
 components = {
@@ -51,6 +51,7 @@ components = {
   44: "UMONITOR",
   45: "CINFRARED",
   46: "OPENTRICKLETIMERS",
+  47: "ICMPv6PERIODIC",
 }
 
 errorDescriptions = {

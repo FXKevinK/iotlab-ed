@@ -143,6 +143,13 @@ owerror_t openserial_printStatus(
         uint8_t length
 );
 
+owerror_t openserial_print_exp(
+        uint8_t calling_component,
+        uint8_t error_code,
+        uint8_t *buffer,
+        uint8_t length
+);
+
 owerror_t openserial_printLog(
         uint8_t log_level,
         uint8_t calling_component,

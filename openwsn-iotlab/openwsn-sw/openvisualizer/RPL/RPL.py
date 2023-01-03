@@ -31,24 +31,26 @@ class RPL(eventBusClient.eventBusClient):
     _TARGET_INFORMATION_TYPE           = 0x05
     _TRANSIT_INFORMATION_TYPE          = 0x06
     
-    # Period between successive DIOs, in seconds.
-    DIO_PERIOD                         = 10
+    # # Period between successive DIOs, in seconds.
+    # DIO_PERIOD                         = 10
     
-    ALL_RPL_NODES_MULTICAST            = [0xff,0x02]+[0x00]*13+[0x1a]
+    # ALL_RPL_NODES_MULTICAST            = [0xff,0x02]+[0x00]*13+[0x1a]
     
     # http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml 
     IANA_ICMPv6_RPL_TYPE               = 155
+
+    APP_PERIODIC_TYPE = 160
     
-    # RPL DIO (RFC6550)
-    DIO_OPT_GROUNDED                   = 1<<7 # Grounded
-    # Non-Storing Mode of Operation (1)
-    MOP_DIO_A                          = 0<<5
-    MOP_DIO_B                          = 0<<4
-    MOP_DIO_C                          = 1<<3
-    # most preferred (7) as I am DAGRoot
-    PRF_DIO_A                          = 1<<2
-    PRF_DIO_B                          = 1<<1
-    PRF_DIO_C                          = 1<<0
+    # # RPL DIO (RFC6550)
+    # DIO_OPT_GROUNDED                   = 1<<7 # Grounded
+    # # Non-Storing Mode of Operation (1)
+    # MOP_DIO_A                          = 0<<5
+    # MOP_DIO_B                          = 0<<4
+    # MOP_DIO_C                          = 1<<3
+    # # most preferred (7) as I am DAGRoot
+    # PRF_DIO_A                          = 1<<2
+    # PRF_DIO_B                          = 1<<1
+    # PRF_DIO_C                          = 1<<0
     
     def __init__(self):
         
@@ -138,6 +140,18 @@ class RPL(eventBusClient.eventBusClient):
                 ),
                 callback          = self._fromMoteDataLocal_notif,
             )
+
+            # ===== APP PERIODIC ===== #
+            # register APP PERIODIC
+            self.register(
+                sender=self.WILDCARD,
+                signal=(
+                    tuple(self.networkPrefix + newDagRootEui64),
+                    self.PROTO_ICMPv6,
+                    self.APP_PERIODIC_TYPE,
+                ),
+                callback=self._icmpv6periodic_notif,
+            )
             
             # announce new DAG root
             self.dispatch(
@@ -167,6 +181,18 @@ class RPL(eventBusClient.eventBusClient):
                 callback          = self._fromMoteDataLocal_notif,
             )
 
+            # ===== APP PERIODIC ===== #
+            # register APP PERIODIC
+            self.unregister(
+                sender=self.WILDCARD,
+                signal=(
+                    tuple(self.networkPrefix + newDagRootEui64),
+                    self.PROTO_ICMPv6,
+                    self.APP_PERIODIC_TYPE,
+                ),
+                callback=self._icmpv6periodic_notif,
+            )
+
             # announce that node is no longer DAG root
             self.dispatch(
                 signal        = 'unregisterDagRoot',
@@ -184,6 +210,10 @@ class RPL(eventBusClient.eventBusClient):
         '''      
         # indicate data to topology
         self._indicateDAO(data)
+        return True
+
+    def _icmpv6periodic_notif(self,sender,signal,data):
+        self._indicatePeriodic(data)
         return True
     
     def _getSourceRoute_notif(self,sender,signal,data):
@@ -301,3 +331,41 @@ class RPL(eventBusClient.eventBusClient):
         
         #with self.dataLock:
         #    self.parents.update({tuple(source):parents})
+
+    def ntohs(self, src):
+        val = (src[0] << 8) | src[1]
+        return val
+
+    def _indicatePeriodic(self,tup):
+        pkt = []
+        # retrieve source and destination
+        try:
+            source = tup[0]
+            if len(source) > 8:
+                source = source[len(source) - 8:]
+            pkt = tup[1]
+        except IndexError:
+            log.warning("packet too short ({0} bytes), no space for destination and source".format(len(pkt)))
+            return
+
+        # retrieve pkt header
+        pkt_header = {}
+
+        try:
+            header = pkt[-6:]
+            header.reverse()
+            # packet header
+            pkt_header['mote_id'] = u.formatBuf(header[:2]).split(' ')[-1]
+            pkt_header['mote_duration'] = self.ntohs(header[2:4])
+            pkt_header['counter'] = self.ntohs(header[4:6])
+        except IndexError:
+            log.warning("pkt too short ({0} bytes), no space for pkt header".format(len(pkt)))
+            return
+
+        # log
+        output = []
+        output += ['received pkt:']
+        output += ['- source :      {0}'.format(u.formatAddr(source))]
+        output += ['- pkt :         {0}'.format(pkt_header)]
+        output = '\n'.join(output)
+        print(output)

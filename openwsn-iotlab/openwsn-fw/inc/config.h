@@ -269,6 +269,14 @@
 #define OPENWSN_ICMPV6ECHO_C (0)
 #endif
 
+/**
+ * \def OPENWSN_ICMPV6PERIODIC_C
+ *
+ * Enables the icmpv6 periodic (ping) functionality
+ */
+#ifndef OPENWSN_ICMPV6PERIODIC_C
+#define OPENWSN_ICMPV6PERIODIC_C (0)
+#endif
 
 /**
  * \def OPENWSN_IEEE802154E_SECURITY_C

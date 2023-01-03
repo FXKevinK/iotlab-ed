@@ -8,7 +8,9 @@ import logging
 import re
 import threading
 import traceback
-
+import os
+import json
+from appdirs import user_data_dir
 import verboselogs
 
 verboselogs.install()
@@ -52,6 +54,24 @@ FCS16TAB = (
     0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0,
 )
 
+def get_log_path():
+    return os.path.join(user_data_dir('openvisualizer'), 'exp_log.txt')
+
+def create_log_file(filepath):
+        # Remove file if exist
+        try:
+            os.remove(filepath)
+        except:
+            pass
+        # Create file
+        file = open(filepath, "w")
+        file.close()
+
+def write_to_log(filepath, pkt):
+    if os.path.exists(filepath):
+        with open(filepath, 'a') as f:
+            text = json.dumps(pkt, sort_keys=True)
+            f.write(text+"\n")
 
 def buf2int(buf):
     """
