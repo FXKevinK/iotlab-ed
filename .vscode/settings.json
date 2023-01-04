@@ -12,6 +12,8 @@
         "compare": "c",
         "check_config.h": "c",
         "idmanager.h": "c",
-        "board.h": "c"
+        "board.h": "c",
+        "opensensors.h": "c",
+        "sensors.h": "c"
     }
 }

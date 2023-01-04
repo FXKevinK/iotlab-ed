@@ -4488,3 +4488,43 @@ AssertionError
 23:49:31 ERROR 2 [IEEE802154E] got desynchronized at slotOffset 81
 23:49:32 SUCCESS 2 [IEEE802154E] synchronized at slotOffset 0
 23:50:10 VERBOSE cleaning up files: /var/folders/s2/khnbx4ld2_x784phny692z200000gn/T/tmp5oFgwE
+00:08:09 VERBOSE loading logging configuration: config/logging.conf
+00:08:09 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsn-iotlab/openwsn-fw
+	- simulation              = 2
+	- simulation topology     = linear
+	- auto-boot sim motes     = True
+	- use page zero           = False
+	- use VCD logger          = False
+00:08:09 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+00:08:09 VERBOSE copying '/Users/dzakyzf/lain/iotlab/openwsn-iotlab/openwsn-fw/bsp/boards/python/openwsnmodule_obj.h' to temporary dir '/var/folders/s2/khnbx4ld2_x784phny692z200000gn/T/tmpGl4pWO'
+00:08:09 VERBOSE copying '/Users/dzakyzf/lain/iotlab/openwsn-iotlab/openwsn-fw/build/python_gcc/projects/common/oos_openwsn.so' to '/var/folders/s2/khnbx4ld2_x784phny692z200000gn/T/tmpGl4pWO/linux/oos_openwsn-amd64.so'
+00:08:10 INFO thread initialized
+00:08:10 INFO thread initialized
+00:08:10 INFO extracting firmware definitions.
+00:08:10 VERBOSE extracting firmware component names
+00:08:10 VERBOSE extracting firmware log descriptions.
+00:08:10 VERBOSE extracting 6top return codes.
+00:08:10 VERBOSE extracting 6top states.
+00:08:11 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: emulated1
+00:08:11 INFO starting RPC server
+00:08:11 INFO thread starting
+00:08:11 DEBUG switchOn
+00:08:11 SUCCESS 2 [OPENWSN] booted
+00:08:11 INFO thread starting
+00:08:11 DEBUG switchOn
+00:08:11 SUCCESS 1 [OPENWSN] booted
+00:08:11 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: emulated2
+00:11:40 SUCCESS Setting mote 0001 as root
+00:11:40 ERROR 1 [IEEE802154E] wrong state 1 in startSlot, at slotOffset 1
+00:11:40 INFO registering DAGroot 14-15-92-cc-00-00-00-01
+00:11:40 SUCCESS 2 [IEEE802154E] synchronized at slotOffset 0
+00:11:40 ERROR 2 [IEEE802154E] got desynchronized at slotOffset 81
+00:11:41 SUCCESS 2 [IEEE802154E] synchronized at slotOffset 0
+00:14:16 VERBOSE cleaning up files: /var/folders/s2/khnbx4ld2_x784phny692z200000gn/T/tmpGl4pWO
+00:14:16 WARNING emulated2; exit loop
+00:14:16 WARNING emulated1; exit loop

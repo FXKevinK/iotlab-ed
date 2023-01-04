@@ -10,8 +10,10 @@ import threading
 import traceback
 import os
 import json
+import shutil
 from appdirs import user_data_dir
 import verboselogs
+from datetime import datetime
 
 verboselogs.install()
 
@@ -54,18 +56,20 @@ FCS16TAB = (
     0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0,
 )
 
+file_name = 'exp_log'
+
 def get_log_path():
-    return os.path.join(user_data_dir('openvisualizer'), 'exp_log.txt')
+    return os.path.join(user_data_dir('openvisualizer'), file_name+".txt")
 
 def create_log_file(filepath):
-        # Remove file if exist
-        try:
-            os.remove(filepath)
-        except:
-            pass
-        # Create file
-        file = open(filepath, "w")
-        file.close()
+    if os.path.exists(filepath):
+        timestamp = datetime.now().strftime("%Y%m%d-%H-%M-%S")
+        filepath_ = filepath.replace(file_name, file_name+"_"+timestamp)
+        shutil.copy2(filepath, filepath_) 
+
+    # Create file
+    file = open(filepath, "w")
+    file.close()
 
 def write_to_log(filepath, pkt):
     if os.path.exists(filepath):

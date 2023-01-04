@@ -7,7 +7,6 @@
 from appdirs import user_data_dir
 import logging
 import struct
-import os
 from datetime import datetime
 from openvisualizer.utils import get_log_path, write_to_log
 import verboselogs
@@ -97,6 +96,7 @@ class ParserLogs(Parser):
         pkt_ = {}
         co_name_low = component_name.lower()
         desc_low = log_desc.lower()
+        time_format = "%H:%M:%S.%f"
 
         if "periodic" in co_name_low and "periodic" in desc_low:
             exp_log = True
@@ -104,7 +104,7 @@ class ParserLogs(Parser):
             pkt_["counter"] = arg1
             pkt_["is_failed"] = arg2
             pkt_["mote_id"] = mote_id
-            pkt_["time"] = datetime.now().strftime("%H:%M:%S.%f")
+            pkt_["time"] = datetime.now().strftime(time_format)
         elif "rpl" in co_name_low and "experiment" in desc_low:
             exp_log = True
             asn = None
@@ -128,7 +128,7 @@ class ParserLogs(Parser):
                 pkt_["slot_duration"] = slotDuration
                 pkt_["mote_rank"] = myDAGrank
                 pkt_["mote_id"] = mote_id
-                pkt_["time"] = datetime.now().strftime("%H:%M:%S.%f")
+                pkt_["time"] = datetime.now().strftime(time_format)
 
         elif "trickle" in co_name_low and "experiment" in desc_low:
             exp_log = True
@@ -157,7 +157,7 @@ class ParserLogs(Parser):
 
                     pkt_["0_state"] = "trickle"
                     pkt_["mote_id"] = mote_id
-                    pkt_["time"] = datetime.now().strftime("%H:%M:%S.%f")
+                    pkt_["time"] = datetime.now().strftime(time_format)
 
         if exp_log:
             if pkt_: write_to_log(self.filepath, pkt_)

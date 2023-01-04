@@ -339,7 +339,7 @@ class RPL(eventbusclient.EventBusClient):
 
         # retrieve pkt header
         pkt_header = {}
-        pkt_header["state"] = "receive"
+        pkt_header["0_state"] = "receive"
         pkt_header["source"] = format_addr(source)
 
         header = pkt[-8:]
