@@ -4,7 +4,7 @@
 #include "config.h"
 
 #define app_pkPeriodSec 1
-#define app_pkPeriodVar 0.1
+#define app_pkPeriodVar 0.05
 #define app_pkLength 90
 
 

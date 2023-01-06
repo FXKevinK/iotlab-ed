@@ -59,7 +59,6 @@ class ACPBTrickle(object):
         self.DIOtransmit = 0
         self.DIOtransmit_dis = 0
         self.m = 0
-        self.t_pos = 0
         self.Nnbr = 0
         self.kmax = self.settings.k_max
         self.transmitted = 0
@@ -158,7 +157,7 @@ class ACPBTrickle(object):
         #       The interval ends at I.
         slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
-        self.Ncells = int(math.ceil(old_div(self.interval, slotframe_duration_ms)))
+        NcellsC = int(math.ceil(old_div(self.interval, slotframe_duration_ms)))
 
         if hasattr(self.mote.rpl.of, 'neighbors'):
             self.Nnbr = len(self.mote.rpl.of.neighbors)
@@ -166,18 +165,23 @@ class ACPBTrickle(object):
         if self.interval == self.min_interval or self.suppressed != 0:
             self.t_start = 0
             self.t_end = old_div(
-                self.Ncells, 2) - (old_div(old_div(self.Ncells, 2), self.Nnbr + 1) * self.suppressed)
+                NcellsC, 2) - (old_div(old_div(NcellsC, 2), self.Nnbr + 1) * self.suppressed)
         elif self.transmitted != 0:
             self.t_start = old_div(
-                self.Ncells, 2) + (old_div(self.Nnbr + 1, old_div(self.Ncells, 2)) * self.transmitted)
-            self.t_end = self.Ncells
+                NcellsC, 2) + (old_div(self.Nnbr + 1, old_div(NcellsC, 2)) * self.transmitted)
+            self.t_end = NcellsC
 
-        self.t_start = int(math.ceil(self.t_start))
-        self.t_end = int(math.ceil(self.t_end))
-        t = random.randint(self.t_start, self.t_end) * slotframe_duration_ms
+        self.t_start = int(math.ceil(self.t_start)) * slotframe_duration_ms
+        self.t_end = int(math.ceil(self.t_end)) * slotframe_duration_ms
 
-        t_range = (self.t_end - self.t_start) * slotframe_duration_ms
-        self.t_pos = round(t / self.interval, 1)
+        if self.t_end < self.t_start:
+            temp = self.t_end
+            self.t_end = self.t_start
+            self.t_start = temp
+
+        t = random.uniform(self.t_start, self.t_end)
+
+        t_range = self.t_end - self.t_start
         self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
 
         cur_asn = self.engine.getAsn()
@@ -307,7 +311,6 @@ class ACPBTrickle(object):
             'Nreset': self.Nreset,
             'preset': self.preset,
             'pstable': self.pstable,
-            't_pos': self.t_pos,
             'counter': self.counter,
             'k': self.redundancy_constant,
         }

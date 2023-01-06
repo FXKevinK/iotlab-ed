@@ -841,7 +841,7 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
         # additional local variables
         self.coordinates = {}  # (x, y) indexed by mote_id
         self.pister_hack = PisterHackModel(self.engine)
-        path = "../coordinates"
+        self.filepath = "../coordinates"
 
         # ConnectivityRandom doesn't need the connectivity matrix. Instead, it
         # initializes coordinates of the motes. Its algorithm is:
@@ -862,10 +862,11 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
         #     step.2-5 otherwise, go back to step.2-1
 
         # for quick access
-        square_side        = self.settings.conn_random_square_side
+        random_square_side = self.settings.conn_random_square_side
         init_min_pdr       = self.settings.conn_random_init_min_pdr
         init_min_neighbors = self.settings.conn_random_init_min_neighbors
         topology           = self.settings.conn_topology
+        grid_max_dist      = self.settings.conn_grid_max_distance
 
         assert init_min_neighbors <= self.settings.exec_numMotes
 
@@ -905,7 +906,7 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
                     grid.append([row, col])
 
             grid = np.array(grid)
-            scaler = MinMaxScaler(feature_range=(0,square_side))
+            scaler = MinMaxScaler(feature_range=(0, shape[0] * grid_max_dist))
             scaler.fit(grid)
 
             grid_ = scaler.transform(grid)
@@ -913,11 +914,11 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
             [[center_x, center_y]] = scaler.transform([[center_x, center_y]])
 
         elif topology == "random":
-            center_x = np.ceil(square_side / 2)
-            center_y = np.ceil(square_side / 2)
+            center_x = np.ceil(random_square_side / 2)
+            center_y = np.ceil(random_square_side / 2)
         elif topology == "saved":
             # reading the data from the file
-            with open(f"{path}.json") as f:
+            with open(f"{self.filepathpath}.json") as f:
                 data = f.read()
             js = json.loads(data)
 
@@ -932,7 +933,7 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
             center_y = position[0][1]
 
         # determine coordinates of the motes
-        for _, target_mote_id in enumerate(self.mote_id_list):
+        for idx, target_mote_id in enumerate(self.mote_id_list):
             mote_is_deployed = False
             while mote_is_deployed is False:
 
@@ -947,8 +948,8 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
                     coordinate = position[choice]
                 elif topology == 'random':
                     coordinate = (
-                        square_side * random.random(),
-                        square_side * random.random()
+                        random_square_side * random.random(),
+                        random_square_side * random.random()
                     )
                 elif topology == 'saved':
                     choice = target_mote_id
@@ -1060,13 +1061,13 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
             plt.scatter(x,y)
             plt.scatter(center_x,center_y,color='r')
             plt.savefig(
-                "{path}.png",
+                f"{self.filepath}.png",
                 bbox_inches     = 'tight',
                 pad_inches      = 0,
                 format          = 'png',
             )
             plt.close()
-            with open(f"{path}.json", 'w') as f:
+            with open(f"{self.filepath}.json", 'w') as f:
                 f.write(json.dumps(self.coordinates, indent=4))
 
     def _get_mote(self, mote_id):

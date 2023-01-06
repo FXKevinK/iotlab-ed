@@ -39,6 +39,7 @@ from .trickle_acpb import ACPBTrickle
 
 # =========================== body ============================================
 
+
 class Rpl(object):
     # locally-defined constants
     DEFAULT_DIS_INTERVAL_SECONDS = 60
@@ -46,18 +47,18 @@ class Rpl(object):
     def __init__(self, mote):
 
         # store params
-        self.mote                      = mote
+        self.mote = mote
 
         # singletons (quicker access, instead of recreating every time)
-        self.engine                    = SimEngine.SimEngine.SimEngine()
-        self.settings                  = SimEngine.SimSettings.SimSettings()
-        self.log                       = SimEngine.SimLog.SimLog().log
+        self.engine = SimEngine.SimEngine.SimEngine()
+        self.settings = SimEngine.SimSettings.SimSettings()
+        self.log = SimEngine.SimLog.SimLog().log
 
         trickle_method = self.settings.trickle_method or ""
 
         if trickle_method == 'qt':
             trickle_class = QTrickle
-        elif trickle_method == 'riata':    
+        elif trickle_method == 'riata':
             trickle_class = RiataTrickle
         elif trickle_method == 'ac':
             trickle_class = ACPBTrickle
@@ -65,14 +66,14 @@ class Rpl(object):
             trickle_class = TrickleTimer
 
         # local variables
-        self.dodagId                   = None
-        self.of                        = RplOFNone(self)
-        self.trickle_timer             = trickle_class(
-            callback = self._send_DIO,
-            mote     = self.mote
+        self.dodagId = None
+        self.of = RplOFNone(self)
+        self.trickle_timer = trickle_class(
+            callback=self._send_DIO,
+            mote=self.mote
         )
-        self.parentChildfromDAOs       = {}      # dictionary containing parents of each node
-        self._tx_stat                  = {}      # indexed by mote_id
+        self.parentChildfromDAOs = {}      # dictionary containing parents of each node
+        self._tx_stat = {}      # indexed by mote_id
         self.dis_mode = self._get_dis_mode()
 
         self.prev_ops_ambr = -1
@@ -80,12 +81,16 @@ class Rpl(object):
         self.counter_ambr = 0
         self.ambr_trigger()
 
-    #======================== public ==========================================
+        self.count_dis = 0
+        self.count_dio = 0
+        self.count_dao = 0
+
+    # ======================== public ==========================================
 
     # getters/setters
 
-    def get_ambr(self):
-        return self.ambr
+    def get_all_cp(self):
+        return self.count_dis, self.count_dio, self.count_dao
 
     def get_rank(self):
         return self.of.rank
@@ -123,48 +128,73 @@ class Rpl(object):
         if self.mote.dagRoot:
             return
 
-        if hasattr(self.mote, 'tsch'):
-            if not self.mote.tsch.getIsSync():
-                self.start_ambr_timer()
-                return
-        else:
+        if not hasattr(self.mote, 'tsch'):
             self.start_ambr_timer()
             return
 
+        # if self.mote.id == 2:
+        #     print('mote id', self.mote.id)
+
         minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
-        if minimal_cell:
-            cur_ops_ambr = minimal_cell.all_ops
-        
-        if self.prev_ops_ambr != -1 and cur_ops_ambr != -1:
+        if not minimal_cell:
+            self.start_ambr_timer()
+            return
+
+        cur_ops_ambr = minimal_cell.all_ops
+        if cur_ops_ambr <= 0:
+            self.start_ambr_timer()
+            return
+            
+
+        # if self.mote.id == 2:
+        #     print('counter_ambr', self.counter_ambr)
+        #     print('cur_ops_ambr', cur_ops_ambr)
+        #     print('prev_ops_ambr', self.prev_ops_ambr)
+
+        if self.prev_ops_ambr >= 0 and cur_ops_ambr >= 0:
             used = cur_ops_ambr - self.prev_ops_ambr
-            if used < 0 : used = 0
+            if used < 0:
+                used = 0
             if used <= self.settings.mbr_slotframes:
                 curr_mbr = used / self.settings.mbr_slotframes
-        
-        if self.counter_ambr > 0 and self.ambr != -1 and curr_mbr != -1:
-            # incremental average
-            self.counter_ambr += 1
-            self.ambr = self.ambr + ((curr_mbr - self.ambr) / self.counter_ambr)
-        
-        if self.counter_ambr == 0 and curr_mbr != -1:
-            self.ambr = curr_mbr
-            self.counter_ambr += 1
-        
-        if cur_ops_ambr != -1: self.prev_ops_ambr = cur_ops_ambr
+
+        if curr_mbr >= 0:
+            if self.counter_ambr == 0:
+                self.ambr = curr_mbr
+                self.counter_ambr += 1
+            elif self.counter_ambr > 0 and self.ambr >= 0:
+                # incremental average
+                self.counter_ambr += 1
+                self.ambr = self.ambr + ((curr_mbr - self.ambr) / self.counter_ambr)
+
+        # if self.mote.id == 2:
+        #     print("curr_mbr", curr_mbr)
+        #     print('ambr', self.ambr)
+        #     print("\n")
+
+        self.prev_ops_ambr = cur_ops_ambr
         self.start_ambr_timer()
 
+        # log
+        if self.ambr >= 0:
+            self.log(
+                SimEngine.SimLog.LOG_MBR,
+                {
+                    u'_mote_id':       self.mote.id,
+                    u'mbr':         self.ambr,
+                }
+            )
+
     def start_ambr_timer(self):
-        slotframe_duration_s = self.settings.tsch_slotDuration * self.settings.tsch_slotframeLength
+        slotframe_duration_s = self.settings.tsch_slotDuration * \
+            self.settings.tsch_slotframeLength
         duration = slotframe_duration_s * self.settings.mbr_slotframes
         self.engine.scheduleIn(
-            delay          = duration,
-            cb             = self.ambr_trigger,
-            uniqueTag      = str(self.mote.id) + u'ambr',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS
+            delay=duration,
+            cb=self.ambr_trigger,
+            uniqueTag=str(self.mote.id) + u'ambr',
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS
         )
-    
-    def stop_ambr_timer(self):
-        self.engine.removeFutureEvent(str(self.mote.id) + u'ambr')
 
     def start(self):
         if self.mote.dagRoot:
@@ -173,11 +203,11 @@ class Rpl(object):
             # now start a new RPL instance; reset the timer as per Section 8.3 of
             # RFC 6550
             self.start_or_reset_trickle_timer(1)
-            
+
         else:
             if self.settings.rpl_of:
                 # update OF with one specified in config.json
-                of_class  = u'Rpl{0}'.format(self.settings.rpl_of)
+                of_class = u'Rpl{0}'.format(self.settings.rpl_of)
                 self.of = getattr(sys.modules[__name__], of_class)(self)
             if self.dis_mode != u'disabled':
                 # the destination address of the first DIS is determined based
@@ -197,7 +227,6 @@ class Rpl(object):
         self.dodagId = None
         self.trickle_timer.stop()
         self.stop_dis_timer()
-        self.stop_ambr_timer()
 
     def indicate_tx(self, cell, dstMac, isACKed):
         self.of.update_etx(cell, dstMac, isACKed)
@@ -272,7 +301,7 @@ class Rpl(object):
             # ignore DIS
             pass
         else:
-            if   self.mote.is_my_ipv6_addr(packet[u'net'][u'dstIp']):
+            if self.mote.is_my_ipv6_addr(packet[u'net'][u'dstIp']):
                 # unicast DIS; send unicast DIO back to the source
                 self.increment_diotransmit_dis(False)
                 self._send_DIO(packet[u'net'][u'srcIp'])
@@ -286,7 +315,7 @@ class Rpl(object):
                 assert False
 
     def _get_dis_mode(self):
-        if   u'dis_unicast' in self.settings.rpl_extensions:
+        if u'dis_unicast' in self.settings.rpl_extensions:
             assert u'dis_broadcast' not in self.settings.rpl_extensions
             return u'dis_unicast'
         elif 'dis_broadcast' in self.settings.rpl_extensions:
@@ -301,10 +330,10 @@ class Rpl(object):
 
     def start_dis_timer(self):
         self.engine.scheduleIn(
-            delay          = self.DEFAULT_DIS_INTERVAL_SECONDS,
-            cb             = self.handle_dis_timer,
-            uniqueTag      = str(self.mote.id) + u'dis',
-            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS
+            delay=self.DEFAULT_DIS_INTERVAL_SECONDS,
+            cb=self.handle_dis_timer,
+            uniqueTag=str(self.mote.id) + u'dis',
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS
         )
 
     def stop_dis_timer(self):
@@ -318,12 +347,12 @@ class Rpl(object):
         assert dstIp is not None
         dis = {
             u'type': d.PKT_TYPE_DIS,
-            u'net' : {
+            u'net': {
                 u'srcIp':         str(self.mote.get_ipv6_link_local_addr()),
                 u'dstIp':         dstIp,
                 u'packet_length': d.PKT_LEN_DIS
             },
-            u'app' : {}
+            u'app': {}
         }
         self.log(
             SimEngine.SimLog.LOG_RPL_DIS_TX,
@@ -332,6 +361,7 @@ class Rpl(object):
                 u'packet':    dis,
             }
         )
+        self.count_dis += 1
         self.mote.sixlowpan.sendPacket(dis)
 
     # === DIO
@@ -352,6 +382,7 @@ class Rpl(object):
             }
         )
 
+        self.count_dio += 1
         self.mote.sixlowpan.sendPacket(dio)
 
     def _create_DIO(self, dstIp=None):
@@ -417,12 +448,11 @@ class Rpl(object):
                 self.start_or_reset_trickle_timer(4)
 
         neighbor = self.of._find_neighbor(packet[u'mac'][u'srcMac'])
-        if neighbor:        
+        if neighbor:
             if (neighbor[u'advertised_rank'] == packet[u'app'][u'rank']):
                 # consistent
                 self.trickle_timer.increment_counter()
                 # print(self.mote.id, neighbor[u'mac_addr'], packet[u'app'][u'rank'], neighbor[u'advertised_rank'], self.trickle_timer.counter)
-
 
         # feed our OF with the received DIO
         self.of.update(packet)
@@ -474,10 +504,10 @@ class Rpl(object):
 
         # schedule sending a DAO
         self.engine.scheduleAtAsn(
-            asn              = asnNow + asnDiff,
-            cb               = self._action_sendDAO,
-            uniqueTag        = (self.mote.id, u'_action_sendDAO'),
-            intraSlotOrder   = d.INTRASLOTORDER_STACKTASKS,
+            asn=asnNow + asnDiff,
+            cb=self._action_sendDAO,
+            uniqueTag=(self.mote.id, u'_action_sendDAO'),
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS,
         )
 
     def _stop_sendDAO(self):
@@ -516,7 +546,7 @@ class Rpl(object):
             return
 
         # abort if not ready yet
-        if self.mote.clear_to_send_EBs_DATA()==False:
+        if self.mote.clear_to_send_EBs_DATA() == False:
             return
 
         parent_mac_addr = netaddr.EUI(self.of.get_preferred_parent())
@@ -548,6 +578,7 @@ class Rpl(object):
         # remove other possible DAOs from the queue
         self.mote.tsch.remove_packets_in_tx_queue(type=d.PKT_TYPE_DAO)
 
+        self.count_dao += 1
         # send
         self.mote.sixlowpan.sendPacket(newDAO)
 
@@ -569,8 +600,8 @@ class Rpl(object):
 
         # store parent/child relationship for source route calculation
         self.addParentChildfromDAOs(
-            parent_addr   = packet[u'app'][u'parent_addr'],
-            child_addr    = packet[u'net'][u'srcIp']
+            parent_addr=packet[u'app'][u'parent_addr'],
+            child_addr=packet[u'net'][u'srcIp']
         )
 
     # source route
@@ -582,7 +613,7 @@ class Rpl(object):
             cur_addr = dst_addr
             while self.mote.is_my_ipv6_addr(cur_addr) is False:
                 sourceRoute += [cur_addr]
-                cur_addr     = self.parentChildfromDAOs[cur_addr]
+                cur_addr = self.parentChildfromDAOs[cur_addr]
                 if cur_addr in sourceRoute:
                     # routing loop is detected; cannot return an effective
                     # source-routing header
@@ -610,8 +641,8 @@ class RplOFBase(object):
         old_parent_mac_addr = self.get_preferred_parent()
         self.preferred_parent = None
         self.rpl.indicate_preferred_parent_change(
-            old_preferred = old_parent_mac_addr,
-            new_preferred = None
+            old_preferred=old_parent_mac_addr,
+            new_preferred=None
         )
 
     def update(self, dio):
@@ -681,13 +712,13 @@ class RplOF0(RplOFBase):
                 continue
 
             if (
-                    (self.rank is None)
-                    or
-                    (
-                        d.RPL_MINHOPRANKINCREASE <=
-                        self.rank - neighbor[u'advertised_rank']
-                    )
-                ):
+                (self.rank is None)
+                or
+                (
+                    d.RPL_MINHOPRANKINCREASE <=
+                    self.rank - neighbor[u'advertised_rank']
+                )
+            ):
                 _parents.append(neighbor)
 
         return _parents
@@ -709,10 +740,10 @@ class RplOF0(RplOFBase):
         # if we received the infinite rank from our preferred parent,
         # invalidate our rank
         if (
-                (self.preferred_parent == neighbor)
-                and
-                (rank == d.RPL_INFINITE_RANK)
-            ):
+            (self.preferred_parent == neighbor)
+            and
+            (rank == d.RPL_INFINITE_RANK)
+        ):
             self.rank = None
 
         # change preferred parent if necessary
@@ -758,18 +789,19 @@ class RplOF0(RplOFBase):
         if neighbor[u'numTx'] >= self.ETX_NUM_TX_CUTOFF:
             # update ETX
             assert neighbor[u'numTxAck'] > 0
-            neighbor[u'etx'] = float(neighbor[u'numTx']) / neighbor[u'numTxAck']
+            neighbor[u'etx'] = float(
+                neighbor[u'numTx']) / neighbor[u'numTxAck']
             # reset counters
             neighbor[u'numTx'] = 0
             neighbor[u'numTxAck'] = 0
         elif (
-                (neighbor[u'numTxAck'] == 0)
-                and
-                (
-                    self.MAX_NUM_OF_CONSECUTIVE_FAILURES_WITHOUT_SUCCESS <=
-                    neighbor[u'numTx']
-                )
-            ):
+            (neighbor[u'numTxAck'] == 0)
+            and
+            (
+                self.MAX_NUM_OF_CONSECUTIVE_FAILURES_WITHOUT_SUCCESS <=
+                neighbor[u'numTx']
+            )
+        ):
             # set invalid ETX
             neighbor[u'etx'] = self.UPPER_LIMIT_OF_ACCEPTABLE_ETX + 1
 
@@ -815,19 +847,20 @@ class RplOF0(RplOFBase):
             # step_of_rank never exceeds 7 because the upper limit of acceptable
             # ETX is 3, which is defined in Section 5.1.1 of RFC 8180
             assert step_of_rank <= self.MAXIMUM_STEP_OF_RANK
-            neighbor[u'rank_increase'] = step_of_rank * d.RPL_MINHOPRANKINCREASE
+            neighbor[u'rank_increase'] = step_of_rank * \
+                d.RPL_MINHOPRANKINCREASE
 
         if neighbor == self.preferred_parent:
             self.rank = self._calculate_rank(self.preferred_parent)
 
     def _calculate_rank(self, neighbor):
         if (
-                (neighbor is None)
-                or
-                (neighbor[u'advertised_rank'] is None)
-                or
-                (neighbor[u'rank_increase'] is None)
-            ):
+            (neighbor is None)
+            or
+            (neighbor[u'advertised_rank'] is None)
+            or
+            (neighbor[u'rank_increase'] is None)
+        ):
             return None
         elif neighbor[u'advertised_rank'] == self.INFINITE_RANK:
             # this neighbor should be ignored
@@ -842,22 +875,22 @@ class RplOF0(RplOFBase):
 
     def _update_preferred_parent(self):
         if (
-                (self.preferred_parent is not None)
-                and
-                (self.preferred_parent[u'advertised_rank'] is not None)
-                and
-                (self.rank is not None)
-                and
-                (
-                    (self.preferred_parent[u'advertised_rank'] - self.rank) <
-                    d.RPL_PARENT_SWITCH_RANK_THRESHOLD
-                )
-                and
-                (
-                    self.preferred_parent[u'rank_increase'] <
-                    self.PARENT_SWITCH_RANK_INCREASE_THRESHOLD
-                )
-            ):
+            (self.preferred_parent is not None)
+            and
+            (self.preferred_parent[u'advertised_rank'] is not None)
+            and
+            (self.rank is not None)
+            and
+            (
+                (self.preferred_parent[u'advertised_rank'] - self.rank) <
+                d.RPL_PARENT_SWITCH_RANK_THRESHOLD
+            )
+            and
+            (
+                self.preferred_parent[u'rank_increase'] <
+                self.PARENT_SWITCH_RANK_INCREASE_THRESHOLD
+            )
+        ):
             # stay with the current parent. the link to the parent is
             # good. but, if the parent rank is higher than us and the
             # difference is more than d.RPL_PARENT_SWITCH_RANK_THRESHOLD, we dump
@@ -902,10 +935,10 @@ class RplOF0(RplOFBase):
                     new_parent = self.preferred_parent
 
         if (
-                (new_parent is not None)
-                and
-                (new_parent != self.preferred_parent)
-            ):
+            (new_parent is not None)
+            and
+            (new_parent != self.preferred_parent)
+        ):
             # change to the new preferred parent
 
             if self.preferred_parent is None:
@@ -920,17 +953,17 @@ class RplOF0(RplOFBase):
                 new_parent_mac_addr = self.preferred_parent[u'mac_addr']
 
             self.rpl.indicate_preferred_parent_change(
-                old_preferred = old_parent_mac_addr,
-                new_preferred = new_parent_mac_addr
+                old_preferred=old_parent_mac_addr,
+                new_preferred=new_parent_mac_addr
             )
 
             # reset Trickle Timer # already called in indicate_preferred_parent_change
             # self.rpl.start_or_reset_trickle_timer(6)
         elif (
-                (new_parent is None)
-                and
-                (self.preferred_parent is not None)
-            ):
+            (new_parent is None)
+            and
+            (self.preferred_parent is not None)
+        ):
             self.rpl.local_repair()
         else:
             # do nothing

@@ -126,15 +126,6 @@ class AppBase(object):
             }
         )
 
-        # log
-        self.log(
-            SimEngine.SimLog.LOG_AMBR,
-            {
-                u'_mote_id':       self.mote.id,
-                u'ambr':         self.mote.rpl.get_ambr(),
-            }
-        )
-
         # send
         self.mote.sixlowpan.sendPacket(packet)
 

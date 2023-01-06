@@ -58,7 +58,7 @@ def init_mote():
         'charge': None,
         'lifetime_AA_years': None,
         'avg_current_uA': None,
-        'ambr': None,
+        'mbr': None,
         'trickle': {},
     }
 
@@ -164,7 +164,7 @@ def kpis_all(inputfile):
             )
             allstats[run_id][mote_id]['upstream_pkts'][appcounter]['rx_asn'] = asn
 
-        elif logline['_type'] == SimLog.LOG_AMBR['type']:
+        elif logline['_type'] == SimLog.LOG_MBR['type']:
             # shorthands
             mote_id = logline['_mote_id']
 
@@ -172,7 +172,7 @@ def kpis_all(inputfile):
             if mote_id == DAGROOT_ID:
                 continue
 
-            allstats[run_id][mote_id]['ambr'] = logline['ambr']
+            allstats[run_id][mote_id]['mbr'] = logline['mbr']
 
         elif logline['_type'] == SimLog.LOG_TRICKLE['type']:
             # trickle result
@@ -267,7 +267,7 @@ def kpis_all(inputfile):
         current_consumed = []
         lifetimes = []
         slot_duration = file_settings['tsch_slotDuration']
-        all_ambr = []
+        all_mbr = []
 
         trickle_stats = {}
 
@@ -299,10 +299,10 @@ def kpis_all(inputfile):
 
                 trickle_stats[key].extend(val)
 
-            # ambr
+            # mbr
 
-            if motestats['ambr'] is not None:
-                all_ambr.append(motestats['ambr'])
+            if motestats['mbr'] is not None:
+                all_mbr.append(motestats['mbr'])
 
             # latency
 
@@ -454,6 +454,10 @@ def kpis_all(inputfile):
             stat = [
                 {
                     'name': key,
+                    'sum': (
+                        sum(val)
+                        if val else 'N/A'
+                    ),
                     'min': (
                         min(val)
                         if val else 'N/A'
@@ -486,37 +490,37 @@ def kpis_all(inputfile):
             ]
             allstats[run_id]['global-stats'][key] = stat
 
-        # ambr
+        # mbr
         stat = [
             {
                 'name': "ambr",
+                'sum': (
+                    sum(all_mbr)
+                    if all_mbr else 'N/A'
+                ),
                 'min': (
-                    min(all_ambr)
-                    if val else 'N/A'
+                    min(all_mbr)
+                    if all_mbr else 'N/A'
                 ),
                 'max': (
-                    max(all_ambr)
-                    if val else 'N/A'
+                    max(all_mbr)
+                    if all_mbr else 'N/A'
                 ),
                 'mean': (
-                    mean(all_ambr)
-                    if val else 'N/A'
-                ),
-                'mode': (
-                    int(st.mode(all_ambr)[0])
-                    if val else 'N/A'
+                    mean(all_mbr)
+                    if all_mbr else 'N/A'
                 ),
                 'std': (
-                    np.std(all_ambr)
-                    if val else 'N/A'
+                    np.std(all_mbr)
+                    if all_mbr else 'N/A'
                 ),
                 '75%': (
-                    np.percentile(all_ambr, 75)
-                    if val else 'N/A'
+                    np.percentile(all_mbr, 75)
+                    if all_mbr else 'N/A'
                 ),
                 '99%': (
-                    np.percentile(all_ambr, 99)
-                    if val else 'N/A'
+                    np.percentile(all_mbr, 99)
+                    if all_mbr else 'N/A'
                 )
             }
         ]
@@ -528,6 +532,8 @@ def kpis_all(inputfile):
         for (mote_id, motestats) in list(per_mote_stats.items()):
             if 'latencies' in motestats:
                 del motestats['latencies']
+            if 'mbr' in motestats:
+                del motestats['mbr']
             if 'sync_asn' in motestats:
                 del motestats['sync_asn']
             if 'charge_asn' in motestats:

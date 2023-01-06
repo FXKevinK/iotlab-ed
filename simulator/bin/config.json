@@ -7,16 +7,15 @@
     "settings": {
         "combination": {
             "exec_numMotes": [
-                20
+                50
             ]
         },
         "regular": {
-            "exec_numSlotframesPerRun": 2000,
+            "exec_numSlotframesPerRun": 1500,
             "exec_minutesPerRun": null,
-            "exec_randomSeed": 1997,
+            "exec_randomSeed": 1,
             "secjoin_enabled": true,
             "app": "AppPeriodic",
-            "app_pkPeriod": 1,
             "app_pkPeriodVar": 0.05,
             "app_pkLength": 90,
             "app_burstTimestamp": null,
@@ -47,21 +46,23 @@
             "conn_random_square_side": 2,
             "conn_random_init_min_pdr": 0.5,
             "conn_random_init_min_neighbors": 3,
-            "conn_topology": "random",
             "phy_numChans": 16,
             "motes_eui64": [],
-            "trickle_method": "qt",
+            "conn_topology": "grid",
+            "conn_grid_max_distance": 0.1,
+            "app_pkPeriod": 5,
+            "trickle_method": "ori",
+            "ql_learning_rate": 0.05,
+            "ql_discount_rate": 0.99,
+            "ql_adaptive_epsilon": true,
+            "ql_epsilon": 0.5,
+            "ql_adaptive_max_epsilon": 1,
+            "ql_adaptive_min_epsilon": 0.01,
+            "ql_adaptive_decay_rate": 0.05,
             "k_max": 10,
             "dio_interval_doublings": 10,
             "dio_interval_min": 10,
-            "mbr_slotframes": 10,
-            "ql_epsilon": 0.5,
-            "ql_learning_rate": 0.05,
-            "ql_discount_rate": 0.99,
-            "ql_adaptive_epsilon": false,
-            "ql_adaptive_max_epsilon": 1,
-            "ql_adaptive_min_epsilon": 0.01,
-            "ql_adaptive_decay_rate": 0.01
+            "mbr_slotframes": 10
         }
     },
     "logging": "all",

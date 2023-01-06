@@ -59,7 +59,6 @@ class QTrickle(object):
         self.DIOtransmit = 0
         self.DIOtransmit_dis = 0
         self.m = 0
-        self.t_pos = 0
         self.Nnbr = 0
         self.DIOtransmit_collision = 0
         self.kmax = self.settings.k_max
@@ -76,7 +75,7 @@ class QTrickle(object):
 
         self.adaptive_epsilon = self.settings.ql_adaptive_epsilon
         if self.adaptive_epsilon:
-            self.max_epsilon = self.settings.ql_use_adaptive
+            self.max_epsilon = self.settings.ql_adaptive_epsilon
             self.min_epsilon = self.settings.ql_adaptive_min_epsilon
             self.decay_rate = self.settings.ql_adaptive_decay_rate
             self.delta = (self.max_epsilon - self.min_epsilon) * self.decay_rate
@@ -171,10 +170,18 @@ class QTrickle(object):
         half_interval = old_div(self.interval, 2)
         self.t_start = half_interval * (self.ptransmit * self.pfree)
         self.t_end = half_interval + (self.pstable * half_interval)
-        t_range = self.t_end - self.t_start
-        t = random.uniform(self.t_start, self.t_end)
 
-        self.t_pos = round(t / self.interval, 1)
+        # make sure that I'm scheduling an event in the future
+        lower_bound = 20 * 5
+        if(self.t_start < lower_bound):
+            self.t_start = lower_bound
+        # make sure there is enough distance between t_min and t_max
+        if(self.t_end-self.t_start < lower_bound):
+            self.t_start -= lower_bound
+
+        t_range = self.t_end - self.t_start
+        # add/subtract with 20ms, to avoid same value of T with t_min or t_max
+        self.t = random.uniform(self.t_start+20, self.t_end-20)
 
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
         self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
@@ -182,12 +189,12 @@ class QTrickle(object):
         cur_asn = self.engine.getAsn()
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
         asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_duration_ms)))
-        asn = cur_asn + int(math.ceil(old_div(t, slot_duration_ms)))
+        asn_ = cur_asn + int(math.ceil(old_div(self.t, slot_duration_ms)))
 
-        if asn == self.engine.getAsn():
+        if asn_ == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
             # the current ASN
-            asn = self.engine.getAsn() + 1
+            asn_ = self.engine.getAsn() + 1
 
         if asn_start == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
@@ -231,7 +238,7 @@ class QTrickle(object):
                 self.end_t_record = minimal_cell.all_ops
 
         self.engine.scheduleAtAsn(
-            asn=asn,
+            asn=asn_,
             cb=t_callback,
             uniqueTag=self.unique_tag_base + u'_at_t',
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
@@ -319,6 +326,14 @@ class QTrickle(object):
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
     def log_result(self):
+
+        count_dis, count_dio, count_dao = self.mote.rpl.get_all_cp()
+
+        minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
+        all_ops = -1
+        if minimal_cell:
+            all_ops = minimal_cell.all_ops
+
         result = {
             'state': self.Nstates,
             'm': self.m,
@@ -330,11 +345,17 @@ class QTrickle(object):
             'Nreset': self.Nreset,
             'preset': self.preset,
             'pstable': self.pstable,
-            't_pos': self.t_pos,
             'counter': self.counter,
             'k': self.redundancy_constant,
             'Nnbr': self.Nnbr,
             'DIOtransmit_collision': self.DIOtransmit_collision,
+            'epsilon': self.epsilon,
+            'all_ops': all_ops,
+            'interval': self.interval,
+            't': self.t,
+            "count_dis": count_dis,
+            "count_dio": count_dio,
+            "count_dao": count_dao
         }
 
         self.log(
@@ -380,7 +401,7 @@ class QTrickle(object):
             prev_average_reward = self.prev_total_reward / (self.Nstates - 1)
             diff = average_reward - prev_average_reward
 
-            if diff > 0:
+            if diff >= 0:
                 # towards exploit
                 new_epsilon -= self.delta
             else:

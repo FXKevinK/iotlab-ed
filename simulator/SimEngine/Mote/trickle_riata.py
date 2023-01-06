@@ -58,7 +58,6 @@ class RiataTrickle(object):
         self.DIOsurpress_log = 0
         self.DIOtransmit_log = 0
         self.m = 0
-        self.t_pos = 0
         self.DIOtransmit = 0
         self.DIOtransmit_dis = 0
         self.kmax = self.settings.k_max
@@ -160,8 +159,6 @@ class RiataTrickle(object):
         self.t_end = int(math.ceil(self.t_end))
         t_range = self.t_end - self.t_start
         t = random.uniform(self.t_start, self.t_end)
-
-        self.t_pos = round(t / self.interval, 1)
 
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
         self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
@@ -313,7 +310,6 @@ class RiataTrickle(object):
             'Nreset': self.Nreset,
             'preset': self.preset,
             'pstable': self.pstable,
-            't_pos': self.t_pos,
             'counter': self.counter,
             'k': self.redundancy_constant,
         }

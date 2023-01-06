@@ -432,12 +432,14 @@ void opentrickletimers_start(opentimers_id_t id)
     opentrickletimers_vars.m = 0;
 
 // ok
-#if use_qtrickle == TRUE
     opentrickletimers_vars.I = opentrickletimers_vars.Imin;
-#else
-    uint32_t rand_num = openrandom_get16b();
-    opentrickletimers_vars.I = (rand_num % (opentrickletimers_vars.max_interval - opentrickletimers_vars.Imin + 1)) + opentrickletimers_vars.Imin;
-#endif
+
+// #if use_qtrickle == TRUE
+//     opentrickletimers_vars.I = opentrickletimers_vars.Imin;
+// #else
+//     uint32_t rand_num = openrandom_get16b();
+//     opentrickletimers_vars.I = (rand_num % (opentrickletimers_vars.max_interval - opentrickletimers_vars.Imin + 1)) + opentrickletimers_vars.Imin;
+// #endif
 
     opentrickletimers_start_next_interval();
 

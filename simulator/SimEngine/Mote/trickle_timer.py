@@ -59,7 +59,6 @@ class TrickleTimer(object):
         self.DIOtransmit = 0
         self.DIOtransmit_dis = 0
         self.m = 0
-        self.t_pos = 0
 
     @property
     def is_running(self):
@@ -76,7 +75,7 @@ class TrickleTimer(object):
         #       the first interval.
         self.state = self.STATE_RUNNING
         self.m = 0
-        self.interval = random.randint(self.min_interval, self.max_interval)
+        self.interval = self.min_interval #random.randint(self.min_interval, self.max_interval)
         self._start_next_interval()
 
     def stop(self):
@@ -146,9 +145,7 @@ class TrickleTimer(object):
         t_min = old_div(self.interval, 2)
         t_max = self.interval
         t_range = t_max - t_min
-        t = random.uniform(t_min, t_max)
-
-        self.t_pos = round(t / self.interval, 1)
+        self.t = random.uniform(t_min, t_max)
 
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
         self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
@@ -156,7 +153,7 @@ class TrickleTimer(object):
         cur_asn = self.engine.getAsn()
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
         asn_start = cur_asn + int(math.ceil(old_div(t_min, slot_duration_ms)))
-        asn = cur_asn + int(math.ceil(old_div(t, slot_duration_ms)))
+        asn = cur_asn + int(math.ceil(old_div(self.t, slot_duration_ms)))
 
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
@@ -269,6 +266,13 @@ class TrickleTimer(object):
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
     def log_result(self):
+        count_dis, count_dio, count_dao = self.mote.rpl.get_all_cp()
+
+        minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
+        all_ops = -1
+        if minimal_cell:
+            all_ops = minimal_cell.all_ops
+
         result = {
             'state': self.Nstates,
             'm': self.m,
@@ -280,9 +284,14 @@ class TrickleTimer(object):
             'Nreset': self.Nreset,
             'preset': self.preset,
             'pstable': self.pstable,
-            't_pos': self.t_pos,
             'counter': self.counter,
             'k': self.redundancy_constant,
+            'all_ops': all_ops,
+            'interval': self.interval,
+            't': self.t,
+            "count_dis": count_dis,
+            "count_dio": count_dio,
+            "count_dao": count_dao
         }
 
         self.log(
