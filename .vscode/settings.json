@@ -14,6 +14,7 @@
         "idmanager.h": "c",
         "board.h": "c",
         "opensensors.h": "c",
-        "sensors.h": "c"
+        "sensors.h": "c",
+        "msf.h": "c"
     }
 }

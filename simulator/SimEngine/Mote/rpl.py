@@ -75,9 +75,17 @@ class Rpl(object):
         self._tx_stat                  = {}      # indexed by mote_id
         self.dis_mode = self._get_dis_mode()
 
+        self.prev_ops_ambr = -1
+        self.ambr = -1
+        self.counter_ambr = 0
+        self.ambr_trigger()
+
     #======================== public ==========================================
 
     # getters/setters
+
+    def get_ambr(self):
+        return self.ambr
 
     def get_rank(self):
         return self.of.rank
@@ -103,6 +111,60 @@ class Rpl(object):
                 self.trickle_timer.start(note)
             else:
                 self.trickle_timer.reset(note)
+
+    def increment_diotransmit_dis(self, is_broadcast):
+        self.trickle_timer.increment_diotransmit_dis(is_broadcast)
+
+    def ambr_trigger(self):
+        cur_ops_ambr = -1
+        used = -1
+        curr_mbr = -1
+
+        if self.mote.dagRoot:
+            return
+
+        if hasattr(self.mote, 'tsch'):
+            if not self.mote.tsch.getIsSync():
+                self.start_ambr_timer()
+                return
+        else:
+            self.start_ambr_timer()
+            return
+
+        minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
+        if minimal_cell:
+            cur_ops_ambr = minimal_cell.all_ops
+        
+        if self.prev_ops_ambr != -1 and cur_ops_ambr != -1:
+            used = cur_ops_ambr - self.prev_ops_ambr
+            if used < 0 : used = 0
+            if used <= self.settings.mbr_slotframes:
+                curr_mbr = used / self.settings.mbr_slotframes
+        
+        if self.counter_ambr > 0 and self.ambr != -1 and curr_mbr != -1:
+            # incremental average
+            self.counter_ambr += 1
+            self.ambr = self.ambr + ((curr_mbr - self.ambr) / self.counter_ambr)
+        
+        if self.counter_ambr == 0 and curr_mbr != -1:
+            self.ambr = curr_mbr
+            self.counter_ambr += 1
+        
+        if cur_ops_ambr != -1: self.prev_ops_ambr = cur_ops_ambr
+        self.start_ambr_timer()
+
+    def start_ambr_timer(self):
+        slotframe_duration_s = self.settings.tsch_slotDuration * self.settings.tsch_slotframeLength
+        duration = slotframe_duration_s * self.settings.mbr_slotframes
+        self.engine.scheduleIn(
+            delay          = duration,
+            cb             = self.ambr_trigger,
+            uniqueTag      = str(self.mote.id) + u'ambr',
+            intraSlotOrder = d.INTRASLOTORDER_STACKTASKS
+        )
+    
+    def stop_ambr_timer(self):
+        self.engine.removeFutureEvent(str(self.mote.id) + u'ambr')
 
     def start(self):
         if self.mote.dagRoot:
@@ -135,6 +197,7 @@ class Rpl(object):
         self.dodagId = None
         self.trickle_timer.stop()
         self.stop_dis_timer()
+        self.stop_ambr_timer()
 
     def indicate_tx(self, cell, dstMac, isACKed):
         self.of.update_etx(cell, dstMac, isACKed)
@@ -194,7 +257,6 @@ class Rpl(object):
             }
         )
         self.dodagId = None
-        print("local repair")
 
     # === DIS
 
@@ -212,9 +274,12 @@ class Rpl(object):
         else:
             if   self.mote.is_my_ipv6_addr(packet[u'net'][u'dstIp']):
                 # unicast DIS; send unicast DIO back to the source
+                self.increment_diotransmit_dis(False)
                 self._send_DIO(packet[u'net'][u'srcIp'])
             elif packet[u'net'][u'dstIp'] == d.IPV6_ALL_RPL_NODES_ADDRESS:
                 # broadcast DIS
+                self.increment_diotransmit_dis(True)
+                self._send_DIO()
                 self.start_or_reset_trickle_timer(3)
             else:
                 # shouldn't happen

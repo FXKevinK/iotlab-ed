@@ -7,7 +7,7 @@
     "settings": {
         "combination": {
             "exec_numMotes": [
-                100
+                20
             ]
         },
         "regular": {
@@ -32,7 +32,7 @@
             "fragmentation_ff_vrb_table_size": 50,
             "tsch_max_payload_len": 90,
             "sf_class": "MSF",
-            "tsch_slotDuration": 0.010,
+            "tsch_slotDuration": 0.01,
             "tsch_slotframeLength": 101,
             "tsch_probBcast_ebProb": 0.33,
             "tsch_clock_max_drift_ppm": 30,
@@ -47,13 +47,14 @@
             "conn_random_square_side": 2,
             "conn_random_init_min_pdr": 0.5,
             "conn_random_init_min_neighbors": 3,
-            "conn_topology": "saved",
+            "conn_topology": "random",
             "phy_numChans": 16,
             "motes_eui64": [],
             "trickle_method": "qt",
             "k_max": 10,
-            "dio_interval_doublings": 8,
-            "dio_interval_min": 14,
+            "dio_interval_doublings": 10,
+            "dio_interval_min": 10,
+            "mbr_slotframes": 10,
             "ql_epsilon": 0.5,
             "ql_learning_rate": 0.05,
             "ql_discount_rate": 0.99,
@@ -66,7 +67,6 @@
     "logging": "all",
     "log_directory_name": "startTime",
     "post": [
-        "python3.7 compute_kpis.py",
-        "python3.7 plot.py"
+        "python3.7 compute_kpis.py"
     ]
 }

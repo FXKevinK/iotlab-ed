@@ -57,6 +57,7 @@ class ACPBTrickle(object):
         self.pstable = 1
         self.DIOsurpress = 0
         self.DIOtransmit = 0
+        self.DIOtransmit_dis = 0
         self.m = 0
         self.t_pos = 0
         self.Nnbr = 0
@@ -68,6 +69,9 @@ class ACPBTrickle(object):
     @property
     def is_running(self):
         return self.state == self.STATE_RUNNING
+
+    def increment_diotransmit_dis(self, is_broadcast):
+        self.DIOtransmit_dis += 1
 
     def start(self, note=None):
         # Section 4.2:
@@ -152,9 +156,9 @@ class ACPBTrickle(object):
         #       random point in the interval, taken from the range [I/2, I),
         #       that is, values greater than or equal to I/2 and less than I.
         #       The interval ends at I.
-        slot_len = self.settings.tsch_slotDuration * 1000  # convert to ms
-        l_e = slot_len * self.settings.tsch_slotframeLength
-        self.Ncells = int(math.ceil(old_div(self.interval, l_e)))
+        slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
+        slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
+        self.Ncells = int(math.ceil(old_div(self.interval, slotframe_duration_ms)))
 
         if hasattr(self.mote.rpl.of, 'neighbors'):
             self.Nnbr = len(self.mote.rpl.of.neighbors)
@@ -170,15 +174,16 @@ class ACPBTrickle(object):
 
         self.t_start = int(math.ceil(self.t_start))
         self.t_end = int(math.ceil(self.t_end))
-        t = random.randint(self.t_start, self.t_end) * l_e
+        t = random.randint(self.t_start, self.t_end) * slotframe_duration_ms
 
-        t_range = (self.t_end - self.t_start) * l_e
+        t_range = (self.t_end - self.t_start) * slotframe_duration_ms
         self.t_pos = round(t / self.interval, 1)
-        self.Ncells = max(int(math.ceil(old_div(t_range, l_e))), 1)
+        self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
 
         cur_asn = self.engine.getAsn()
-        asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_len)))
-        asn = cur_asn + int(math.ceil(old_div(t, slot_len)))
+        # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
+        asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_duration_ms)))
+        asn = cur_asn + int(math.ceil(old_div(t, slot_duration_ms)))
 
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
@@ -229,7 +234,7 @@ class ACPBTrickle(object):
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         if self.t_end < self.interval:
-            asn_end = cur_asn + int(math.ceil(old_div(self.t_end, slot_len)))
+            asn_end = cur_asn + int(math.ceil(old_div(self.t_end, slot_duration_ms)))
             if asn_end == self.engine.getAsn():
                 # schedule the event at the next ASN since we cannot schedule it at
                 # the current ASN
@@ -243,7 +248,7 @@ class ACPBTrickle(object):
 
         # ========================
 
-        asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
+        asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_duration_ms)))
 
         def i_callback():
             used = None

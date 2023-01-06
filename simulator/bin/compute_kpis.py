@@ -58,6 +58,7 @@ def init_mote():
         'charge': None,
         'lifetime_AA_years': None,
         'avg_current_uA': None,
+        'ambr': None,
         'trickle': {},
     }
 
@@ -163,6 +164,16 @@ def kpis_all(inputfile):
             )
             allstats[run_id][mote_id]['upstream_pkts'][appcounter]['rx_asn'] = asn
 
+        elif logline['_type'] == SimLog.LOG_AMBR['type']:
+            # shorthands
+            mote_id = logline['_mote_id']
+
+            # only log non-dagRoot
+            if mote_id == DAGROOT_ID:
+                continue
+
+            allstats[run_id][mote_id]['ambr'] = logline['ambr']
+
         elif logline['_type'] == SimLog.LOG_TRICKLE['type']:
             # trickle result
 
@@ -256,6 +267,7 @@ def kpis_all(inputfile):
         current_consumed = []
         lifetimes = []
         slot_duration = file_settings['tsch_slotDuration']
+        all_ambr = []
 
         trickle_stats = {}
 
@@ -276,6 +288,8 @@ def kpis_all(inputfile):
             if motestats['join_asn'] is not None:
                 joining_times.append(motestats['join_asn'])
 
+            # trickle timer
+
             for key in trickle_keys:
                 val = [motestats['trickle'][x][key] for x in motestats['trickle']]
 
@@ -284,6 +298,11 @@ def kpis_all(inputfile):
                     trickle_stats[key] = []
 
                 trickle_stats[key].extend(val)
+
+            # ambr
+
+            if motestats['ambr'] is not None:
+                all_ambr.append(motestats['ambr'])
 
             # latency
 
@@ -467,10 +486,48 @@ def kpis_all(inputfile):
             ]
             allstats[run_id]['global-stats'][key] = stat
 
+        # ambr
+        stat = [
+            {
+                'name': "ambr",
+                'min': (
+                    min(all_ambr)
+                    if val else 'N/A'
+                ),
+                'max': (
+                    max(all_ambr)
+                    if val else 'N/A'
+                ),
+                'mean': (
+                    mean(all_ambr)
+                    if val else 'N/A'
+                ),
+                'mode': (
+                    int(st.mode(all_ambr)[0])
+                    if val else 'N/A'
+                ),
+                'std': (
+                    np.std(all_ambr)
+                    if val else 'N/A'
+                ),
+                '75%': (
+                    np.percentile(all_ambr, 75)
+                    if val else 'N/A'
+                ),
+                '99%': (
+                    np.percentile(all_ambr, 99)
+                    if val else 'N/A'
+                )
+            }
+        ]
+        allstats[run_id]['global-stats']['ambr'] = stat
+
     # === remove unnecessary stats
 
     for (run_id, per_mote_stats) in list(allstats.items()):
         for (mote_id, motestats) in list(per_mote_stats.items()):
+            if 'latencies' in motestats:
+                del motestats['latencies']
             if 'sync_asn' in motestats:
                 del motestats['sync_asn']
             if 'charge_asn' in motestats:

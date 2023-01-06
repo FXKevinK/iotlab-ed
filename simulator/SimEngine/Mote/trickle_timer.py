@@ -57,12 +57,16 @@ class TrickleTimer(object):
         self.pstable = 1
         self.DIOsurpress = 0
         self.DIOtransmit = 0
+        self.DIOtransmit_dis = 0
         self.m = 0
         self.t_pos = 0
 
     @property
     def is_running(self):
         return self.state == self.STATE_RUNNING
+
+    def increment_diotransmit_dis(self, is_broadcast):
+        self.DIOtransmit_dis += 1
 
     def start(self, note=None):
         # Section 4.2:
@@ -137,7 +141,7 @@ class TrickleTimer(object):
         #       random point in the interval, taken from the range [I/2, I),
         #       that is, values greater than or equal to I/2 and less than I.
         #       The interval ends at I.
-        slot_len = self.settings.tsch_slotDuration * 1000  # convert to ms
+        slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
 
         t_min = old_div(self.interval, 2)
         t_max = self.interval
@@ -146,12 +150,13 @@ class TrickleTimer(object):
 
         self.t_pos = round(t / self.interval, 1)
 
-        l_e = slot_len * self.settings.tsch_slotframeLength
-        self.Ncells = max(int(math.ceil(old_div(t_range, l_e))), 1)
+        slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
+        self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
 
         cur_asn = self.engine.getAsn()
-        asn_start = cur_asn + int(math.ceil(old_div(t_min, slot_len)))
-        asn = cur_asn + int(math.ceil(old_div(t, slot_len)))
+        # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
+        asn_start = cur_asn + int(math.ceil(old_div(t_min, slot_duration_ms)))
+        asn = cur_asn + int(math.ceil(old_div(t, slot_duration_ms)))
 
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
@@ -201,7 +206,7 @@ class TrickleTimer(object):
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         if t_max < self.interval:
-            asn_end = cur_asn + int(math.ceil(old_div(t_max, slot_len)))
+            asn_end = cur_asn + int(math.ceil(old_div(t_max, slot_duration_ms)))
             if asn_end == self.engine.getAsn():
                 # schedule the event at the next ASN since we cannot schedule it at
                 # the current ASN
@@ -215,7 +220,7 @@ class TrickleTimer(object):
 
         # ========================
 
-        asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_len)))
+        asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_duration_ms)))
 
         def i_callback():
             used = None
@@ -271,6 +276,7 @@ class TrickleTimer(object):
             'poccupancy': self.poccupancy,
             'DIOtransmit': self.DIOtransmit,
             'DIOsurpress': self.DIOsurpress,
+            'DIOtransmit_dis': self.DIOtransmit_dis,
             'Nreset': self.Nreset,
             'preset': self.preset,
             'pstable': self.pstable,

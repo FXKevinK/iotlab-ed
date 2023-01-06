@@ -98,13 +98,31 @@ class ParserLogs(Parser):
         desc_low = log_desc.lower()
         time_format = "%H:%M:%S.%f"
 
-        if "periodic" in co_name_low and "periodic" in desc_low:
+        if "periodic" in co_name_low and "experiment" in desc_low:
             exp_log = True
-            pkt_["0_state"] = "send"
-            pkt_["counter"] = arg1
-            pkt_["is_failed"] = arg2
-            pkt_["mote_id"] = mote_id
-            pkt_["time"] = datetime.now().strftime(time_format)
+            asn = None
+
+            try:
+                (counter, ambr, is_failed) = struct.unpack('<HHB', ''.join([chr(c) for c in data_only[:-5]]))
+            except struct.error:
+                log.info("Invalid debug Send-1 {0}".format(data_only))
+
+            try:
+                (asn_4, asn_2_3, asn_0_1) = struct.unpack('<BHH', ''.join([chr(c) for c in data_only[-5:]]))
+                _, hex = self.update_test(byte0_1=asn_0_1, byte2_3=asn_2_3, byte4=asn_4)
+                asn = int(hex, 16)
+            except struct.error:
+                log.info("Invalid debug Send-2 {0}".format(data_only))
+
+            if asn:
+                pkt_["0_state"] = "send"
+                pkt_["counter"] = counter
+                pkt_["is_failed"] = is_failed
+                pkt_["ambr"] = float(ambr)/10000
+                pkt_["asn"] = asn
+                pkt_["mote_id"] = mote_id
+                pkt_["time"] = datetime.now().strftime(time_format)
+
         elif "rpl" in co_name_low and "experiment" in desc_low:
             exp_log = True
             asn = None
@@ -116,7 +134,7 @@ class ParserLogs(Parser):
 
             try:
                 (asn_4, asn_2_3, asn_0_1) = struct.unpack('<BHH', ''.join([chr(c) for c in data_only[-5:]]))
-                bytes, hex = self.update_test(byte0_1=asn_0_1, byte2_3=asn_2_3, byte4=asn_4)
+                _, hex = self.update_test(byte0_1=asn_0_1, byte2_3=asn_2_3, byte4=asn_4)
                 asn = int(hex, 16)
             except struct.error:
                 log.info("Invalid debug RPL-2 {0}".format(data_only))
@@ -134,13 +152,13 @@ class ParserLogs(Parser):
             exp_log = True
             values = None
             try:
-                values = struct.unpack('<BBBBHHHHHHHHH', ''.join([chr(c) for c in data_only]))
+                values = struct.unpack('<BBBBHHHHHHHHHH', ''.join([chr(c) for c in data_only]))
             except struct.error:
                 log.info("could not extract data from {0}".format(data_only))
 
             if values:
                 values = list(values)
-                if len(values) == 13:
+                if len(values) == 14:
                     pkt_["m"] = values[0]
                     pkt_["Nnbr"] = values[1]
                     pkt_["k"] = values[2]
@@ -150,17 +168,19 @@ class ParserLogs(Parser):
                     pkt_["DIOtransmit"] = values[6]
                     pkt_["DIOsurpress"] = values[7]
                     pkt_["DIOtransmit_collision"] = values[8]
-                    pkt_["pfree"] = float(values[9])/10000
-                    pkt_["preset"] = float(values[10])/10000
-                    pkt_["t_pos"] = float(values[11])/10000
-                    pkt_["epsilon"] = float(values[12])/10000
+                    pkt_["DIOtransmit_dis"] = values[9]
+                    pkt_["pfree"] = float(values[10])/10000
+                    pkt_["preset"] = float(values[11])/10000
+                    pkt_["t_pos"] = float(values[12])/10000
+                    pkt_["epsilon"] = float(values[13])/10000
 
                     pkt_["0_state"] = "trickle"
                     pkt_["mote_id"] = mote_id
                     pkt_["time"] = datetime.now().strftime(time_format)
 
         if exp_log:
-            if pkt_: write_to_log(self.filepath, pkt_)
+            if pkt_:
+                write_to_log(self.filepath, pkt_)
             return 'error', data
 
         # turn into string

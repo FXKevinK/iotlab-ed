@@ -22,6 +22,7 @@
 //=========================== variables =======================================
 
 icmpv6periodic_vars_t icmpv6periodic_vars;
+icmpv6periodic_debug_t icmpv6periodic_debug;
 
 //=========================== prototypes ======================================
 
@@ -167,8 +168,24 @@ owerror_t icmpv6periodic_send(void)
     ((ICMPv6_ht *) (msg->payload))->code = 0;
     packetfunctions_calculateChecksum(msg, (uint8_t * ) & (((ICMPv6_ht *) (msg->payload))->checksum));//do last
 
-    bool result = icmpv6_send(msg);
-    LOG_INFO(COMPONENT_ICMPv6PERIODIC, ERR_PERIODIC_SEND, icmpv6periodic_vars.info.counter, result);
+    // Log
+    uint8_t asn[5];
+    asn_t curAsn;
+    bool result;
+
+    result = icmpv6_send(msg);
+
+    icmpv6periodic_debug.counter = icmpv6periodic_vars.info.counter;
+    icmpv6periodic_debug.is_failed = result;
+    icmpv6periodic_debug.ambr = opentrickletimers_getAMBR();
+
+    ieee154e_getAsn(&(asn[0]));
+    curAsn.bytes0and1 = 256 * asn[1] + asn[0];
+    curAsn.bytes2and3 = 256 * asn[3] + asn[2];
+    curAsn.byte4 = asn[4];
+    
+    memcpy(&icmpv6periodic_debug.asn, &curAsn, sizeof(asn_t));
+    openserial_print_exp(COMPONENT_ICMPv6PERIODIC, ERR_EXPERIMENT, (uint8_t *) & icmpv6periodic_debug, sizeof(icmpv6periodic_debug_t));
 
     if (result == E_SUCCESS)
     {

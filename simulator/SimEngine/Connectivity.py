@@ -31,7 +31,7 @@ import gzip
 import datetime as dt
 import json
 import itertools
-
+from sklearn.preprocessing import MinMaxScaler
 from . import SimSettings
 from . import SimLog
 from .Mote.Mote import Mote
@@ -871,22 +871,50 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
 
         nodes_len = len(self.mote_id_list)
         position = []
+        shape = []
         available_position = [x for x in range(nodes_len - 1)]
 
         if topology == 'grid':
             loop_n = int(np.sqrt(nodes_len))
-            assert loop_n**2 == nodes_len
-            center_ = loop_n // 2
-            center = (square_side * center_) / loop_n
-            for row in range(1, loop_n + 1):
-                for col in range(1, loop_n + 1):
-                    if row == center_ and col == center_:
+            if loop_n**2 == nodes_len:
+                shape = [loop_n, loop_n]
+            else:
+                factor = []
+                for i in range(1, nodes_len):
+                    if nodes_len % i == 0:
+                        factor.append(i)
+
+                factor_ = np.flip(factor)
+                for idx, f in enumerate(factor_):
+                    if idx+1 == len(factor_):
                         continue
-                    row_ = (square_side * row) / loop_n
-                    col_ = (square_side * col) / loop_n
-                    position.append((row_, col_))
+                    next_ = factor_[idx+1]
+                    if f * next_ == nodes_len:
+                        shape = [f, next_]
+                        break
+
+            assert len(shape) == 2
+            center_x = np.ceil(shape[0] / 2)
+            center_y = np.ceil(shape[1] / 2)
+
+            grid = []
+            for row in range(1, shape[0] + 1):
+                for col in range(1, shape[1] + 1):
+                    if row == center_x and col == center_y:
+                        continue
+                    grid.append([row, col])
+
+            grid = np.array(grid)
+            scaler = MinMaxScaler(feature_range=(0,square_side))
+            scaler.fit(grid)
+
+            grid_ = scaler.transform(grid)
+            position = [(val[0], val[1]) for val in grid_]
+            [[center_x, center_y]] = scaler.transform([[center_x, center_y]])
+
         elif topology == "random":
-            center = square_side // 2
+            center_x = np.ceil(square_side / 2)
+            center_y = np.ceil(square_side / 2)
         elif topology == "saved":
             # reading the data from the file
             with open(f"{path}.json") as f:
@@ -900,7 +928,8 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
             for key in js.keys():
                 row, col = js[key]
                 position[int(key)] = (row, col)
-            center = position[0][0]
+            center_x = position[0][0]
+            center_y = position[0][1]
 
         # determine coordinates of the motes
         for _, target_mote_id in enumerate(self.mote_id_list):
@@ -909,7 +938,7 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
 
                 # select a tentative coordinate
                 if target_mote_id == 0:
-                    self.coordinates[target_mote_id] = (center, center)
+                    self.coordinates[target_mote_id] = (center_x, center_y)
                     mote_is_deployed = True
                     continue
 
@@ -1029,7 +1058,7 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
             data = np.array(data)
             x, y = data.T
             plt.scatter(x,y)
-            plt.scatter(center,center,color='r')
+            plt.scatter(center_x,center_y,color='r')
             plt.savefig(
                 "{path}.png",
                 bbox_inches     = 'tight',

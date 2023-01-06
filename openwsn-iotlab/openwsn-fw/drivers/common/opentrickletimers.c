@@ -24,6 +24,9 @@
 
 //=========================== variables =======================================
 
+#define EMPTY_16 0xffff
+#define EMPTY_8 0xff
+
 opentrickletimers_vars_t opentrickletimers_vars;
 opentrickletimers_debug_t opentrickletimers_debug;
 
@@ -40,6 +43,8 @@ void opentrickletimers_calculate_k(void);
 void opentrickletimers_update_qtable(void);
 void opentrickletimers_calculate_epsilon(void);
 void opentrickletimers_log_result(void);
+void opentrickletimers_ambr_trigger(opentimers_id_t id);
+void opentrickletimers_scheduler_ambr(void);
 
 //=========================== public ==========================================
 
@@ -91,16 +96,16 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
     DISABLE_INTERRUPTS();
 
     opentrickletimers_vars.Imin = DEFAULT_DIO_IMIN_MS;
-    opentrickletimers_vars.Imax = DEFAULT_DIO_IMAX;
-    opentrickletimers_vars.max_interval = DEFAULT_DIO_IMIN_MS * DEFAULT_DIO_IMAX;
+    opentrickletimers_vars.Imax = DEFAULT_DIO_INTERVAL_DOUBLINGS;
+    opentrickletimers_vars.max_interval = DEFAULT_DIO_IMIN_MS * DEFAULT_DIO_INTERVAL_DOUBLINGS;
 
     opentrickletimers_vars.K = DEFAULT_DIO_REDUNDANCY_CONSTANT;
     opentrickletimers_vars.m = 0;
     opentrickletimers_vars.C = 0;
     opentrickletimers_vars.I = 0;
-    opentrickletimers_vars.start_ops = -1;
-    opentrickletimers_vars.end_ops = -1;
-    opentrickletimers_vars.Ncells = -1;
+    opentrickletimers_vars.start_ops = EMPTY_16;
+    opentrickletimers_vars.end_ops = EMPTY_16;
+    opentrickletimers_vars.Ncells = EMPTY_16;
     opentrickletimers_vars.is_dio_sent = FALSE;
     opentrickletimers_vars.Nstates = 1;
     opentrickletimers_vars.pfree = 1;
@@ -108,9 +113,14 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
     opentrickletimers_vars.Nreset = 0;
     opentrickletimers_vars.DIOsurpress = 0;
     opentrickletimers_vars.DIOtransmit = 0;
+    opentrickletimers_vars.DIOtransmit_dis = 0;
     opentrickletimers_vars.t_pos = 0;
     opentrickletimers_vars.preset = 0;
     opentrickletimers_vars.pstable = 1;
+
+    opentrickletimers_vars.prev_ops_ambr = EMPTY_16;
+    opentrickletimers_vars.ambr = EMPTY_8;
+    opentrickletimers_vars.counter_ambr = 0;
 
     opentrickletimers_vars.callback = cb;
     opentrickletimers_vars.isUsed = TRUE;
@@ -121,11 +131,11 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
     opentrickletimers_vars.Nnbr = 0;
     opentrickletimers_vars.DIOtransmit_collision = 0;
     opentrickletimers_vars.ptransmit = 1;
-    opentrickletimers_vars.current_action = -1;
+    opentrickletimers_vars.current_action = EMPTY_8;
     opentrickletimers_vars.ptransmit_collision = 0;
     opentrickletimers_vars.epsilon = default_epsilon;
     opentrickletimers_vars.is_explore = TRUE;
-    memset(&opentrickletimers_vars.q_table[0], 0, (DEFAULT_DIO_IMAX + 1) * 2);
+    memset(&opentrickletimers_vars.q_table[0], 0, (DEFAULT_DIO_INTERVAL_DOUBLINGS + 1) * 2);
 #endif
 
 #if adaptive_epsilon == TRUE
@@ -138,19 +148,124 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
     opentrickletimers_vars.sc_at_t = opentimers_create(TIMER_GENERAL_PURPOSE, TASKPRIO_RPL);
     opentrickletimers_vars.sc_at_start_t = opentimers_create(TIMER_GENERAL_PURPOSE, TASKPRIO_RPL);
     opentrickletimers_vars.sc_at_end_t = opentimers_create(TIMER_GENERAL_PURPOSE, TASKPRIO_RPL);
+    opentrickletimers_vars.sc_ambr = opentimers_create(TIMER_GENERAL_PURPOSE, TASKPRIO_RPL);
 
     if (
         (opentrickletimers_vars.sc_at_i < 0 || MAX_NUM_TIMERS <= opentrickletimers_vars.sc_at_i) ||
         (opentrickletimers_vars.sc_at_t < 0 || MAX_NUM_TIMERS <= opentrickletimers_vars.sc_at_t) ||
         (opentrickletimers_vars.sc_at_start_t < 0 || MAX_NUM_TIMERS <= opentrickletimers_vars.sc_at_start_t) ||
+        (opentrickletimers_vars.sc_ambr < 0 || MAX_NUM_TIMERS <= opentrickletimers_vars.sc_ambr) ||
         (opentrickletimers_vars.sc_at_end_t < 0 || MAX_NUM_TIMERS <= opentrickletimers_vars.sc_at_end_t))
     {
+        LOG_CRITICAL(COMPONENT_OPENTRICKLETIMERS, ERR_NO_FREE_TIMER_OR_QUEUE_ENTRY,
+                        (errorparameter_t) 0,
+                        (errorparameter_t) 0);
         return FALSE;
     }
+
+    opentrickletimers_ambr_trigger(opentrickletimers_vars.sc_ambr);
 
     ENABLE_INTERRUPTS();
 
     return TRUE;
+}
+
+void opentrickletimers_ambr_trigger(opentimers_id_t id){
+
+    slotinfo_element_t minimal_cell;
+    uint16_t cur_ops_ambr = EMPTY_16;
+    uint16_t used = EMPTY_16;
+    float curr_mbr = EMPTY_8;
+
+    INTERRUPT_DECLARATION();
+
+    if (idmanager_getIsDAGroot() == TRUE)
+    {
+        opentimers_cancel(opentrickletimers_vars.sc_ambr);
+        return;
+    }
+
+    if (ieee154e_isSynch() == FALSE)
+    {
+        opentrickletimers_scheduler_ambr();
+        return;
+    }
+    
+    DISABLE_INTERRUPTS();
+
+    // Record ops saat ini masukin ke prev_ops
+    // Schedule 10 slotframe ke depan
+
+    // Record ops pas udah beres schedule ke cur_ops OK
+    // Hitung used = cur_ops - prev_ops OK
+    // Hitung cur_ambr, jika -1, assign aja. jika udah ada nilainya, pake incremental average pake counter dan currect value OK
+    // simpen global variabel ambr OK
+
+    // prev_ops = cur_ops dan schedule lg OK
+
+    schedule_getSlotInfo(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET, &minimal_cell);
+    if (minimal_cell.found == TRUE && minimal_cell.channelOffset == 0)
+    {
+        cur_ops_ambr = minimal_cell.allOps;
+    }
+    
+    if (opentrickletimers_vars.prev_ops_ambr != EMPTY_16 && cur_ops_ambr != EMPTY_16)
+    {
+        used = cur_ops_ambr - opentrickletimers_vars.prev_ops_ambr;
+        if (used < 0)
+        {
+            used = 0;
+        }
+
+        if (used <= MINIMAL_CELL_BUSY_RATIO_SLOTFRAME)
+        {
+            curr_mbr = (float)used / MINIMAL_CELL_BUSY_RATIO_SLOTFRAME;
+        }
+    }
+
+    if (opentrickletimers_vars.counter_ambr > 0 && opentrickletimers_vars.ambr != EMPTY_8 && curr_mbr != EMPTY_8)
+    {
+        // incremental average
+        opentrickletimers_vars.counter_ambr += 1;
+        opentrickletimers_vars.ambr = opentrickletimers_vars.ambr + ((curr_mbr - opentrickletimers_vars.ambr) / opentrickletimers_vars.counter_ambr);
+    }
+
+    if(opentrickletimers_vars.counter_ambr == 0 && curr_mbr != EMPTY_8){
+        opentrickletimers_vars.ambr = curr_mbr;
+        opentrickletimers_vars.counter_ambr += 1;
+    }
+
+    if(cur_ops_ambr != EMPTY_16){
+        opentrickletimers_vars.prev_ops_ambr = cur_ops_ambr;
+    }
+
+    opentrickletimers_scheduler_ambr();
+
+    ENABLE_INTERRUPTS();
+
+}
+
+void opentrickletimers_scheduler_ambr(void){
+    uint16_t slotframe_duration_ms;
+    uint8_t slot_duration_ms;
+    uint16_t frameLength;
+
+    slot_duration_ms = (ieee154e_getSlotDuration() * 305) / 10000; // 10 ms
+    frameLength = schedule_getFrameLength(); // 101
+    slotframe_duration_ms = frameLength * slot_duration_ms; // 1010 ms per slotframe
+
+    if(slotframe_duration_ms < 1){
+        slotframe_duration_ms = SLOTFRAME_LENGTH * SLOTDURATION;
+    }
+
+    opentimers_scheduleIn(
+        opentrickletimers_vars.sc_ambr,
+        MINIMAL_CELL_BUSY_RATIO_SLOTFRAME * slotframe_duration_ms,
+        TIME_MS,
+        TIMER_ONESHOT,
+        opentrickletimers_ambr_trigger
+    );
+    
 }
 
 uint32_t opentrickletimers_getValue(uint8_t code)
@@ -170,11 +285,11 @@ void opentrickletimers_schedule_event_at_t_and_i(void)
 {
 
     uint8_t lower_bound;
-    uint16_t l_e;
+    uint16_t slotframe_duration_ms;
     uint32_t t_range;
     uint32_t rand_num;
     uint32_t half_interval;
-    uint8_t slot_time_ms;
+    uint8_t slot_duration_ms;
     uint16_t frameLength;
 
     INTERRUPT_DECLARATION();
@@ -213,11 +328,11 @@ void opentrickletimers_schedule_event_at_t_and_i(void)
 
     t_range = opentrickletimers_vars.t_max - opentrickletimers_vars.t_min;
 
-    slot_time_ms = (ieee154e_getSlotDuration() * 305) / 10000;
-    frameLength = schedule_getFrameLength();
-    l_e = frameLength * slot_time_ms;
+    slot_duration_ms = (ieee154e_getSlotDuration() * 305) / 10000; // 10 ms
+    frameLength = schedule_getFrameLength(); // 101
+    slotframe_duration_ms = frameLength * slot_duration_ms; // 1010 ms per slotframe
 
-    opentrickletimers_vars.Ncells = ((float)t_range / (float)l_e);
+    opentrickletimers_vars.Ncells = ((float)t_range / (float)slotframe_duration_ms);
     opentrickletimers_vars.Ncells = packetfunctions_mathCeil(opentrickletimers_vars.Ncells);
     if (opentrickletimers_vars.Ncells < 1)
     {
@@ -327,6 +442,15 @@ void opentrickletimers_start(opentimers_id_t id)
     opentrickletimers_start_next_interval();
 
     ENABLE_INTERRUPTS();
+}
+
+uint16_t opentrickletimers_getAMBR(void){
+    uint16_t value = (uint16_t) (opentrickletimers_vars.ambr * 10000);
+    return value;
+}
+
+void opentrickletimers_incrementDioTransmitDis(void){
+    opentrickletimers_vars.DIOtransmit_dis += 1;
 }
 
 /**
@@ -448,7 +572,7 @@ void opentrickletimers_start_t_callback(opentimers_id_t id)
     DISABLE_INTERRUPTS();
 
     schedule_getSlotInfo(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET, &minimal_cell);
-    opentrickletimers_vars.start_ops = -1;
+    opentrickletimers_vars.start_ops = EMPTY_16;
     if (minimal_cell.found == TRUE && minimal_cell.channelOffset == 0)
     {
         opentrickletimers_vars.start_ops = minimal_cell.allOps;
@@ -464,7 +588,7 @@ void opentrickletimers_end_t_callback(opentimers_id_t id)
     DISABLE_INTERRUPTS();
 
     schedule_getSlotInfo(SCHEDULE_MINIMAL_6TISCH_SLOTOFFSET, &minimal_cell);
-    opentrickletimers_vars.end_ops = -1;
+    opentrickletimers_vars.end_ops = EMPTY_16;
     if (minimal_cell.found == TRUE && minimal_cell.channelOffset == 0)
     {
         opentrickletimers_vars.end_ops = minimal_cell.allOps;
@@ -474,8 +598,8 @@ void opentrickletimers_end_t_callback(opentimers_id_t id)
 
 void opentrickletimers_i_callback(opentimers_id_t id)
 {
-    uint16_t used = -1;
-    float occ = -1;
+    uint16_t used = EMPTY_16;
+    float occ = EMPTY_8;
     uint16_t dio_sent;
     bool fw_dioSent;
 
@@ -483,7 +607,7 @@ void opentrickletimers_i_callback(opentimers_id_t id)
     DISABLE_INTERRUPTS();
 
     fw_dioSent = icmpv6rpl_getdioSent();
-    if (opentrickletimers_vars.start_ops >= 0 && opentrickletimers_vars.end_ops >= 0)
+    if (opentrickletimers_vars.start_ops != EMPTY_16 && opentrickletimers_vars.end_ops != EMPTY_16)
     {
         dio_sent = fw_dioSent * opentrickletimers_vars.is_dio_sent;
         used = (opentrickletimers_vars.end_ops - opentrickletimers_vars.start_ops) - dio_sent;
@@ -565,14 +689,13 @@ void opentrickletimers_log_result(void)
     {
         return;
     }
-    
-    bool result;
 
     opentrickletimers_debug.state = opentrickletimers_vars.Nstates;
     opentrickletimers_debug.m = opentrickletimers_vars.m;
     opentrickletimers_debug.DIOtransmit = opentrickletimers_vars.DIOtransmit;
     opentrickletimers_debug.DIOsurpress = opentrickletimers_vars.DIOsurpress;
     opentrickletimers_debug.DIOtransmit_collision = opentrickletimers_vars.DIOtransmit_collision;
+    opentrickletimers_debug.DIOtransmit_dis = opentrickletimers_vars.DIOtransmit_dis;
     opentrickletimers_debug.Nreset = opentrickletimers_vars.Nreset;
     opentrickletimers_debug.counter = opentrickletimers_vars.C;
     opentrickletimers_debug.k = opentrickletimers_vars.K;
@@ -581,7 +704,7 @@ void opentrickletimers_log_result(void)
     opentrickletimers_debug.preset = (uint16_t) (opentrickletimers_vars.preset * 10000);
     opentrickletimers_debug.t_pos = (uint16_t) (opentrickletimers_vars.t_pos * 10000);
     opentrickletimers_debug.epsilon = (uint16_t) (opentrickletimers_vars.epsilon * 10000);
-    result = openserial_print_exp(COMPONENT_OPENTRICKLETIMERS, ERR_EXPERIMENT, (uint8_t * ) & opentrickletimers_debug, sizeof(opentrickletimers_debug_t));
+    openserial_print_exp(COMPONENT_OPENTRICKLETIMERS, ERR_EXPERIMENT, (uint8_t * ) & opentrickletimers_debug, sizeof(opentrickletimers_debug_t));
 }
 
 // ok

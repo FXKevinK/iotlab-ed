@@ -356,6 +356,7 @@ void icmpv6rpl_receive(OpenQueueEntry_t *msg)
             {
                 icmpv6rpl_start_or_reset_trickle_timer();
             }
+            opentrickletimers_incrementDioTransmitDis();
             icmpv6rpl_timer_DIO_task();
         }
 
@@ -648,7 +649,6 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection(void)
 
         // Log
         uint16_t prId2B;
-        bool result;
         uint8_t asn[5];
         asn_t curAsn;
 
@@ -663,7 +663,7 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection(void)
         curAsn.byte4 = asn[4];
         
         memcpy(&icmpv6rpl_debug.asn, &curAsn, sizeof(asn_t));
-        result = openserial_print_exp(COMPONENT_ICMPv6RPL, ERR_EXPERIMENT, (uint8_t *) & icmpv6rpl_debug, sizeof(icmpv6rpl_debug_t));
+        openserial_print_exp(COMPONENT_ICMPv6RPL, ERR_EXPERIMENT, (uint8_t *) & icmpv6rpl_debug, sizeof(icmpv6rpl_debug_t));
     }
     else
     {
@@ -1035,11 +1035,7 @@ void icmpv6rpl_timer_DIO_cb(opentimers_id_t id)
 */
 void icmpv6rpl_timer_DIO_task(void)
 {
-
-    if (openrandom_get16b() < (0xffff / DIO_PORTION))
-    {
-        sendDIO();
-    }
+    sendDIO();
 }
 
 /**

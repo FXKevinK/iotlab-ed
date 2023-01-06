@@ -7,6 +7,17 @@
 #define app_pkPeriodVar 0.1
 #define app_pkLength 90
 
+
+BEGIN_PACK
+typedef struct
+{
+    uint16_t counter;
+    uint16_t ambr;
+    bool is_failed;
+    asn_t asn;
+} icmpv6periodic_debug_t;
+END_PACK
+
 typedef struct
 {
     uint16_t counter;

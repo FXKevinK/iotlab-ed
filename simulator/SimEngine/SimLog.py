@@ -42,6 +42,7 @@ DROPREASON_RANK_ERROR             = u'rank_error'
 
 # === q-trickle
 LOG_TRICKLE                       = {u'type': u'log.trickle', u'keys': [u'_mote_id', u'result']}
+LOG_AMBR                          = {u'type': u'log.ambr', u'keys': [u'_mote_id', u'ambr']}
 
 # === app
 LOG_APP_TX                        = {u'type': u'app.tx',                    u'keys': [u'_mote_id',u'packet']}

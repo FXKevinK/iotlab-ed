@@ -57,7 +57,6 @@ void openstack_init(void) {
     //===== drivers
     opentimers_init();
     openserial_init();
-    opentrickletimers_init();
 
     //===== stack
     //-- cross-layer
@@ -84,6 +83,8 @@ void openstack_init(void) {
     frag_init();
 #endif
 
+    opentrickletimers_init();
+
     //-- 03b-IPv6
     forwarding_init();
     icmpv6_init();
@@ -95,7 +96,7 @@ void openstack_init(void) {
 #if OPENWSN_ICMPV6PERIODIC_C
     icmpv6periodic_init();
 #endif
-
+    
     icmpv6rpl_init();
     //-- 04-TRAN
 
