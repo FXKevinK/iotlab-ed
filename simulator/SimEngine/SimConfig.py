@@ -135,8 +135,33 @@ class SimConfig(dict):
 
         assert SimConfig._log_directory_name is None
 
-        # determine log_directory_name
-        if   self.log_directory_name == u'startTime':
+        if "trickle" in self.log_directory_name:
+            method = self.config['settings']['regular']['trickle_method']
+            subfolders = list(
+                [os.path.join(SimSettings.SimSettings.DEFAULT_LOG_ROOT_DIR, x) for x in os.listdir(SimSettings.SimSettings.DEFAULT_LOG_ROOT_DIR) if method in x]
+            )
+            index = len(subfolders) + 1
+            log_directory_name = u'_'.join((method, str(index)))
+
+            if "exp1" in self.log_directory_name:
+                ql_learning_rate = self.config['settings']['regular']['ql_learning_rate']
+                ql_discount_rate = self.config['settings']['regular']['ql_discount_rate']
+                ql_epsilon = self.config['settings']['regular']['ql_epsilon']
+                log_directory_name = u'{}_lr{}-dr{}-ep{}'.format(log_directory_name, ql_learning_rate, ql_discount_rate, ql_epsilon)
+            elif "exp2" in self.log_directory_name:
+                use_adaptive = self.config['settings']['regular']['ql_adaptive_epsilon']
+                adaptive_epsilon = "adaptive" if use_adaptive else "static"
+                ql_learning_rate = self.config['settings']['regular']['ql_learning_rate']
+                ql_discount_rate = self.config['settings']['regular']['ql_discount_rate']
+                epsilon_var = self.config['settings']['regular']['ql_adaptive_decay_rate'] if use_adaptive else self.config['settings']['regular']['ql_epsilon']
+                log_directory_name = u'{}_lr{}-dr{}-{}{}'.format(log_directory_name, ql_learning_rate, ql_discount_rate, adaptive_epsilon, epsilon_var)
+            elif "exp3" in self.log_directory_name:
+                num_motes = self.config['settings']['combination']['exec_numMotes'][0]
+                imin = self.config['settings']['regular']['dio_interval_min_s']
+                log_directory_name = u'{}_n{}-i{}'.format(log_directory_name, num_motes, imin)
+
+        elif self.log_directory_name == u'startTime':
+            # determine log_directory_name
             log_directory_name = u'{0}-{1:03d}'.format(
                 time.strftime(
                     "%Y%m%d-%H%M%S",

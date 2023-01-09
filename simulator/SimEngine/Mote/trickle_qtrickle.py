@@ -27,7 +27,7 @@ class QTrickle(object):
         self.log = SimEngine.SimLog.SimLog().log
 
         self.mote = mote
-        i_min = pow(2, self.settings.dio_interval_min)
+        i_min = self.settings.dio_interval_min_s * 1000 # to ms
         i_max = self.settings.dio_interval_doublings
         self.redundancy_constant = self.settings.k_max
         self.i_max = i_max
@@ -182,6 +182,7 @@ class QTrickle(object):
         t_range = self.t_end - self.t_start
         # add/subtract with 20ms, to avoid same value of T with t_min or t_max
         self.t = random.uniform(self.t_start+20, self.t_end-20)
+        self.listen_period = self.t - self.t_start
 
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
         self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
@@ -241,7 +242,8 @@ class QTrickle(object):
             asn=asn_,
             cb=t_callback,
             uniqueTag=self.unique_tag_base + u'_at_t',
-            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS,
+            auto_correct=True)
 
         self.engine.scheduleAtAsn(
             asn=asn_start,
@@ -326,14 +328,6 @@ class QTrickle(object):
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
     def log_result(self):
-
-        count_dis, count_dio, count_dao = self.mote.rpl.get_all_cp()
-
-        minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
-        all_ops = -1
-        if minimal_cell:
-            all_ops = minimal_cell.all_ops
-
         result = {
             'state': self.Nstates,
             'm': self.m,
@@ -341,21 +335,13 @@ class QTrickle(object):
             'poccupancy': self.poccupancy,
             'DIOtransmit': self.DIOtransmit,
             'DIOsurpress': self.DIOsurpress,
-            'DIOtransmit_dis': self.DIOtransmit_dis,
             'Nreset': self.Nreset,
             'preset': self.preset,
             'pstable': self.pstable,
             'counter': self.counter,
             'k': self.redundancy_constant,
-            'Nnbr': self.Nnbr,
-            'DIOtransmit_collision': self.DIOtransmit_collision,
             'epsilon': self.epsilon,
-            'all_ops': all_ops,
-            'interval': self.interval,
-            't': self.t,
-            "count_dis": count_dis,
-            "count_dio": count_dio,
-            "count_dao": count_dao
+            'listen_period': self.listen_period,
         }
 
         self.log(

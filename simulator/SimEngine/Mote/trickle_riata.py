@@ -27,7 +27,7 @@ class RiataTrickle(object):
         self.log = SimEngine.SimLog.SimLog().log
 
         self.mote = mote
-        i_min = pow(2, self.settings.dio_interval_min)
+        i_min = self.settings.dio_interval_min_s * 1000 # to ms
         i_max = self.settings.dio_interval_doublings
         self.redundancy_constant = self.settings.k_max
         self.i_max = i_max
@@ -57,9 +57,10 @@ class RiataTrickle(object):
         self.pstable = 1
         self.DIOsurpress_log = 0
         self.DIOtransmit_log = 0
+        self.DIOtransmit_collision_log = 0
+        self.DIOtransmit_dis_log = 0
         self.m = 0
         self.DIOtransmit = 0
-        self.DIOtransmit_dis = 0
         self.kmax = self.settings.k_max
         self.current_action = -1
         self.t_start = 0
@@ -76,7 +77,7 @@ class RiataTrickle(object):
         return self.state == self.STATE_RUNNING
 
     def increment_diotransmit_dis(self, is_broadcast):
-        self.DIOtransmit_dis += 1
+        self.DIOtransmit_dis_log += 1
 
     def start(self, note=None):
         # Section 4.2:
@@ -158,7 +159,8 @@ class RiataTrickle(object):
         self.t_start = int(math.ceil(self.t_start))
         self.t_end = int(math.ceil(self.t_end))
         t_range = self.t_end - self.t_start
-        t = random.uniform(self.t_start, self.t_end)
+        self.t = random.uniform(self.t_start, self.t_end)
+        self.listen_period = self.t - self.t_start
 
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
         self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
@@ -166,7 +168,7 @@ class RiataTrickle(object):
         cur_asn = self.engine.getAsn()
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
         asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_duration_ms)))
-        asn = cur_asn + int(math.ceil(old_div(t, slot_duration_ms)))
+        asn = cur_asn + int(math.ceil(old_div(self.t, slot_duration_ms)))
 
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
@@ -206,6 +208,8 @@ class RiataTrickle(object):
                 self.current_action = 1
                 self.DIOtransmit += 1
                 self.DIOtransmit_log += 1
+                if not self.mote.tsch.is_dio_sent:
+                    self.DIOtransmit_collision_log += 1
             else:
                 self.current_action = 0
                 self.DIOsurpress_log += 1
@@ -312,6 +316,7 @@ class RiataTrickle(object):
             'pstable': self.pstable,
             'counter': self.counter,
             'k': self.redundancy_constant,
+            'listen_period': self.listen_period,
         }
 
         self.log(

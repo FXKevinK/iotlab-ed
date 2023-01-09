@@ -218,14 +218,18 @@ class DiscreteEventEngine(threading.Thread):
 
     #=== scheduling
 
-    def scheduleAtAsn(self, asn, cb, uniqueTag, intraSlotOrder):
+    def scheduleAtAsn(self, asn, cb, uniqueTag, intraSlotOrder, auto_correct = False):
         """
         Schedule an event at a particular ASN in the future.
         Also removed all future events with the same uniqueTag.
         """
 
+        if auto_correct and asn > self.asn:
+             asn = self.asn + 5
+
         # make sure we are scheduling in the future
         assert asn > self.asn
+        
 
         # remove all events with same uniqueTag (the event will be rescheduled)
         self.removeFutureEvent(uniqueTag)
@@ -335,8 +339,10 @@ class DiscreteEventEngine(threading.Thread):
         slotframe_iteration = int(old_div(self.asn, self.settings.tsch_slotframeLength))
 
         # print
+        LOG_EVERY_N = 200
         if self.verbose:
-            print(u'   slotframe_iteration: {0}/{1}'.format(slotframe_iteration, self.settings.exec_numSlotframesPerRun-1))
+            if (slotframe_iteration % LOG_EVERY_N) == 0:
+                print(u'   slotframe_iteration: {0}/{1}'.format(slotframe_iteration, self.settings.exec_numSlotframesPerRun-1))
 
         # schedule next statistics collection
         self.scheduleAtAsn(
@@ -372,6 +378,8 @@ class SimEngine(DiscreteEventEngine):
         # set random seed
         if   self.settings.exec_randomSeed == u'random':
             self.random_seed = random.randint(0, sys.maxsize)
+        if   self.settings.exec_randomSeed == u'run_id':
+            self.random_seed = int(self.run_id)
         elif self.settings.exec_randomSeed == u'context':
             # with context for exec_randomSeed, an MD5 value of
             # 'startTime-hostname-run_id' is used for a random seed
@@ -385,6 +393,10 @@ class SimEngine(DiscreteEventEngine):
         else:
             assert isinstance(self.settings.exec_randomSeed, int)
             self.random_seed = self.settings.exec_randomSeed
+
+        print("LOG", "random_seed", self.random_seed)
+        print("LOG", "trickle_method", self.settings.trickle_method)
+
         # apply the random seed; log the seed after self.log is initialized
         random.seed(a=self.random_seed)
 

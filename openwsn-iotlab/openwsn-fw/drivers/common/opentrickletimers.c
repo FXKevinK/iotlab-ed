@@ -97,7 +97,7 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
 
     opentrickletimers_vars.Imin = DEFAULT_DIO_IMIN_MS;
     opentrickletimers_vars.Imax = DEFAULT_DIO_INTERVAL_DOUBLINGS;
-    opentrickletimers_vars.max_interval = DEFAULT_DIO_IMIN_MS * DEFAULT_DIO_INTERVAL_DOUBLINGS;
+    opentrickletimers_vars.max_interval = DEFAULT_DIO_IMIN_MS * (1 << DEFAULT_DIO_INTERVAL_DOUBLINGS);
 
     opentrickletimers_vars.K = DEFAULT_DIO_REDUNDANCY_CONSTANT;
     opentrickletimers_vars.m = 0;

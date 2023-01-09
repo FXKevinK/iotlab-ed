@@ -27,7 +27,7 @@ class TrickleTimer(object):
         self.log = SimEngine.SimLog.SimLog().log
 
         self.mote = mote
-        i_min = pow(2, self.settings.dio_interval_min)
+        i_min = self.settings.dio_interval_min_s * 1000 # to ms
         i_max = self.settings.dio_interval_doublings
         self.redundancy_constant = self.settings.k_max
         self.i_max = i_max
@@ -58,6 +58,7 @@ class TrickleTimer(object):
         self.DIOsurpress = 0
         self.DIOtransmit = 0
         self.DIOtransmit_dis = 0
+        self.DIOtransmit_collision = 0
         self.m = 0
 
     @property
@@ -146,6 +147,7 @@ class TrickleTimer(object):
         t_max = self.interval
         t_range = t_max - t_min
         self.t = random.uniform(t_min, t_max)
+        self.listen_period = self.t - t_min
 
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
         self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
@@ -233,6 +235,8 @@ class TrickleTimer(object):
 
             if self.is_dio_sent:
                 self.DIOtransmit += 1
+                if not self.mote.tsch.is_dio_sent:
+                    self.DIOtransmit_collision += 1
             else:
                 self.DIOsurpress += 1
 
@@ -280,18 +284,12 @@ class TrickleTimer(object):
             'poccupancy': self.poccupancy,
             'DIOtransmit': self.DIOtransmit,
             'DIOsurpress': self.DIOsurpress,
-            'DIOtransmit_dis': self.DIOtransmit_dis,
             'Nreset': self.Nreset,
             'preset': self.preset,
             'pstable': self.pstable,
             'counter': self.counter,
             'k': self.redundancy_constant,
-            'all_ops': all_ops,
-            'interval': self.interval,
-            't': self.t,
-            "count_dis": count_dis,
-            "count_dio": count_dio,
-            "count_dao": count_dao
+            'listen_period': self.listen_period,
         }
 
         self.log(

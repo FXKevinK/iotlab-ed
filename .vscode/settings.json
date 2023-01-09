@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.json": "jsonc",
         "cexample.h": "c",
         "uecho.h": "c",
         "openqueue.h": "c",
@@ -15,6 +16,7 @@
         "board.h": "c",
         "opensensors.h": "c",
         "sensors.h": "c",
-        "msf.h": "c"
+        "msf.h": "c",
+        "forwarding.h": "c"
     }
 }

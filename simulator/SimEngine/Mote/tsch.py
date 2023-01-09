@@ -13,6 +13,7 @@ from past.utils import old_div
 import copy
 from itertools import chain
 import random
+import math
 
 import netaddr
 
@@ -83,6 +84,12 @@ class Tsch(object):
         self.args_for_next_pending_bit_task = None
 
         self.is_dio_sent = False
+        self.eb_prob = float(self.settings.tsch_probBcast_ebProb)
+        trickle_method = self.settings.trickle_method or ""
+        self.use_sw = True if trickle_method == "ac" else False
+        self.sw_tp = 0
+        self.sw_x = 0.5
+        self.calculate_eb_sw()
 
         assert self.settings.phy_numChans <= len(d.TSCH_HOPPING_SEQUENCE)
         self.hopping_sequence = (
@@ -1074,16 +1081,36 @@ class Tsch(object):
                 self._action_RX()
             else:
                 assert self.active_cell.is_tx_on()
-                self._action_TX(
-                    pktToSend=self.pktToSend,
-                    channel=self._get_physical_channel(self.active_cell)
-                )
-                # update cell stats
-                self.active_cell.increment_num_tx()
-                if self.pktToSend[u'mac'][u'dstMac'] == self.clock.source:
-                    # we're going to send a frame to our time source; reset the
-                    # keep-alive timer
-                    self._reset_keep_alive_timer()
+                send_pkt = True
+
+                if self.use_sw and self.active_cell.is_minimal_cell() and not self.mote.dagRoot:
+                    if self.pktToSend[u'type'] in [
+                        d.PKT_TYPE_DIO,
+                    ]:
+                        self.set_sw_after_dis()
+                        if self.sw_tp < 2:
+                            self.sw_tp += 1
+                        elif self.sw_tp >= 2:
+                            send_pkt = False
+                            self.waitingFor = None
+                            self.pktToSend = None
+                        elif self.pktToSend[u'net'][u'dstIp'] == d.IPV6_ALL_RPL_NODES_ADDRESS:
+                            self.sw_x = 1
+                            send_pkt = False
+                            self.waitingFor = None
+                            self.pktToSend = None
+
+                if send_pkt:
+                    self._action_TX(
+                        pktToSend=self.pktToSend,
+                        channel=self._get_physical_channel(self.active_cell)
+                    )
+                    # update cell stats
+                    self.active_cell.increment_num_tx()
+                    if self.pktToSend[u'mac'][u'dstMac'] == self.clock.source:
+                        # we're going to send a frame to our time source; reset the
+                        # keep-alive timer
+                        self._reset_keep_alive_timer()
         else:
             # do nothing
             pass
@@ -1156,15 +1183,36 @@ class Tsch(object):
         ]
 
     # EBs
+    def calculate_eb_sw(self):
+        if not self.use_sw:
+            return
+
+        n = 1 + len(self.neighbor_table)
+        slot_duration_s = self.settings.tsch_slotDuration
+        slotframe_duration_s = slot_duration_s * self.settings.tsch_slotframeLength
+        eb_interval = slotframe_duration_s * n
+        sw = eb_interval + (self.sw_x * eb_interval)
+
+        cur_asn = self.engine.getAsn()
+        self.end_sw_asn = cur_asn + int(math.ceil(old_div(sw, slot_duration_s)))
+
+    def set_sw_after_dis(self):
+        if not self.use_sw:
+            return
+
+        cur_asn = self.engine.getAsn()
+        if cur_asn >= self.end_sw_asn:
+            self.sw_tp = 0
+            self.sw_x = 0.5
+            self.calculate_eb_sw()
 
     def _decided_to_send_eb(self):
         # short-hand
-        prob = float(self.settings.tsch_probBcast_ebProb)
         n = 1 + len(self.neighbor_table)
 
         # following the Bayesian broadcasting algorithm
         return (
-            (random.random() < (old_div(prob, n)))
+            (random.random() < (old_div(self.eb_prob, n)))
             and
             self.iAmSendingEBs
         )
@@ -1830,3 +1878,13 @@ class Cell(object):
 
     def is_shared_on(self):
         return d.CELLOPTION_SHARED in self.options
+
+    def is_minimal_cell(self):
+        if (
+            self.slot_offset == 0 and
+            self.channel_offset == 0 and
+            d.CELLOPTION_SHARED in self.options
+        ):
+            return True
+        else:
+            return False

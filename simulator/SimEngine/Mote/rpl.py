@@ -54,13 +54,13 @@ class Rpl(object):
         self.settings = SimEngine.SimSettings.SimSettings()
         self.log = SimEngine.SimLog.SimLog().log
 
-        trickle_method = self.settings.trickle_method or ""
+        self.trickle_method = self.settings.trickle_method or ""
 
-        if trickle_method == 'qt':
+        if self.trickle_method == 'qt':
             trickle_class = QTrickle
-        elif trickle_method == 'riata':
+        elif self.trickle_method == 'riata':
             trickle_class = RiataTrickle
-        elif trickle_method == 'ac':
+        elif self.trickle_method == 'ac':
             trickle_class = ACPBTrickle
         else:
             trickle_class = TrickleTimer
@@ -75,11 +75,6 @@ class Rpl(object):
         self.parentChildfromDAOs = {}      # dictionary containing parents of each node
         self._tx_stat = {}      # indexed by mote_id
         self.dis_mode = self._get_dis_mode()
-
-        self.prev_ops_ambr = -1
-        self.ambr = -1
-        self.counter_ambr = 0
-        self.ambr_trigger()
 
         self.count_dis = 0
         self.count_dio = 0
@@ -120,79 +115,72 @@ class Rpl(object):
     def increment_diotransmit_dis(self, is_broadcast):
         self.trickle_timer.increment_diotransmit_dis(is_broadcast)
 
-    def ambr_trigger(self):
-        cur_ops_ambr = -1
-        used = -1
-        curr_mbr = -1
-
+    def last_slotframe_callback(self):
         if self.mote.dagRoot:
             return
 
         if not hasattr(self.mote, 'tsch'):
-            self.start_ambr_timer()
             return
-
-        # if self.mote.id == 2:
-        #     print('mote id', self.mote.id)
 
         minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
         if not minimal_cell:
-            self.start_ambr_timer()
             return
 
-        cur_ops_ambr = minimal_cell.all_ops
-        if cur_ops_ambr <= 0:
-            self.start_ambr_timer()
-            return
-            
+        cur_all_ops = minimal_cell.all_ops
+        curr_mbr = cur_all_ops / (self.end_slotframe+1)
 
-        # if self.mote.id == 2:
-        #     print('counter_ambr', self.counter_ambr)
-        #     print('cur_ops_ambr', cur_ops_ambr)
-        #     print('prev_ops_ambr', self.prev_ops_ambr)
+        if self.trickle_method == 'riata':
+            DIOtransmit = self.trickle_timer.DIOtransmit_log
+            DIOsurpress = self.trickle_timer.DIOsurpress_log
+            DIOtransmit_dis = self.trickle_timer.DIOtransmit_dis_log
+            DIOtransmit_collision = self.trickle_timer.DIOtransmit_collision_log
+        else:
+            DIOtransmit = self.trickle_timer.DIOtransmit
+            DIOsurpress = self.trickle_timer.DIOsurpress
+            DIOtransmit_dis = self.trickle_timer.DIOtransmit_dis
+            DIOtransmit_collision = self.trickle_timer.DIOtransmit_collision
 
-        if self.prev_ops_ambr >= 0 and cur_ops_ambr >= 0:
-            used = cur_ops_ambr - self.prev_ops_ambr
-            if used < 0:
-                used = 0
-            if used <= self.settings.mbr_slotframes:
-                curr_mbr = used / self.settings.mbr_slotframes
-
-        if curr_mbr >= 0:
-            if self.counter_ambr == 0:
-                self.ambr = curr_mbr
-                self.counter_ambr += 1
-            elif self.counter_ambr > 0 and self.ambr >= 0:
-                # incremental average
-                self.counter_ambr += 1
-                self.ambr = self.ambr + ((curr_mbr - self.ambr) / self.counter_ambr)
-
-        # if self.mote.id == 2:
-        #     print("curr_mbr", curr_mbr)
-        #     print('ambr', self.ambr)
-        #     print("\n")
-
-        self.prev_ops_ambr = cur_ops_ambr
-        self.start_ambr_timer()
+        result = {
+            'DIOtransmit': DIOtransmit,
+            'DIOsurpress': DIOsurpress,
+            'DIOtransmit_dis': DIOtransmit_dis,
+            'DIOtransmit_collision': DIOtransmit_collision,
+            'mbr': curr_mbr,
+            'ops': cur_all_ops,
+            "count_dis": self.count_dis,
+            "count_dio": self.count_dio,
+            "count_dao": self.count_dao,
+        }
 
         # log
-        if self.ambr >= 0:
-            self.log(
-                SimEngine.SimLog.LOG_MBR,
-                {
-                    u'_mote_id':       self.mote.id,
-                    u'mbr':         self.ambr,
-                }
-            )
+        self.log(
+            SimEngine.SimLog.LOG_LAST_SLOTFRAME,
+            {
+                u'_mote_id': self.mote.id,
+                u'result': result,
+            }
+        )
 
-    def start_ambr_timer(self):
-        slotframe_duration_s = self.settings.tsch_slotDuration * \
-            self.settings.tsch_slotframeLength
-        duration = slotframe_duration_s * self.settings.mbr_slotframes
-        self.engine.scheduleIn(
-            delay=duration,
-            cb=self.ambr_trigger,
-            uniqueTag=str(self.mote.id) + u'ambr',
+    def last_slotframe_trigger(self):
+        tag_ = str(self.mote.id) + u'ambr'
+        if self.engine.is_scheduled(tag_):
+            return
+
+        cur_asn = self.engine.getAsn()
+        slotframe_iteration = int(old_div(cur_asn, self.settings.tsch_slotframeLength))
+        self.end_slotframe = self.settings.exec_numSlotframesPerRun
+        left_slotframe = self.end_slotframe - slotframe_iteration - 1
+
+        asn_end = cur_asn + (self.settings.tsch_slotframeLength * left_slotframe)
+        if asn_end == self.engine.getAsn():
+            # schedule the event at the next ASN since we cannot schedule it at
+            # the current ASN
+            asn_end = self.engine.getAsn() + 1
+            
+        self.engine.scheduleAtAsn(
+            asn=asn_end,
+            cb=self.last_slotframe_callback,
+            uniqueTag=tag_,
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS
         )
 
@@ -221,6 +209,7 @@ class Rpl(object):
                     raise NotImplementedError()
                 self.send_DIS(dstIp)
                 self.start_dis_timer()
+                self.last_slotframe_trigger()
 
     def stop(self):
         assert not self.mote.dagRoot
@@ -307,6 +296,7 @@ class Rpl(object):
                 self._send_DIO(packet[u'net'][u'srcIp'])
             elif packet[u'net'][u'dstIp'] == d.IPV6_ALL_RPL_NODES_ADDRESS:
                 # broadcast DIS
+                self.mote.tsch.set_sw_after_dis()
                 self.increment_diotransmit_dis(True)
                 self._send_DIO()
                 self.start_or_reset_trickle_timer(3)
@@ -494,6 +484,13 @@ class Rpl(object):
 
         if firstDAO:
             asnDiff = 1
+
+            self.log(
+                SimEngine.SimLog.LOG_RPL_JOINED,
+                {
+                    u'_mote_id': self.mote.id,
+                }
+            )
         else:
             asnDiff = int(math.ceil(
                 old_div(random.uniform(

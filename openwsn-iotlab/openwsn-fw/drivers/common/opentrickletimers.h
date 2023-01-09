@@ -22,13 +22,13 @@
 
 //=========================== define ==========================================
 
-#define use_qtrickle FALSE
-#define adaptive_epsilon FALSE
+#define use_qtrickle TRUE
+#define adaptive_epsilon TRUE
 
 // DIO trickle timer parameters
-#define DEFAULT_DIO_INTERVAL_MIN 10
+#define DEFAULT_DIO_INTERVAL_MIN 12
 #define DEFAULT_DIO_REDUNDANCY_CONSTANT 10
-#define DEFAULT_DIO_INTERVAL_DOUBLINGS 10
+#define DEFAULT_DIO_INTERVAL_DOUBLINGS 8
 #define MINIMAL_CELL_BUSY_RATIO_SLOTFRAME 10
 
 #define IMIN_1 (1 << DEFAULT_DIO_INTERVAL_MIN)
@@ -41,15 +41,15 @@
 #define DEFAULT_DIO_IMIN_MS IMIN_2
 
 #if use_qtrickle == TRUE
-#define ql_learning_rate 0.05
-#define ql_discount_rate 0.99
+#define ql_learning_rate 0.5
+#define ql_discount_rate 0.2
 #define default_epsilon 0.5
 #endif
 
 #if adaptive_epsilon == TRUE
 #define max_epsilon 1.0
 #define min_epsilon 0.01
-#define decay_rate 0.1
+#define decay_rate 0.2
 #define epsilon_delta ((max_epsilon - min_epsilon) * decay_rate)
 #endif
 

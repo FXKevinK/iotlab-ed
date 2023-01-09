@@ -38,6 +38,7 @@ from .Mote.Mote import Mote
 from .Mote import MoteDefines as d
 from matplotlib import pyplot as plt
 import numpy as np
+import os
 # =========================== defines =========================================
 
 CONN_TYPE_TRACE         = u'trace'
@@ -841,7 +842,7 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
         # additional local variables
         self.coordinates = {}  # (x, y) indexed by mote_id
         self.pister_hack = PisterHackModel(self.engine)
-        self.filepath = "../coordinates"
+        self.filepath = "../topologies/coordinates"
 
         # ConnectivityRandom doesn't need the connectivity matrix. Instead, it
         # initializes coordinates of the motes. Its algorithm is:
@@ -874,6 +875,12 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
         position = []
         shape = []
         available_position = [x for x in range(nodes_len - 1)]
+
+        filepath_topo_len = f"{self.filepath}-{topology}-{nodes_len}.json"
+        if os.path.exists(filepath_topo_len):
+            topology = 'saved'
+
+        print("LOG", "topology", topology)
 
         if topology == 'grid':
             loop_n = int(np.sqrt(nodes_len))
@@ -910,15 +917,25 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
             scaler.fit(grid)
 
             grid_ = scaler.transform(grid)
-            position = [(val[0], val[1]) for val in grid_]
             [[center_x, center_y]] = scaler.transform([[center_x, center_y]])
+
+            # scale vertical size
+            next_ver = grid_[1]
+            ver_diff = next_ver[1]-grid_[0][1]
+            if ver_diff > 0.1:
+                num_diff = ver_diff-0.1
+                grid_t = [[x[0], max(x[1]-num_diff, 0)] for x in grid_] 
+                center_y = max(center_y-num_diff, 0)
+                grid_ = np.array(grid_t)
+
+            position = [(val[0], val[1]) for val in grid_]
 
         elif topology == "random":
             center_x = np.ceil(random_square_side / 2)
             center_y = np.ceil(random_square_side / 2)
         elif topology == "saved":
             # reading the data from the file
-            with open(f"{self.filepathpath}.json") as f:
+            with open(filepath_topo_len) as f:
                 data = f.read()
             js = json.loads(data)
 
@@ -1061,13 +1078,13 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
             plt.scatter(x,y)
             plt.scatter(center_x,center_y,color='r')
             plt.savefig(
-                f"{self.filepath}.png",
+                f"{filepath_topo_len}.png",
                 bbox_inches     = 'tight',
                 pad_inches      = 0,
                 format          = 'png',
             )
             plt.close()
-            with open(f"{self.filepath}.json", 'w') as f:
+            with open(filepath_topo_len, 'w') as f:
                 f.write(json.dumps(self.coordinates, indent=4))
 
     def _get_mote(self, mote_id):

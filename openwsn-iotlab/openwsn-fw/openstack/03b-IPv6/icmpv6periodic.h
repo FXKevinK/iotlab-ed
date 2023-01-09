@@ -2,10 +2,11 @@
 #define OPENWSN_ICMPv6PERIODIC_H
 
 #include "config.h"
+#include "opentimers.h"
 
 #define app_pkPeriodSec 1
 #define app_pkPeriodVar 0.05
-#define app_pkLength 90
+#define app_pkLength 20
 
 
 BEGIN_PACK

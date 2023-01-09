@@ -109,7 +109,6 @@ def runSimCombinations(params):
                run_id+1-first_run,
                numRuns
             )
-            print(simconfig.settings.regular["trickle_method"])
             printOrLog(cpuID, pid, output, verbose)
 
             # create singletons
@@ -181,8 +180,6 @@ def merge_output_files(folder_path):
             )
         )
 
-        # simData/20230106-143458-349 exec_numMotes_50 
-        # print(folder_path, subfolder)
         # read files and concatenate results
         with open(os.path.join(folder_path, subfolder + ".dat"), 'w') as outputfile:
             for file_path in file_path_list:

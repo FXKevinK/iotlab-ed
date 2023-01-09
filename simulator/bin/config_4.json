@@ -2,28 +2,25 @@
     "version": 0,
     "execution": {
         "numCPUs": 1,
-        "numRuns": 1
+        "numRuns": 3
     },
     "settings": {
         "combination": {
             "exec_numMotes": [
-                50
+                100
             ]
         },
         "regular": {
-            "exec_numSlotframesPerRun": 1500,
-            "exec_minutesPerRun": null,
-            "exec_randomSeed": 1,
+            "exec_numSlotframesPerRun": null,
             "secjoin_enabled": true,
             "app": "AppPeriodic",
-            "app_pkPeriodVar": 0.05,
-            "app_pkLength": 90,
+            "app_pkPeriodVar": 0,
             "app_burstTimestamp": null,
             "app_burstNumPackets": 0,
             "rpl_of": "OF0",
             "rpl_daoPeriod": 60,
             "rpl_extensions": [
-                "dis_unicast"
+                "dis_broadcast"
             ],
             "fragmentation": "FragmentForwarding",
             "sixlowpan_reassembly_buffers_num": 1,
@@ -47,27 +44,27 @@
             "conn_random_init_min_pdr": 0.5,
             "conn_random_init_min_neighbors": 3,
             "phy_numChans": 16,
+            "exec_randomSeed": "run_id",
             "motes_eui64": [],
             "conn_topology": "grid",
             "conn_grid_max_distance": 0.1,
-            "app_pkPeriod": 5,
-            "trickle_method": "ori",
-            "ql_learning_rate": 0.05,
-            "ql_discount_rate": 0.99,
-            "ql_adaptive_epsilon": true,
-            "ql_epsilon": 0.5,
+            "dio_interval_doublings": 8,
+            "exec_minutesPerRun": 60,
+            "app_pkPeriod": 0,
+            "app_pkLength": 20,
             "ql_adaptive_max_epsilon": 1,
             "ql_adaptive_min_epsilon": 0.01,
-            "ql_adaptive_decay_rate": 0.05,
             "k_max": 10,
-            "dio_interval_doublings": 10,
-            "dio_interval_min": 10,
-            "mbr_slotframes": 10
+            "trickle_method": "qt",
+            "ql_learning_rate": 0.5,
+            "ql_discount_rate": 0.2,
+            "ql_epsilon": 0.5,
+            "ql_adaptive_epsilon": true,
+            "ql_adaptive_decay_rate": 0.2,
+            "dio_interval_min_s": 1
         }
     },
     "logging": "all",
-    "log_directory_name": "startTime",
-    "post": [
-        "python3.7 compute_kpis.py"
-    ]
+    "log_directory_name": "trickle exp3",
+    "post": []
 }

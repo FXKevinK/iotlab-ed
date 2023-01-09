@@ -12,6 +12,7 @@
 #include "openrandom.h"
 #include "scheduler.h"
 #include "opentimers.h"
+#include "opentrickletimers.h"
 #include "schedule.h"
 #include "neighbors.h"
 #include "icmpv6.h"
@@ -34,9 +35,9 @@ owerror_t icmpv6periodic_send(void);
 void icmpv6periodic_init(void)
 {
     float ms;
-    float diff;
+    // float diff;
     uint16_t myId2B;
-    uint32_t rand_num;
+    // uint32_t rand_num;
 
     if (idmanager_getIsDAGroot() == TRUE)
     {
@@ -56,12 +57,13 @@ void icmpv6periodic_init(void)
     ms *= 60;
     #endif
 
-    diff = (float)app_pkPeriodVar * ms;
-    icmpv6periodic_vars.min_duration = packetfunctions_mathCeil((ms - diff));
-    icmpv6periodic_vars.max_duration = packetfunctions_mathCeil((ms + diff));
+    // diff = (float)app_pkPeriodVar * ms;
+    // icmpv6periodic_vars.min_duration = packetfunctions_mathCeil((ms - diff));
+    // icmpv6periodic_vars.max_duration = packetfunctions_mathCeil((ms + diff));
 
-    rand_num = openrandom_get16b();
-    icmpv6periodic_vars.info.mote_duration = (rand_num % (icmpv6periodic_vars.max_duration - icmpv6periodic_vars.min_duration + 1)) + icmpv6periodic_vars.min_duration;
+    // rand_num = openrandom_get16b();
+    // icmpv6periodic_vars.info.mote_duration = (rand_num % (icmpv6periodic_vars.max_duration - icmpv6periodic_vars.min_duration + 1)) + icmpv6periodic_vars.min_duration;
+    icmpv6periodic_vars.info.mote_duration = ms;
 
     icmpv6periodic_vars.timer_id = opentimers_create(TIMER_GENERAL_PURPOSE, TASKPRIO_RPL);
     opentimers_scheduleIn(

@@ -12403,3 +12403,178 @@ AssertionError
 06:49:04 VERBOSE cleaning up files: /var/folders/s2/khnbx4ld2_x784phny692z200000gn/T/tmpTYpSGW
 06:49:04 WARNING emulated2; exit loop
 06:49:04 WARNING emulated1; exit loop
+05:05:29 VERBOSE loading logging configuration: config/logging.conf
+05:05:29 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsn-iotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+05:05:29 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+05:05:33 SUCCESS m3-238.lille.iot-lab.info Ok.
+05:05:37 SUCCESS m3-239.lille.iot-lab.info Ok.
+05:05:42 SUCCESS m3-240.lille.iot-lab.info Ok.
+05:05:49 WARNING m3-241.lille.iot-lab.info; exit loop
+05:05:53 SUCCESS m3-242.lille.iot-lab.info Ok.
+05:06:02 WARNING m3-225.lille.iot-lab.info; exit loop
+05:06:06 SUCCESS m3-226.lille.iot-lab.info Ok.
+05:06:14 WARNING m3-227.lille.iot-lab.info; exit loop
+05:06:19 SUCCESS m3-228.lille.iot-lab.info Ok.
+05:06:27 WARNING m3-229.lille.iot-lab.info; exit loop
+05:06:28 SUCCESS discovered following iotlab-motes: ['m3-238.lille.iot-lab.info', 'm3-239.lille.iot-lab.info', 'm3-240.lille.iot-lab.info', 'm3-242.lille.iot-lab.info', 'm3-226.lille.iot-lab.info', 'm3-228.lille.iot-lab.info']
+05:06:28 INFO extracting firmware definitions.
+05:06:28 VERBOSE extracting firmware component names
+05:06:28 VERBOSE extracting firmware log descriptions.
+05:06:28 VERBOSE extracting 6top return codes.
+05:06:28 VERBOSE extracting 6top states.
+05:06:29 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-238.lille.iot-lab.info
+05:06:29 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-239.lille.iot-lab.info
+05:06:29 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-240.lille.iot-lab.info
+05:06:30 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-242.lille.iot-lab.info
+05:06:30 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-226.lille.iot-lab.info
+05:06:30 INFO starting RPC server
+05:06:30 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-228.lille.iot-lab.info
+05:06:38 WARNING m3-238.lille.iot-lab.info; exit loop
+05:07:16 VERBOSE loading logging configuration: config/logging.conf
+05:07:16 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsn-iotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+05:07:16 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+05:07:26 WARNING m3-238.lille.iot-lab.info; exit loop
+05:07:29 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:07:29 ERROR Could not establish connection from local ('127.0.0.1', 50476) to remote ('m3-239.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:07:29 WARNING [Errno 54] Connection reset by peer
+05:07:30 WARNING m3-239.lille.iot-lab.info; exit loop
+05:07:31 ERROR [Errno 9] Bad file descriptor
+05:07:34 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:07:34 ERROR Could not establish connection from local ('127.0.0.1', 50480) to remote ('m3-240.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:07:34 WARNING [Errno 54] Connection reset by peer
+05:07:35 WARNING m3-240.lille.iot-lab.info; exit loop
+05:07:36 ERROR [Errno 9] Bad file descriptor
+05:07:41 SUCCESS m3-241.lille.iot-lab.info Ok.
+05:07:42 WARNING m3-241.lille.iot-lab.info; exit loop
+05:07:44 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:07:44 ERROR Could not establish connection from local ('127.0.0.1', 50494) to remote ('m3-242.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:08:41 VERBOSE loading logging configuration: config/logging.conf
+05:08:41 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsn-iotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+05:08:41 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+05:08:45 SUCCESS m3-238.lille.iot-lab.info Ok.
+05:08:48 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:08:48 ERROR Could not establish connection from local ('127.0.0.1', 50559) to remote ('m3-239.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:08:48 WARNING [Errno 54] Connection reset by peer
+05:08:49 WARNING m3-239.lille.iot-lab.info; exit loop
+05:08:50 ERROR [Errno 9] Bad file descriptor
+05:08:53 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:08:53 ERROR Could not establish connection from local ('127.0.0.1', 50566) to remote ('m3-240.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:08:53 WARNING [Errno 54] Connection reset by peer
+05:08:54 WARNING m3-240.lille.iot-lab.info; exit loop
+05:08:55 ERROR [Errno 9] Bad file descriptor
+05:08:59 SUCCESS m3-241.lille.iot-lab.info Ok.
+05:09:02 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:09:02 ERROR Could not establish connection from local ('127.0.0.1', 50579) to remote ('m3-242.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:09:02 WARNING [Errno 54] Connection reset by peer
+05:09:03 WARNING m3-242.lille.iot-lab.info; exit loop
+05:09:04 ERROR [Errno 9] Bad file descriptor
+05:09:09 SUCCESS m3-225.lille.iot-lab.info Ok.
+05:09:12 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:09:12 ERROR Could not establish connection from local ('127.0.0.1', 50591) to remote ('m3-226.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:09:12 WARNING [Errno 54] Connection reset by peer
+05:09:13 WARNING m3-226.lille.iot-lab.info; exit loop
+05:09:14 ERROR [Errno 9] Bad file descriptor
+05:09:18 SUCCESS m3-227.lille.iot-lab.info Ok.
+05:09:21 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:09:21 ERROR Could not establish connection from local ('127.0.0.1', 50604) to remote ('m3-228.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:09:21 WARNING [Errno 54] Connection reset by peer
+05:09:22 WARNING m3-228.lille.iot-lab.info; exit loop
+05:09:23 ERROR [Errno 9] Bad file descriptor
+05:09:26 SUCCESS m3-229.lille.iot-lab.info Ok.
+05:09:26 SUCCESS discovered following iotlab-motes: ['m3-238.lille.iot-lab.info', 'm3-241.lille.iot-lab.info', 'm3-225.lille.iot-lab.info', 'm3-227.lille.iot-lab.info', 'm3-229.lille.iot-lab.info']
+05:09:26 INFO extracting firmware definitions.
+05:09:26 VERBOSE extracting firmware component names
+05:09:26 VERBOSE extracting firmware log descriptions.
+05:09:26 VERBOSE extracting 6top return codes.
+05:09:26 VERBOSE extracting 6top states.
+05:09:27 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-238.lille.iot-lab.info
+05:09:27 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-241.lille.iot-lab.info
+05:09:27 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-225.lille.iot-lab.info
+05:09:28 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-227.lille.iot-lab.info
+05:09:28 CRITICAL [Errno 48] Address already in use
+05:09:28 WARNING m3-238.lille.iot-lab.info; exit loop
+05:09:28 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-229.lille.iot-lab.info
+05:09:28 WARNING m3-241.lille.iot-lab.info; exit loop
+05:09:29 WARNING m3-225.lille.iot-lab.info; exit loop
+05:09:29 WARNING m3-227.lille.iot-lab.info; exit loop
+05:09:29 WARNING m3-229.lille.iot-lab.info; exit loop
+05:11:00 VERBOSE loading logging configuration: config/logging.conf
+05:11:00 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsn-iotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+05:11:00 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+05:11:13 SUCCESS m3-238.lille.iot-lab.info Ok.
+05:11:16 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:11:16 ERROR Could not establish connection from local ('127.0.0.1', 50712) to remote ('m3-239.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:11:16 WARNING [Errno 54] Connection reset by peer
+05:11:17 WARNING m3-239.lille.iot-lab.info; exit loop
+05:11:18 ERROR [Errno 9] Bad file descriptor
+05:11:22 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:11:22 ERROR Could not establish connection from local ('127.0.0.1', 50717) to remote ('m3-240.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:11:22 WARNING [Errno 54] Connection reset by peer
+05:11:23 WARNING m3-240.lille.iot-lab.info; exit loop
+05:11:24 ERROR [Errno 9] Bad file descriptor
+05:11:30 SUCCESS m3-241.lille.iot-lab.info Ok.
+05:11:33 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:11:33 ERROR Could not establish connection from local ('127.0.0.1', 50731) to remote ('m3-242.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:11:33 WARNING [Errno 54] Connection reset by peer
+05:11:34 WARNING m3-242.lille.iot-lab.info; exit loop
+05:11:35 ERROR [Errno 9] Bad file descriptor
+05:11:39 SUCCESS m3-225.lille.iot-lab.info Ok.
+05:11:42 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:11:42 ERROR Could not establish connection from local ('127.0.0.1', 50753) to remote ('m3-226.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:11:42 WARNING [Errno 54] Connection reset by peer
+05:11:43 WARNING m3-226.lille.iot-lab.info; exit loop
+05:11:44 ERROR [Errno 9] Bad file descriptor
+05:11:48 SUCCESS m3-227.lille.iot-lab.info Ok.
+05:11:51 ERROR Secsh channel 0 open FAILED: Connection refused: Connect failed
+05:11:51 ERROR Could not establish connection from local ('127.0.0.1', 50768) to remote ('m3-228.lille.iot-lab.info', 20000) side of the tunnel: open new channel ssh error: ChannelException(2, 'Connect failed')
+05:11:51 WARNING [Errno 54] Connection reset by peer
+05:11:52 WARNING m3-228.lille.iot-lab.info; exit loop
+05:11:53 ERROR [Errno 9] Bad file descriptor
+05:12:01 WARNING m3-229.lille.iot-lab.info; exit loop
+05:12:02 SUCCESS discovered following iotlab-motes: ['m3-238.lille.iot-lab.info', 'm3-241.lille.iot-lab.info', 'm3-225.lille.iot-lab.info', 'm3-227.lille.iot-lab.info']
+05:12:02 INFO extracting firmware definitions.
+05:12:02 VERBOSE extracting firmware component names
+05:12:02 VERBOSE extracting firmware log descriptions.
+05:12:02 VERBOSE extracting 6top return codes.
+05:12:02 VERBOSE extracting 6top states.
+05:12:02 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-238.lille.iot-lab.info
+05:12:03 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-241.lille.iot-lab.info
+05:12:03 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-225.lille.iot-lab.info
+05:12:03 CRITICAL [Errno 48] Address already in use
+05:12:03 SUCCESS connected to broker (argus.paris.inria.fr) for mote on port: m3-227.lille.iot-lab.info
+05:12:03 WARNING m3-238.lille.iot-lab.info; exit loop
+05:12:04 WARNING m3-241.lille.iot-lab.info; exit loop
+05:12:04 WARNING m3-225.lille.iot-lab.info; exit loop
+05:12:05 WARNING m3-227.lille.iot-lab.info; exit loop

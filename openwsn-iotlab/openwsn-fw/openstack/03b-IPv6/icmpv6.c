@@ -2,12 +2,12 @@
 
 #include "opendefs.h"
 #include "icmpv6.h"
-#include "icmpv6periodic.h"
 #include "icmpv6echo.h"
 #include "icmpv6rpl.h"
 #include "forwarding.h"
 #include "openqueue.h"
 #include "openserial.h"
+#include "icmpv6periodic.h"
 
 //=========================== variables =======================================
 

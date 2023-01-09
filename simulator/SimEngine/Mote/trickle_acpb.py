@@ -27,7 +27,7 @@ class ACPBTrickle(object):
         self.log = SimEngine.SimLog.SimLog().log
 
         self.mote = mote
-        i_min = pow(2, self.settings.dio_interval_min)
+        i_min = self.settings.dio_interval_min_s * 1000 # to ms
         i_max = self.settings.dio_interval_doublings
         self.redundancy_constant = self.settings.k_max
         self.i_max = i_max
@@ -58,6 +58,7 @@ class ACPBTrickle(object):
         self.DIOsurpress = 0
         self.DIOtransmit = 0
         self.DIOtransmit_dis = 0
+        self.DIOtransmit_collision = 0
         self.m = 0
         self.Nnbr = 0
         self.kmax = self.settings.k_max
@@ -179,7 +180,8 @@ class ACPBTrickle(object):
             self.t_end = self.t_start
             self.t_start = temp
 
-        t = random.uniform(self.t_start, self.t_end)
+        self.t = random.uniform(self.t_start, self.t_end)
+        self.listen_period = self.t - self.t_start
 
         t_range = self.t_end - self.t_start
         self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
@@ -187,7 +189,7 @@ class ACPBTrickle(object):
         cur_asn = self.engine.getAsn()
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
         asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_duration_ms)))
-        asn = cur_asn + int(math.ceil(old_div(t, slot_duration_ms)))
+        asn = cur_asn + int(math.ceil(old_div(self.t, slot_duration_ms)))
 
         if asn == self.engine.getAsn():
             # schedule the event at the next ASN since we cannot schedule it at
@@ -268,6 +270,8 @@ class ACPBTrickle(object):
 
             if self.is_dio_sent:
                 self.DIOtransmit += 1
+                if not self.mote.tsch.is_dio_sent:
+                    self.DIOtransmit_collision += 1
             else:
                 self.DIOsurpress += 1
 
@@ -313,6 +317,7 @@ class ACPBTrickle(object):
             'pstable': self.pstable,
             'counter': self.counter,
             'k': self.redundancy_constant,
+            'listen_period': self.listen_period,
         }
 
         self.log(
