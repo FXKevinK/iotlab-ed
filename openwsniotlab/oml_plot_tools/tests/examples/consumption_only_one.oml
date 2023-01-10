@@ -1,0 +1,10 @@
+protocol: 4
+domain: 10328
+start-time: 1440424717
+sender-id: m3-1
+app-name: control_node_measures
+schema: 0 _experiment_metadata subject:string key:string value:string 
+schema: 1 control_node_measures_consumption timestamp_s:uint32 timestamp_us:uint32 power:double voltage:double current:double 
+content: text
+
+34.309935	1	1	1440424734	484120	nan	4.188750	0.038142

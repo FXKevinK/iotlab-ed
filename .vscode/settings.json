@@ -17,6 +17,10 @@
         "opensensors.h": "c",
         "sensors.h": "c",
         "msf.h": "c",
-        "forwarding.h": "c"
+        "forwarding.h": "c",
+        "ieee802154e.h": "c",
+        "icmpv6rpl.h": "c",
+        "sixtop.h": "c",
+        "opentimers.h": "c"
     }
 }

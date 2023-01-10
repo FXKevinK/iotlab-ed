@@ -1,0 +1,26 @@
+{
+    "turtlebot2_m3_18": {
+        "frame_id": "map", 
+        "theta": 1.57, 
+        "x": 43.11, 
+        "y": 2.05
+    }, 
+    "turtlebot2_m3_19": {
+        "frame_id": "map", 
+        "theta": 0, 
+        "x": 21.71, 
+        "y": -0.3
+    }, 
+    "turtlebot2_m3_381": {
+        "frame_id": "map", 
+        "theta": 0, 
+        "x": 45.11, 
+        "y": 27.4
+    }, 
+    "turtlebot2_m3_382": {
+        "frame_id": "map", 
+        "theta": 0, 
+        "x": 22.16, 
+        "y": 25.5
+    }
+}
