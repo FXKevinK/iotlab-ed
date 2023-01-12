@@ -295,6 +295,7 @@ enum {
    ERR_DEBUG_1                         = 0x56, // debug {0} - {1}
    ERR_PERIODIC_SEND                   = 0x57, // periodic {0} - {1}
    ERR_EXPERIMENT                      = 0x58, // experiment
+   ERR_TIMER_MINUS                     = 0x59, // timer minus
 };
 
 //=========================== typedef =========================================

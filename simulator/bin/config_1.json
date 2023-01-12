@@ -2,12 +2,12 @@
     "version": 0,
     "execution": {
         "numCPUs": 1,
-        "numRuns": 3
+        "numRuns": 1
     },
     "settings": {
         "combination": {
             "exec_numMotes": [
-                100
+                50
             ]
         },
         "regular": {
@@ -55,16 +55,16 @@
             "ql_adaptive_max_epsilon": 1,
             "ql_adaptive_min_epsilon": 0.01,
             "k_max": 10,
-            "trickle_method": "qt",
+            "trickle_method": "riata",
             "ql_learning_rate": 0.5,
-            "ql_discount_rate": 0.2,
+            "ql_discount_rate": 0.5,
             "ql_epsilon": 0.5,
             "ql_adaptive_epsilon": true,
-            "ql_adaptive_decay_rate": 0.2,
-            "dio_interval_min_s": 10
+            "ql_adaptive_decay_rate": 0.05,
+            "dio_interval_min_s": 5
         }
     },
     "logging": "all",
-    "log_directory_name": "trickle exp3",
+    "log_directory_name": "trickle exp2",
     "post": []
 }

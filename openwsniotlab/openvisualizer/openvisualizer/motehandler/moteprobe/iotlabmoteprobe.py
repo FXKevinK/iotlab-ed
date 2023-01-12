@@ -90,6 +90,7 @@ class IotlabMoteProbe(MoteProbe):
 
         valid_motes = ['{0}'.format(p._portname) for p in mote_probes]
         log.success("discovered following iotlab-motes: {}".format(valid_motes))
+        log.success("Total iotlab-motes: {}".format(len(valid_motes)))
 
         return mote_probes
 

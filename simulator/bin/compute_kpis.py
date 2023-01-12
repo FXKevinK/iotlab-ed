@@ -78,6 +78,8 @@ def kpis_all(inputfile):
     trickle_keys = []
     last_slotframe_keys = []
 
+    time_ms = ['t', 't_start', 't_end', 'interval', 'listen_period']
+
     # === gather raw stats
 
     for line in inputfile:
@@ -205,6 +207,8 @@ def kpis_all(inputfile):
                     trickle_keys.append(key)
 
                 value = logline['result'][key]
+                if key in time_ms:
+                    value /= 1000
                 allstats[run_id][mote_id]['trickle'][state][key] = value
 
         elif logline['_type'] == SimLog.LOG_RADIO_STATS['type']:
@@ -405,6 +409,10 @@ def generate_stats(new_key, val, attach_value=False):
     val = [float(x) for x in val]
     stats = {
         'name': new_key,
+        'count': (
+            len(val)
+            if val else 'N/A'
+        ),
         'sum': (
             sum(val)
             if val else 'N/A'
@@ -503,17 +511,17 @@ def parseCliParams():
 def main():
     cliparams = parseCliParams()
 
-    # measured_metrics = {
-    #     'trickle_pfree': 'mean',
-    #     'joining-time': 'mean',
-    #     'current-consumed': 'mean',
-    # }
-
     measured_metrics = {
-        'last_DIOtransmit': 'sum',
-        'last_DIOsurpress': 'sum',
-        'last_DIOtransmit_collision': 'sum',
+        'trickle_pfree': 'mean',
+        'joining-time': 'mean',
+        'current-consumed': 'mean',
     }
+
+    # measured_metrics = {
+    #     'last_DIOtransmit': 'sum',
+    #     'last_DIOsurpress': 'sum',
+    #     'last_DIOtransmit_collision': 'sum',
+    # }
 
     subfolders = list(
         [os.path.join('simData', x) for x in os.listdir('simData')]
@@ -584,38 +592,38 @@ def main():
     df2.columns = df2.columns.map('-'.join)
     df2 = df2.reset_index()
 
-    # temp
-    values = df2['method'].values
-    new_values = []
-    sort_temp = []
-    parameter = []
-    for v in values:
-        # ac_2_n10-i5
-        m = v.split("_")[0]
-        m = str(m).upper()
+    # # temp
+    # values = df2['method'].values
+    # new_values = []
+    # sort_temp = []
+    # parameter = []
+    # for v in values:
+    #     # ac_2_n10-i5
+    #     m = v.split("_")[0]
+    #     m = str(m).upper()
 
-        n = v.split("_n")[1].split("-")[0]
-        i = v.split("-i")[1]
+    #     n = v.split("_n")[1].split("-")[0]
+    #     i = v.split("-i")[1]
 
-        new_values.append(m)
-        parameter.append(f"({n}, {i})")
+    #     new_values.append(m)
+    #     parameter.append(f"({n}, {i})")
 
-        if m == 'ORI':
-            id_ = 1
-        elif m == 'RIATA':
-            id_ = 2
-        elif m == 'AC':
-            id_ = 3
-        else:
-            id_ = 4
+    #     if m == 'ORI':
+    #         id_ = 1
+    #     elif m == 'RIATA':
+    #         id_ = 2
+    #     elif m == 'AC':
+    #         id_ = 3
+    #     else:
+    #         id_ = 4
 
-        sort_temp.append(f"{n}-{i}-{id_}")
+    #     sort_temp.append(f"{n}-{i}-{id_}")
 
-    df2['method'] = new_values
-    df2['parameter'] = parameter
-    df2['sort_temp'] = sort_temp
-    df2.sort_values(by='sort_temp', inplace=True, ignore_index=True)
-    df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
+    # df2['method'] = new_values
+    # df2['parameter'] = parameter
+    # df2['sort_temp'] = sort_temp
+    # df2.sort_values(by='sort_temp', inplace=True, ignore_index=True)
+    # df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
 
     df2.to_csv(path2, index=False)
 

@@ -256,6 +256,7 @@ typedef struct
    icmpv6rpl_config_ht *incomingConf; // configuration incoming
    bool daoSent;
    bool dioSent;
+   bool dioScheduled;
 } icmpv6rpl_vars_t;
 
 BEGIN_PACK
@@ -299,6 +300,8 @@ void senddao_(void);
 bool icmpv6rpl_daoSent(void);
 bool icmpv6rpl_getdioSent(void);
 void icmpv6rpl_setdioSent(bool value);
+bool icmpv6rpl_getdioScheduled(void);
+void icmpv6rpl_setdioScheduled(bool value);
 void icmpv6rpl_resetAll(void);
 
 /**

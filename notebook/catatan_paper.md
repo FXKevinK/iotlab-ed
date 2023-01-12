@@ -1,10 +1,7 @@
 # Terkait paper:
-- update algorithm pake yang baru (ada epsilon)
 - taruh penjelasan dan pembeda tentang adaptive epsilon
-- update penghitungan poccupation 
-- ganti termnya dari pcollision, dan pfree jg
-- jelasin iot-lab
-- jelasin default imin imax nya rpl 3 dan 20, tp untuk experiment ini kt buat rentang sendiri agar tidak terlalu lama ngerunnya
+- jelasin iot-lab + paremter experimentnya
+- ubah flowchart pake adaptive epsilon
 
 # Parameter:
 Topologies: 10 (5*2), 35 (5*7)

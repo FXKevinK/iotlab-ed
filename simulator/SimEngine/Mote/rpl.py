@@ -373,6 +373,7 @@ class Rpl(object):
         )
 
         self.count_dio += 1
+        # DZAKY: DIO goes here (1)
         self.mote.sixlowpan.sendPacket(dio)
 
     def _create_DIO(self, dstIp=None):
@@ -393,6 +394,7 @@ class Rpl(object):
             u'app': {
                 u'rank':          rank,
                 u'dodagId':       self.dodagId,
+                u'count':         self.count_dio
             },
             u'net': {
                 u'srcIp':         self.mote.get_ipv6_link_local_addr(),

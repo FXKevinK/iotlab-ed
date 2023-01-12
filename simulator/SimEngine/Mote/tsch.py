@@ -83,7 +83,8 @@ class Tsch(object):
         self.pending_bit_enabled = False
         self.args_for_next_pending_bit_task = None
 
-        self.is_dio_sent = False
+        self.is_dio_scheduled = False
+        self.is_dio_sent= False
         self.eb_prob = float(self.settings.tsch_probBcast_ebProb)
         trickle_method = self.settings.trickle_method or ""
         self.use_sw = True if trickle_method == "ac" else False
@@ -192,6 +193,18 @@ class Tsch(object):
                     and
                     (cell.mac_addr == mac_addr)
                 ):
+                    return cell
+        return None
+
+    def get_minimal_cell(self):
+        slotframe_handle = 0
+        slot_offset = 0
+        channel_offset = 0
+        if slotframe_handle in self.slotframes:
+            slotframe = self.slotframes[slotframe_handle]
+            cells = slotframe.get_cells_by_slot_offset(slot_offset)
+            for cell in cells:
+                if cell.channel_offset == channel_offset:
                     return cell
         return None
 
@@ -461,6 +474,8 @@ class Tsch(object):
                 self.txQueue.insert(index, packet)
             else:
                 packet[u'mac'][u'priority'] = False
+
+                # DZAKY: DIO goes here (3)
                 # add to txQueue
                 self.txQueue += [packet]
 
@@ -480,12 +495,15 @@ class Tsch(object):
 
         if "type" in packet:
             if packet[u'type'] == d.PKT_TYPE_DIO:
-                self.is_dio_sent = goOn
+                self.is_dio_scheduled = goOn
 
         return goOn
 
     def set_is_dio_sent(self, value):
         self.is_dio_sent = value
+
+    def set_is_dio_scheduled(self, value):
+        self.is_dio_scheduled = value
 
     def dequeue(self, packet):
         if packet in self.txQueue:
@@ -1158,6 +1176,12 @@ class Tsch(object):
             pktToSend[u'mac'][u'pending_bit'] = True
         else:
             pktToSend[u'mac'][u'pending_bit'] = False
+        
+        # DZAKY: DIO goes here (4)
+        # on next slotframe, where DIO is ready to send
+        if "type" in pktToSend:
+            if pktToSend[u'type'] == d.PKT_TYPE_DIO:
+                self.is_dio_sent = True
 
         # send packet to the radio
         self.mote.radio.startTx(channel, pktToSend)

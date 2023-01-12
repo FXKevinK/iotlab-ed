@@ -162,20 +162,20 @@ class DiscreteEventEngine(threading.Thread):
             output += [u'The log file is {0}'.format(
                 self.settings.getOutputFile()
             )]
-            output += [u'']
-            output += [u'==============================']
-            output += [u'config.json to reproduce:']
-            output += [u'']
-            output += [u'']
-            output  = u'\n'.join(output)
-            output += json.dumps(
-                SimConfig.SimConfig.generate_config(
-                    settings_dict = self.settings.__dict__,
-                    random_seed   = self.random_seed
-                ),
-                indent = 4
-            )
-            output += u'\n\n==============================\n'
+            # output += [u'']
+            # output += [u'==============================']
+            # output += [u'config.json to reproduce:']
+            # output += [u'']
+            # output += [u'']
+            # output  = u'\n'.join(output)
+            # output += json.dumps(
+            #     SimConfig.SimConfig.generate_config(
+            #         settings_dict = self.settings.__dict__,
+            #         random_seed   = self.random_seed
+            #     ),
+            #     indent = 4
+            # )
+            # output += u'\n\n==============================\n'
 
             sys.stderr.write(output)
 
@@ -224,7 +224,7 @@ class DiscreteEventEngine(threading.Thread):
         Also removed all future events with the same uniqueTag.
         """
 
-        if auto_correct and asn > self.asn:
+        if auto_correct and asn < self.asn:
              asn = self.asn + 5
 
         # make sure we are scheduling in the future

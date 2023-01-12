@@ -43,8 +43,12 @@ class Sixlowpan(object):
         self.fragmentation        = globals()[self.settings.fragmentation](self)
 
         self.on_link_neighbor_list = []
+        self.is_dio_sent = False
 
     #======================== public ==========================================
+
+    def set_is_dio_sent(self, value):
+        self.is_dio_sent = value
 
     def sendPacket(self, packet):
         assert sorted(packet.keys()) == sorted([u'type',u'app',u'net'])
@@ -130,7 +134,12 @@ class Sixlowpan(object):
         # enqueue each fragment
         if goOn:
             for frag in frags:
+                # DZAKY: DIO goes here (2)
                 self.mote.tsch.enqueue(frag)
+
+        if "type" in packet:
+            if packet[u'type'] == d.PKT_TYPE_DIO:
+                self.is_dio_sent = goOn
 
     def recvPacket(self, packet):
 

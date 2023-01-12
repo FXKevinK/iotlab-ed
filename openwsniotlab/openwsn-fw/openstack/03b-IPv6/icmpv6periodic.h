@@ -6,7 +6,7 @@
 
 #define app_pkPeriodSec 1
 #define app_pkLength 20
-#define PERIODIC_PORTION 0.1
+#define PERIODIC_PORTION 0.07
 
 BEGIN_PACK
 typedef struct

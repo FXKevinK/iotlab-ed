@@ -29,7 +29,7 @@ class FieldParsingKey(object):
 
 class ParserStatus(parser.Parser):
     HEADER_LENGTH = 4
-    QUEUELENGTH = 20
+    QUEUELENGTH = 30
     QUEUELENGTH_PARSE = "B" * (QUEUELENGTH*2)
 
     QUEUELENGTH_NAME = []

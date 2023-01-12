@@ -51,10 +51,12 @@ class QTrickle(object):
         self.Nstates = 1
         self.Ncells = 0
         self.Nreset = 0
-        self.pfree = 1
-        self.poccupancy = 0
-        self.preset = 0
-        self.pstable = 1
+        self.poccupancy = 1
+        self.preset = 1
+        self.pfree = 1 - self.poccupancy
+        self.pstable = 1 - self.preset
+        self.ptransmit = 0
+        self.ptransmit_collision = 0
         self.DIOsurpress = 0
         self.DIOtransmit = 0
         self.DIOtransmit_dis = 0
@@ -62,25 +64,27 @@ class QTrickle(object):
         self.Nnbr = 0
         self.DIOtransmit_collision = 0
         self.kmax = self.settings.k_max
-        self.ptransmit = 1
         self.current_action = -1
-        self.ptransmit_collision = 0
         self.t_start = 0
         self.t_end = 0
         self.q_table = np.zeros([self.i_max + 1, 2])
         self.alpha = self.settings.ql_learning_rate
         self.betha = self.settings.ql_discount_rate
         self.epsilon = self.settings.ql_epsilon
-
+        self.used = 0
+        self.is_explore = None
 
         self.adaptive_epsilon = self.settings.ql_adaptive_epsilon
         if self.adaptive_epsilon:
             self.max_epsilon = self.settings.ql_adaptive_epsilon
             self.min_epsilon = self.settings.ql_adaptive_min_epsilon
             self.decay_rate = self.settings.ql_adaptive_decay_rate
-            self.delta = (self.max_epsilon - self.min_epsilon) * self.decay_rate
+            self.delta = (self.max_epsilon - self.min_epsilon) * \
+                self.decay_rate
             self.total_reward = 0
-            self.prev_total_reward = 0
+            self.epsilon_exploit = 0
+            self.epsilon_explore = 0
+            self.average_reward = 0
             self.epsilon = self.max_epsilon
 
     @property
@@ -109,7 +113,6 @@ class QTrickle(object):
         self.state = self.STATE_STOPPED
 
     def reset(self, note=None):
-        # print(self.mote.id, f'reset {note}')
         if self.state == self.STATE_STOPPED:
             return
 
@@ -124,8 +127,7 @@ class QTrickle(object):
         #       also reset its timer in response to external "events".
         self.m = 0
         self.Nreset += 1
-        self.preset = self.Nreset / self.Nstates
-        self.pstable = 1 - self.preset
+        self.calculate_preset()
 
         if self.min_interval < self.interval:
             self.interval = self.min_interval
@@ -165,56 +167,45 @@ class QTrickle(object):
         #       that is, values greater than or equal to I/2 and less than I.
         #       The interval ends at I.
         slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
+        slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
 
         # Calculate T
         half_interval = old_div(self.interval, 2)
         self.t_start = half_interval * (self.ptransmit * self.pfree)
         self.t_end = half_interval + (self.pstable * half_interval)
 
-        # make sure that I'm scheduling an event in the future
-        lower_bound = 20 * 5
-        if(self.t_start < lower_bound):
-            self.t_start = lower_bound
-        # make sure there is enough distance between t_min and t_max
-        if(self.t_end-self.t_start < lower_bound):
-            self.t_start -= lower_bound
-
-        t_range = self.t_end - self.t_start
         # add/subtract with 20ms, to avoid same value of T with t_min or t_max
-        self.t = random.uniform(self.t_start+20, self.t_end-20)
+        self.t = random.uniform(self.t_start, self.t_end)
         self.listen_period = self.t - self.t_start
+        t_range = self.t_end - self.t_start
+        self.Ncells = self.ceil_division(t_range, slotframe_duration_ms)
 
-        slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
-        self.Ncells = max(int(math.ceil(old_div(t_range, slotframe_duration_ms))), 1)
-
-        cur_asn = self.engine.getAsn()
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
-        asn_start = cur_asn + int(math.ceil(old_div(self.t_start, slot_duration_ms)))
-        asn_ = cur_asn + int(math.ceil(old_div(self.t, slot_duration_ms)))
+        cur_asn = self.engine.getAsn()
+        asn_start = cur_asn + \
+            self.ceil_division(self.t_start, slot_duration_ms)
+        asn_t = cur_asn + self.ceil_division(self.t, slot_duration_ms)
+        asn_end = cur_asn + self.ceil_division(self.t_end, slot_duration_ms)
+        asn_i = cur_asn + self.ceil_division(self.interval, slot_duration_ms)
 
-        if asn_ == self.engine.getAsn():
-            # schedule the event at the next ASN since we cannot schedule it at
-            # the current ASN
-            asn_ = self.engine.getAsn() + 1
-
-        if asn_start == self.engine.getAsn():
-            # schedule the event at the next ASN since we cannot schedule it at
-            # the current ASN
-            asn_start = self.engine.getAsn() + 1
+        if cur_asn > asn_start or cur_asn > asn_t or cur_asn > asn_end or cur_asn > asn_i:
+            print("\ncheck")
+            print(self.mote.id, ":", "t_start", self.t_start, "t_end", self.t_end,
+                  "t", self.t, "t_range", t_range, "interval", self.interval)
+            print(self.mote.id, ":", "cur_asn", cur_asn, "asn_start",
+                  asn_start, "asn_t", asn_t, "asn_end", asn_end, "asn_i", asn_i)
+            print("preset", self.preset, "pstable:", self.pstable, "ptransmit",
+                  self.ptransmit, "pfree", self.pfree, "Ncells", self.Ncells)
 
         def t_callback():
-            self.mote.tsch.set_is_dio_sent(False)
-            self.is_dio_sent = False
-            if random.uniform(0, 1) <= self.epsilon:
+            self.reset_is_dio_sent()
+            self.is_explore = random.uniform(0, 1) <= self.epsilon
+            if self.is_explore:
                 # Explore action space
                 if self.counter < self.redundancy_constant or self.redundancy_constant == 0:
-                    #  Section 4.2:
-                    #    4.  At time t, Trickle transmits if and only if the
-                    #        counter c is less than the redundancy constant k.
                     self.is_dio_sent = True
                     self.user_callback()
                 else:
-                    # do nothing
                     pass
             else:
                 # Exploit learned values
@@ -223,75 +214,48 @@ class QTrickle(object):
                     self.is_dio_sent = True
                     self.user_callback()
                 else:
-                    # do nothing
                     pass
 
         def start_t():
-            minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
-            self.start_t_record = None
-            if minimal_cell:
-                self.start_t_record = minimal_cell.all_ops
+            self.start_t_record = self.getOpsMC()
 
         def end_t():
-            minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
-            self.end_t_record = None
-            if minimal_cell:
-                self.end_t_record = minimal_cell.all_ops
+            self.end_t_record = self.getOpsMC()
 
         self.engine.scheduleAtAsn(
-            asn=asn_,
+            asn=self.correctASN(asn_t),
             cb=t_callback,
             uniqueTag=self.unique_tag_base + u'_at_t',
-            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS,
-            auto_correct=True)
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         self.engine.scheduleAtAsn(
-            asn=asn_start,
+            asn=self.correctASN(asn_start),
             cb=start_t,
             uniqueTag=self.unique_tag_base + u'_at_start_t',
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         if self.t_end < self.interval:
-            asn_end = cur_asn + int(math.ceil(old_div(self.t_end, slot_duration_ms)))
-            if asn_end == self.engine.getAsn():
-                # schedule the event at the next ASN since we cannot schedule it at
-                # the current ASN
-                asn_end = self.engine.getAsn() + 1
-
             self.engine.scheduleAtAsn(
-                asn=asn_end,
+                asn=self.correctASN(asn_end),
                 cb=end_t,
                 uniqueTag=self.unique_tag_base + u'_at_end_t',
                 intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         # ========================
 
-        asn = self.engine.getAsn() + int(math.ceil(old_div(self.interval, slot_duration_ms)))
-
         def i_callback():
-            used = None
-            occ = None
-            if self.end_t_record is not None and self.start_t_record is not None:
-                dio_sent = int(self.mote.tsch.is_dio_sent) * \
-                    int(self.is_dio_sent)
-                used = max(
-                    (self.end_t_record - self.start_t_record) - dio_sent, 0)
-                occ = used / self.Ncells
-                self.poccupancy = occ
-                self.pfree = 1 - self.poccupancy
-
             if self.is_dio_sent:
                 self.DIOtransmit += 1
                 self.current_action = 1
-                if not self.mote.tsch.is_dio_sent:
+                if self.is_dio_not_sent():
                     self.DIOtransmit_collision += 1
             else:
                 self.DIOsurpress += 1
                 self.current_action = 0
 
-            self.ptransmit = self.DIOtransmit / self.Nstates
-            self.ptransmit_collision = (
-                self.DIOtransmit_collision / self.DIOtransmit) if self.DIOtransmit else 0
+            self.calculate_pfree()
+            self.calculate_ptransmit()
+            self.calculate_preset()
 
             self.update_qtable()
             if self.adaptive_epsilon:
@@ -300,8 +264,7 @@ class QTrickle(object):
 
             # ===== Start new interval
 
-            self.mote.tsch.set_is_dio_sent(False)
-            self.is_dio_sent = False
+            self.reset_is_dio_sent()
             # doubling the interval
             #
             # Section 4.2:
@@ -322,10 +285,67 @@ class QTrickle(object):
             i_callback()
 
         self.engine.scheduleAtAsn(
-            asn=asn,
+            asn=self.correctASN(asn_i),
             cb=i_callback if self.t_end < self.interval else end_t_i_callback,
             uniqueTag=self.unique_tag_base + u'_at_i',
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
+
+    def calculate_preset(self):
+        self.preset = self.Nreset / self.Nstates
+        self.pstable = 1 - self.preset
+
+    def calculate_ptransmit(self):
+        self.ptransmit = self.DIOtransmit / self.Nstates
+        self.ptransmit_collision = (
+            self.DIOtransmit_collision / self.DIOtransmit) if self.DIOtransmit else 0
+
+    def calculate_pfree(self):
+        if self.end_t_record is not None and self.start_t_record is not None:
+            self.used = self.end_t_record - self.start_t_record
+            # if self.used > 0: self.used -= self.is_dio_truly_sent()
+            if self.Ncells < self.used:
+                self.Ncells = self.used
+            self.Ncells = max(self.Ncells, 1)
+            occ = self.used / self.Ncells
+            self.poccupancy = occ
+            self.pfree = 1 - self.poccupancy
+
+    def getOpsMC(self):
+        minimal_cell = self.mote.tsch.get_minimal_cell()
+        if minimal_cell:
+            return minimal_cell.all_ops
+        return None
+
+    def correctASN(self, asn_):
+        cur = self.engine.getAsn()
+        if asn_ == cur:
+            asn_ = cur + 1
+        return asn_
+
+    def reset_is_dio_sent(self):
+        self.mote.tsch.set_is_dio_scheduled(False)
+        self.mote.tsch.set_is_dio_sent(False)
+        self.mote.sixlowpan.set_is_dio_sent(False)
+        self.is_dio_sent = False
+
+    def is_dio_not_sent(self):
+        if (
+            not self.mote.sixlowpan.is_dio_sent or
+            not self.mote.tsch.is_dio_scheduled or
+            not self.mote.tsch.is_dio_sent
+        ):
+            return True
+        return False
+
+    def is_dio_truly_sent(self):
+        result = int(self.mote.tsch.is_dio_scheduled)
+        result *= int(self.mote.tsch.is_dio_sent)
+        result *= int(self.is_dio_sent)
+        result *= int(self.mote.sixlowpan.is_dio_sent)
+        return result
+
+    def ceil_division(self, a, b):
+        return int(math.ceil(old_div(a, b)))
 
     def log_result(self):
         result = {
@@ -335,13 +355,27 @@ class QTrickle(object):
             'poccupancy': self.poccupancy,
             'DIOtransmit': self.DIOtransmit,
             'DIOsurpress': self.DIOsurpress,
+            'DIOtransmit_collision': self.DIOtransmit_collision,
             'Nreset': self.Nreset,
             'preset': self.preset,
             'pstable': self.pstable,
             'counter': self.counter,
             'k': self.redundancy_constant,
+            'used': self.used,
+            'Ncells': self.Ncells,
             'epsilon': self.epsilon,
+            'epsilon_exploit': self.epsilon_exploit,
+            'epsilon_explore': self.epsilon_explore,
+            "average_reward": self.average_reward,
+            't_start': self.t_start / self.interval,
+            't': self.t / self.interval,
+            't_end': self.t_end / self.interval,
+            'interval': self.interval,
             'listen_period': self.listen_period,
+            'end_t_record': self.end_t_record,
+            'start_t_record': self.start_t_record,
+            'is_dio_truly_sent': self.is_dio_truly_sent(),
+            'is_explore': self.is_explore
         }
 
         self.log(
@@ -354,8 +388,6 @@ class QTrickle(object):
 
     def update_qtable(self):
         reward = self.pfree
-        if self.adaptive_epsilon:
-            self.total_reward += reward
 
         # clip m
         if self.i_max < (self.m + 1):
@@ -379,22 +411,20 @@ class QTrickle(object):
         return k
 
     def calculate_epsilon(self):
-        average_reward = self.total_reward / self.Nstates
-        diff = average_reward
+        self.total_reward += self.pfree
+        self.average_reward = self.total_reward / self.Nstates
         new_epsilon = self.epsilon
 
         if self.Nstates > 1:
-            prev_average_reward = self.prev_total_reward / (self.Nstates - 1)
-            diff = average_reward - prev_average_reward
-
-            if diff >= 0:
+            if self.pfree > self.average_reward:
                 # towards exploit
                 new_epsilon -= self.delta
+                self.epsilon_exploit += 1
             else:
                 # towards explore
                 new_epsilon += self.delta
-        
+                self.epsilon_explore += 1
+
         new_epsilon = max(new_epsilon, self.min_epsilon)
         new_epsilon = min(new_epsilon, self.max_epsilon)
         self.epsilon = new_epsilon
-        self.prev_average_reward = self.total_reward

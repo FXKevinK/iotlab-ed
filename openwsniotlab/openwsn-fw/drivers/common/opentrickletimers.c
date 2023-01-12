@@ -108,15 +108,15 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
     opentrickletimers_vars.Ncells = EMPTY_16;
     opentrickletimers_vars.is_dio_sent = FALSE;
     opentrickletimers_vars.Nstates = 1;
-    opentrickletimers_vars.pfree = 1;
-    opentrickletimers_vars.poccupancy = 0;
     opentrickletimers_vars.Nreset = 0;
     opentrickletimers_vars.DIOsurpress = 0;
     opentrickletimers_vars.DIOtransmit = 0;
     opentrickletimers_vars.DIOtransmit_dis = 0;
     opentrickletimers_vars.listen_period = 0;
-    opentrickletimers_vars.preset = 0;
-    opentrickletimers_vars.pstable = 1;
+    opentrickletimers_vars.poccupancy = 1;
+    opentrickletimers_vars.preset = 1;
+    opentrickletimers_vars.pfree = 1 - opentrickletimers_vars.poccupancy;
+    opentrickletimers_vars.pstable = 1 - opentrickletimers_vars.preset;
 
     opentrickletimers_vars.prev_ops_ambr = EMPTY_16;
     opentrickletimers_vars.ambr = EMPTY_8;
@@ -126,12 +126,13 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
     opentrickletimers_vars.isUsed = TRUE;
     opentrickletimers_vars.isRunning = FALSE;
 
+    opentrickletimers_vars.ptransmit = 0;
+    opentrickletimers_vars.ptransmit_collision = 0;
+    opentrickletimers_vars.DIOtransmit_collision = 0;
+
 #if use_qtrickle == TRUE
     opentrickletimers_vars.Nnbr = 0;
-    opentrickletimers_vars.DIOtransmit_collision = 0;
-    opentrickletimers_vars.ptransmit = 1;
     opentrickletimers_vars.current_action = EMPTY_8;
-    opentrickletimers_vars.ptransmit_collision = 0;
     opentrickletimers_vars.epsilon = default_epsilon;
     opentrickletimers_vars.is_explore = TRUE;
     memset(&opentrickletimers_vars.q_table[0], 0, (DEFAULT_DIO_INTERVAL_DOUBLINGS + 1) * 2);
@@ -139,7 +140,7 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
 
 #if adaptive_epsilon == TRUE
     opentrickletimers_vars.total_reward = 0;
-    opentrickletimers_vars.prev_total_reward = 0;
+    opentrickletimers_vars.average_reward = 0;
     opentrickletimers_vars.epsilon = max_epsilon;
 #endif
 
@@ -157,8 +158,8 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
         (opentrickletimers_vars.sc_at_end_t < 0 || MAX_NUM_TIMERS <= opentrickletimers_vars.sc_at_end_t))
     {
         LOG_CRITICAL(COMPONENT_OPENTRICKLETIMERS, ERR_NO_FREE_TIMER_OR_QUEUE_ENTRY,
-                        (errorparameter_t) 0,
-                        (errorparameter_t) 0);
+                     (errorparameter_t)0,
+                     (errorparameter_t)0);
         return FALSE;
     }
 
@@ -169,7 +170,8 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
     return TRUE;
 }
 
-void opentrickletimers_ambr_trigger(opentimers_id_t id){
+void opentrickletimers_ambr_trigger(opentimers_id_t id)
+{
 
     slotinfo_element_t minimal_cell;
     uint16_t cur_ops_ambr = EMPTY_16;
@@ -189,7 +191,7 @@ void opentrickletimers_ambr_trigger(opentimers_id_t id){
         opentrickletimers_scheduler_ambr();
         return;
     }
-    
+
     DISABLE_INTERRUPTS();
 
     // Record ops saat ini masukin ke prev_ops
@@ -207,7 +209,7 @@ void opentrickletimers_ambr_trigger(opentimers_id_t id){
     {
         cur_ops_ambr = minimal_cell.allOps;
     }
-    
+
     if (opentrickletimers_vars.prev_ops_ambr != EMPTY_16 && cur_ops_ambr != EMPTY_16)
     {
         used = cur_ops_ambr - opentrickletimers_vars.prev_ops_ambr;
@@ -229,31 +231,34 @@ void opentrickletimers_ambr_trigger(opentimers_id_t id){
         opentrickletimers_vars.ambr = opentrickletimers_vars.ambr + ((curr_mbr - opentrickletimers_vars.ambr) / opentrickletimers_vars.counter_ambr);
     }
 
-    if(opentrickletimers_vars.counter_ambr == 0 && curr_mbr != EMPTY_8){
+    if (opentrickletimers_vars.counter_ambr == 0 && curr_mbr != EMPTY_8)
+    {
         opentrickletimers_vars.ambr = curr_mbr;
         opentrickletimers_vars.counter_ambr += 1;
     }
 
-    if(cur_ops_ambr != EMPTY_16){
+    if (cur_ops_ambr != EMPTY_16)
+    {
         opentrickletimers_vars.prev_ops_ambr = cur_ops_ambr;
     }
 
     opentrickletimers_scheduler_ambr();
 
     ENABLE_INTERRUPTS();
-
 }
 
-void opentrickletimers_scheduler_ambr(void){
+void opentrickletimers_scheduler_ambr(void)
+{
     uint16_t slotframe_duration_ms;
     uint8_t slot_duration_ms;
     uint16_t frameLength;
 
     slot_duration_ms = (ieee154e_getSlotDuration() * 305) / 10000; // 10 ms
-    frameLength = schedule_getFrameLength(); // 101
-    slotframe_duration_ms = frameLength * slot_duration_ms; // 1010 ms per slotframe
+    frameLength = schedule_getFrameLength();                       // 101
+    slotframe_duration_ms = frameLength * slot_duration_ms;        // 1010 ms per slotframe
 
-    if(slotframe_duration_ms < 1){
+    if (slotframe_duration_ms < 1)
+    {
         slotframe_duration_ms = SLOTFRAME_LENGTH * SLOTDURATION;
     }
 
@@ -262,9 +267,7 @@ void opentrickletimers_scheduler_ambr(void){
         MINIMAL_CELL_BUSY_RATIO_SLOTFRAME * slotframe_duration_ms,
         TIME_MS,
         TIMER_ONESHOT,
-        opentrickletimers_ambr_trigger
-    );
-    
+        opentrickletimers_ambr_trigger);
 }
 
 uint32_t opentrickletimers_getValue(uint8_t code)
@@ -283,7 +286,6 @@ uint32_t opentrickletimers_getValue(uint8_t code)
 void opentrickletimers_schedule_event_at_t_and_i(void)
 {
 
-    uint8_t lower_bound;
     uint16_t slotframe_duration_ms;
     uint32_t t_range;
     uint32_t rand_num;
@@ -303,44 +305,28 @@ void opentrickletimers_schedule_event_at_t_and_i(void)
     half_interval = opentrickletimers_vars.I / 2;
 
 #if use_qtrickle == TRUE
-    opentrickletimers_vars.t_min = (uint32_t) ((float) half_interval * (opentrickletimers_vars.ptransmit * opentrickletimers_vars.pfree));
-    opentrickletimers_vars.t_max = (uint32_t) ((float) half_interval + (opentrickletimers_vars.pstable * half_interval));
+    opentrickletimers_vars.t_start = (uint32_t)((float)half_interval * (opentrickletimers_vars.ptransmit * opentrickletimers_vars.pfree));
+    opentrickletimers_vars.t_end = (uint32_t)((float)half_interval + (opentrickletimers_vars.pstable * half_interval));
 #else
-    opentrickletimers_vars.t_min = half_interval;
-    opentrickletimers_vars.t_max = opentrickletimers_vars.I;
+    opentrickletimers_vars.t_start = half_interval;
+    opentrickletimers_vars.t_end = opentrickletimers_vars.I;
 #endif
 
-    // make sure that I'm scheduling an event in the future
-    lower_bound = 20 * 5;
-    if(opentrickletimers_vars.t_min < lower_bound){
-        opentrickletimers_vars.t_min = lower_bound;
-    }
-    // make sure there is enough distance between t_min and t_max
-    if(opentrickletimers_vars.t_max-opentrickletimers_vars.t_min < lower_bound){
-        opentrickletimers_vars.t_min -= lower_bound;
-    }
-
     rand_num = openrandom_get16b();
-    // add/subtract with 20ms, to avoid same value of T with t_min or t_max
-    opentrickletimers_vars.T = (rand_num % ((opentrickletimers_vars.t_max-20) - (opentrickletimers_vars.t_min+20) + 1)) + (opentrickletimers_vars.t_min+20);
-    opentrickletimers_vars.listen_period = opentrickletimers_vars.T - opentrickletimers_vars.t_min;
+    // add/subtract with 20ms, to avoid same value of T with t_start or t_end
+    opentrickletimers_vars.T = (rand_num % ((opentrickletimers_vars.t_end) - (opentrickletimers_vars.t_start) + 1)) + (opentrickletimers_vars.t_start);
+    opentrickletimers_vars.listen_period = opentrickletimers_vars.T - opentrickletimers_vars.t_start;
 
-    t_range = opentrickletimers_vars.t_max - opentrickletimers_vars.t_min;
+    t_range = opentrickletimers_vars.t_end - opentrickletimers_vars.t_start;
 
     slot_duration_ms = (ieee154e_getSlotDuration() * 305) / 10000; // 10 ms
-    frameLength = schedule_getFrameLength(); // 101
-    slotframe_duration_ms = frameLength * slot_duration_ms; // 1010 ms per slotframe
+    frameLength = schedule_getFrameLength();                       // 101
+    slotframe_duration_ms = frameLength * slot_duration_ms;        // 1010 ms per slotframe
 
-    opentrickletimers_vars.Ncells = ((float)t_range / (float)slotframe_duration_ms);
-    opentrickletimers_vars.Ncells = packetfunctions_mathCeil(opentrickletimers_vars.Ncells);
-    if (opentrickletimers_vars.Ncells < 1)
-    {
-        opentrickletimers_vars.Ncells = 1;
-    }
+    opentrickletimers_vars.Ncells = packetfunctions_mathCeil(((float)t_range / (float)slotframe_duration_ms));
 
-    if (opentrickletimers_vars.Ncells < 1)
-    {
-        opentrickletimers_vars.Ncells = 1;
+    if(opentrickletimers_vars.T < 0 || opentrickletimers_vars.t_start < 0 || opentrickletimers_vars.t_end < 0 || opentrickletimers_vars.I < 0){
+        LOG_CRITICAL(COMPONENT_OPENTRICKLETIMERS, ERR_TIMER_MINUS, 0, 0);
     }
 
     opentimers_scheduleIn(
@@ -352,16 +338,16 @@ void opentrickletimers_schedule_event_at_t_and_i(void)
 
     opentimers_scheduleIn(
         opentrickletimers_vars.sc_at_start_t,
-        opentrickletimers_vars.t_min,
+        opentrickletimers_vars.t_start,
         TIME_MS,
         TIMER_ONESHOT,
         opentrickletimers_start_t_callback);
 
-    if (opentrickletimers_vars.t_max < opentrickletimers_vars.I)
+    if (opentrickletimers_vars.t_end < opentrickletimers_vars.I)
     {
         opentimers_scheduleIn(
             opentrickletimers_vars.sc_at_end_t,
-            opentrickletimers_vars.t_max,
+            opentrickletimers_vars.t_end,
             TIME_MS,
             TIMER_ONESHOT,
             opentrickletimers_end_t_callback);
@@ -435,12 +421,14 @@ void opentrickletimers_start(opentimers_id_t id)
     ENABLE_INTERRUPTS();
 }
 
-uint16_t opentrickletimers_getAMBR(void){
-    uint16_t value = (uint16_t) (opentrickletimers_vars.ambr * 10000);
+uint16_t opentrickletimers_getAMBR(void)
+{
+    uint16_t value = (uint16_t)(opentrickletimers_vars.ambr * 10000);
     return value;
 }
 
-void opentrickletimers_incrementDioTransmitDis(void){
+void opentrickletimers_incrementDioTransmitDis(void)
+{
     opentrickletimers_vars.DIOtransmit_dis += 1;
 }
 
@@ -534,6 +522,7 @@ bool opentrickletimers_reset(opentimers_id_t id)
 
     opentrickletimers_vars.m = 0;
     opentrickletimers_vars.Nreset += 1;
+    // calculate_preset
     opentrickletimers_vars.preset = (float)opentrickletimers_vars.Nreset / opentrickletimers_vars.Nstates;
     opentrickletimers_vars.pstable = 1 - opentrickletimers_vars.preset;
 
@@ -586,41 +575,29 @@ void opentrickletimers_i_callback(opentimers_id_t id)
 {
     uint16_t used = EMPTY_16;
     float occ = EMPTY_8;
-    uint16_t dio_sent;
     bool fw_dioSent;
+    bool fw_dioScheduled;
 
     INTERRUPT_DECLARATION();
     DISABLE_INTERRUPTS();
 
-    fw_dioSent = icmpv6rpl_getdioSent();
-    if (opentrickletimers_vars.start_ops != EMPTY_16 && opentrickletimers_vars.end_ops != EMPTY_16)
-    {
-        dio_sent = fw_dioSent * opentrickletimers_vars.is_dio_sent;
-        used = (opentrickletimers_vars.end_ops - opentrickletimers_vars.start_ops) - dio_sent;
-        if (used < 0)
-        {
-            used = 0;
-        }
-
-        if (used <= opentrickletimers_vars.Ncells)
-        {
-            occ = (float)used / opentrickletimers_vars.Ncells;
-            opentrickletimers_vars.poccupancy = occ;
-            opentrickletimers_vars.pfree = 1.0 - occ;
-        }
-    }
-
-    if (opentrickletimers_vars.is_dio_sent)
-    {
+    if (opentrickletimers_vars.is_dio_sent){
         opentrickletimers_vars.DIOtransmit += 1;
 
 #if use_qtrickle == TRUE
         opentrickletimers_vars.current_action = 1;
-        if (fw_dioSent == FALSE)
+#endif
+
+        // is_dio_truly_sent
+        fw_dioSent = icmpv6rpl_getdioSent();
+        fw_dioScheduled = icmpv6rpl_getdioScheduled();
+
+        // is_dio_not_sent
+        if (fw_dioSent == FALSE || fw_dioScheduled == FALSE)
         {
             opentrickletimers_vars.DIOtransmit_collision += 1;
         }
-#endif
+
     }
     else
     {
@@ -631,24 +608,52 @@ void opentrickletimers_i_callback(opentimers_id_t id)
 #endif
     }
 
-#if use_qtrickle == TRUE
+
+    // calculate_pfree
+    if (opentrickletimers_vars.start_ops != EMPTY_16 && opentrickletimers_vars.end_ops != EMPTY_16)
+    {
+        // dio_sent = fw_dioScheduled * fw_dioSent * opentrickletimers_vars.is_dio_sent;
+        used = opentrickletimers_vars.end_ops - opentrickletimers_vars.start_ops;
+
+        if(opentrickletimers_vars.Ncells < used){
+            opentrickletimers_vars.Ncells = used;
+        }
+
+        if(opentrickletimers_vars.Ncells < 1){
+            opentrickletimers_vars.Ncells = 1;
+        }
+
+
+        occ = (float)used / opentrickletimers_vars.Ncells;
+        opentrickletimers_vars.poccupancy = occ;
+        opentrickletimers_vars.pfree = 1.0 - occ;
+    }
+
+    // calculate_ptransmit 
     opentrickletimers_vars.ptransmit = (float)opentrickletimers_vars.DIOtransmit / (float)opentrickletimers_vars.Nstates;
     opentrickletimers_vars.ptransmit_collision = 0;
     if (opentrickletimers_vars.DIOtransmit > 0)
     {
         opentrickletimers_vars.ptransmit_collision = (float)opentrickletimers_vars.DIOtransmit_collision / (float)opentrickletimers_vars.DIOtransmit;
     }
+
+    // calculate_preset
+    opentrickletimers_vars.preset = (float)opentrickletimers_vars.Nreset / opentrickletimers_vars.Nstates;
+    opentrickletimers_vars.pstable = 1 - opentrickletimers_vars.preset;
+
+#if use_qtrickle == TRUE
     opentrickletimers_update_qtable();
 #endif
 
 #if adaptive_epsilon == TRUE
-    opentrickletimers_vars.total_reward += opentrickletimers_vars.pfree;
     opentrickletimers_calculate_epsilon();
 #endif
 
     opentrickletimers_log_result();
 
+    // reset_is_dio_sent
     icmpv6rpl_setdioSent(FALSE);
+    icmpv6rpl_setdioScheduled(FALSE);
     opentrickletimers_vars.is_dio_sent = FALSE;
 
     opentrickletimers_vars.I *= 2;
@@ -683,11 +688,11 @@ void opentrickletimers_log_result(void)
     opentrickletimers_debug.counter = opentrickletimers_vars.C;
     opentrickletimers_debug.k = opentrickletimers_vars.K;
     opentrickletimers_debug.Nnbr = opentrickletimers_vars.Nnbr;
-    opentrickletimers_debug.pfree = (uint16_t) (opentrickletimers_vars.pfree * 10000);
-    opentrickletimers_debug.preset = (uint16_t) (opentrickletimers_vars.preset * 10000);
-    opentrickletimers_debug.epsilon = (uint16_t) (opentrickletimers_vars.epsilon * 10000);
+    opentrickletimers_debug.pfree = (uint16_t)(opentrickletimers_vars.pfree * 10000);
+    opentrickletimers_debug.preset = (uint16_t)(opentrickletimers_vars.preset * 10000);
+    opentrickletimers_debug.epsilon = (uint16_t)(opentrickletimers_vars.epsilon * 10000);
     opentrickletimers_debug.listen_period = opentrickletimers_vars.listen_period;
-    openserial_print_exp(COMPONENT_OPENTRICKLETIMERS, ERR_EXPERIMENT, (uint8_t * ) & opentrickletimers_debug, sizeof(opentrickletimers_debug_t));
+    openserial_print_exp(COMPONENT_OPENTRICKLETIMERS, ERR_EXPERIMENT, (uint8_t *)&opentrickletimers_debug, sizeof(opentrickletimers_debug_t));
 }
 
 #if use_qtrickle == TRUE
@@ -756,20 +761,14 @@ void opentrickletimers_update_qtable(void)
 void opentrickletimers_calculate_epsilon(void)
 {
     float new_epsilon;
-    float average_reward;
-    float diff;
-    float prev_average_reward;
 
-    average_reward = (float)opentrickletimers_vars.total_reward / opentrickletimers_vars.Nstates;
-    diff = average_reward;
+    opentrickletimers_vars.total_reward += opentrickletimers_vars.pfree;
+    opentrickletimers_vars.average_reward = (float)opentrickletimers_vars.total_reward / opentrickletimers_vars.Nstates;
     new_epsilon = opentrickletimers_vars.epsilon;
 
     if (opentrickletimers_vars.Nstates > 1)
     {
-        prev_average_reward = (float)opentrickletimers_vars.prev_total_reward / (opentrickletimers_vars.Nstates - 1);
-        diff = (float)average_reward - prev_average_reward;
-
-        if (diff > 0)
+        if (opentrickletimers_vars.pfree > opentrickletimers_vars.average_reward)
         {
             // towards exploit
             new_epsilon -= epsilon_delta;
@@ -790,7 +789,6 @@ void opentrickletimers_calculate_epsilon(void)
         new_epsilon = max_epsilon;
     }
     opentrickletimers_vars.epsilon = new_epsilon;
-    opentrickletimers_vars.prev_total_reward = opentrickletimers_vars.total_reward;
 }
 #endif
 
@@ -818,7 +816,9 @@ void opentrickletimers_t_callback(opentimers_id_t id)
         opentrickletimers_vars.isUsed == TRUE &&
         opentrickletimers_vars.callback != NULL)
     {
+        // reset_is_dio_sent
         icmpv6rpl_setdioSent(FALSE);
+        icmpv6rpl_setdioScheduled(FALSE);
         opentrickletimers_vars.is_dio_sent = FALSE;
 
 #if use_qtrickle == TRUE
@@ -826,8 +826,8 @@ void opentrickletimers_t_callback(opentimers_id_t id)
         multiplier = 10000;
         rand_num = (openrandom_get16b() % multiplier);
         action = 0;
-        temp = (uint32_t) (opentrickletimers_vars.epsilon * multiplier);
-        
+        temp = (uint32_t)(opentrickletimers_vars.epsilon * multiplier);
+
         if (rand_num <= temp)
         {
             opentrickletimers_vars.is_explore = TRUE;

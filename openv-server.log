@@ -1,0 +1,1181 @@
+02:43:20 VERBOSE loading logging configuration: config/logging.conf
+02:43:20 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsn-iotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+02:43:20 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+02:43:29 SUCCESS m3-1.strasbourg.iot-lab.info Ok.
+02:43:33 SUCCESS m3-2.strasbourg.iot-lab.info Ok.
+02:43:37 SUCCESS m3-19.strasbourg.iot-lab.info Ok.
+02:43:42 SUCCESS m3-20.strasbourg.iot-lab.info Ok.
+02:43:46 SUCCESS m3-29.strasbourg.iot-lab.info Ok.
+02:43:50 SUCCESS m3-30.strasbourg.iot-lab.info Ok.
+02:43:54 SUCCESS m3-47.strasbourg.iot-lab.info Ok.
+02:43:58 SUCCESS m3-48.strasbourg.iot-lab.info Ok.
+02:44:02 SUCCESS m3-53.strasbourg.iot-lab.info Ok.
+02:44:06 SUCCESS m3-54.strasbourg.iot-lab.info Ok.
+02:44:09 WARNING MoteProbe@m3-5.strasbourg.iot-lab.info: invalid serial frame: ( 2B) 7e-7e packet too short
+02:44:10 SUCCESS m3-5.strasbourg.iot-lab.info Ok.
+02:44:14 SUCCESS m3-6.strasbourg.iot-lab.info Ok.
+02:44:18 SUCCESS m3-21.strasbourg.iot-lab.info Ok.
+02:44:21 WARNING MoteProbe@m3-22.strasbourg.iot-lab.info: invalid serial frame: ( 2B) 7e-7e packet too short
+02:44:22 SUCCESS m3-22.strasbourg.iot-lab.info Ok.
+02:44:27 SUCCESS m3-33.strasbourg.iot-lab.info Ok.
+02:44:31 SUCCESS m3-34.strasbourg.iot-lab.info Ok.
+02:44:35 SUCCESS m3-49.strasbourg.iot-lab.info Ok.
+02:44:39 SUCCESS m3-50.strasbourg.iot-lab.info Ok.
+02:44:43 SUCCESS m3-57.strasbourg.iot-lab.info Ok.
+02:44:47 SUCCESS m3-58.strasbourg.iot-lab.info Ok.
+02:44:51 SUCCESS m3-9.strasbourg.iot-lab.info Ok.
+02:44:55 SUCCESS m3-10.strasbourg.iot-lab.info Ok.
+02:44:59 SUCCESS m3-23.strasbourg.iot-lab.info Ok.
+02:45:03 SUCCESS m3-24.strasbourg.iot-lab.info Ok.
+02:45:07 SUCCESS m3-37.strasbourg.iot-lab.info Ok.
+02:45:11 SUCCESS m3-38.strasbourg.iot-lab.info Ok.
+02:45:16 SUCCESS m3-51.strasbourg.iot-lab.info Ok.
+02:45:20 SUCCESS m3-52.strasbourg.iot-lab.info Ok.
+02:45:24 SUCCESS m3-61.strasbourg.iot-lab.info Ok.
+02:45:28 SUCCESS m3-62.strasbourg.iot-lab.info Ok.
+02:45:28 SUCCESS discovered following iotlab-motes: ['m3-1.strasbourg.iot-lab.info', 'm3-2.strasbourg.iot-lab.info', 'm3-19.strasbourg.iot-lab.info', 'm3-20.strasbourg.iot-lab.info', 'm3-29.strasbourg.iot-lab.info', 'm3-30.strasbourg.iot-lab.info', 'm3-47.strasbourg.iot-lab.info', 'm3-48.strasbourg.iot-lab.info', 'm3-53.strasbourg.iot-lab.info', 'm3-54.strasbourg.iot-lab.info', 'm3-5.strasbourg.iot-lab.info', 'm3-6.strasbourg.iot-lab.info', 'm3-21.strasbourg.iot-lab.info', 'm3-22.strasbourg.iot-lab.info', 'm3-33.strasbourg.iot-lab.info', 'm3-34.strasbourg.iot-lab.info', 'm3-49.strasbourg.iot-lab.info', 'm3-50.strasbourg.iot-lab.info', 'm3-57.strasbourg.iot-lab.info', 'm3-58.strasbourg.iot-lab.info', 'm3-9.strasbourg.iot-lab.info', 'm3-10.strasbourg.iot-lab.info', 'm3-23.strasbourg.iot-lab.info', 'm3-24.strasbourg.iot-lab.info', 'm3-37.strasbourg.iot-lab.info', 'm3-38.strasbourg.iot-lab.info', 'm3-51.strasbourg.iot-lab.info', 'm3-52.strasbourg.iot-lab.info', 'm3-61.strasbourg.iot-lab.info', 'm3-62.strasbourg.iot-lab.info']
+02:45:28 INFO extracting firmware definitions.
+02:45:28 VERBOSE extracting firmware component names
+02:45:28 CRITICAL could not updated firmware definitions: [Errno 2] No such file or directory: '/Users/dzakyzf/lain/iotlab/openwsn-iotlab/openwsn-fw/inc/opendefs.h'
+02:48:24 VERBOSE loading logging configuration: config/logging.conf
+02:48:24 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsniotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+02:48:24 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+02:48:29 SUCCESS m3-1.strasbourg.iot-lab.info Ok.
+02:48:34 SUCCESS m3-2.strasbourg.iot-lab.info Ok.
+02:48:38 SUCCESS m3-19.strasbourg.iot-lab.info Ok.
+02:48:42 SUCCESS m3-20.strasbourg.iot-lab.info Ok.
+02:48:46 SUCCESS m3-29.strasbourg.iot-lab.info Ok.
+02:48:50 SUCCESS m3-30.strasbourg.iot-lab.info Ok.
+02:48:54 SUCCESS m3-47.strasbourg.iot-lab.info Ok.
+02:48:59 SUCCESS m3-48.strasbourg.iot-lab.info Ok.
+02:49:03 SUCCESS m3-53.strasbourg.iot-lab.info Ok.
+02:49:07 SUCCESS m3-54.strasbourg.iot-lab.info Ok.
+02:49:11 SUCCESS m3-5.strasbourg.iot-lab.info Ok.
+02:49:15 SUCCESS m3-6.strasbourg.iot-lab.info Ok.
+02:49:19 SUCCESS m3-21.strasbourg.iot-lab.info Ok.
+02:49:23 SUCCESS m3-22.strasbourg.iot-lab.info Ok.
+02:49:28 SUCCESS m3-33.strasbourg.iot-lab.info Ok.
+02:49:32 SUCCESS m3-34.strasbourg.iot-lab.info Ok.
+02:49:36 SUCCESS m3-49.strasbourg.iot-lab.info Ok.
+02:49:40 SUCCESS m3-50.strasbourg.iot-lab.info Ok.
+02:49:45 SUCCESS m3-57.strasbourg.iot-lab.info Ok.
+02:49:50 SUCCESS m3-58.strasbourg.iot-lab.info Ok.
+02:49:54 SUCCESS m3-9.strasbourg.iot-lab.info Ok.
+02:49:58 SUCCESS m3-10.strasbourg.iot-lab.info Ok.
+02:50:02 SUCCESS m3-23.strasbourg.iot-lab.info Ok.
+02:50:06 SUCCESS m3-24.strasbourg.iot-lab.info Ok.
+02:50:10 SUCCESS m3-37.strasbourg.iot-lab.info Ok.
+02:50:15 SUCCESS m3-38.strasbourg.iot-lab.info Ok.
+02:50:19 SUCCESS m3-51.strasbourg.iot-lab.info Ok.
+02:50:23 SUCCESS m3-52.strasbourg.iot-lab.info Ok.
+02:50:27 SUCCESS m3-61.strasbourg.iot-lab.info Ok.
+02:50:31 SUCCESS m3-62.strasbourg.iot-lab.info Ok.
+02:50:31 SUCCESS discovered following iotlab-motes: ['m3-1.strasbourg.iot-lab.info', 'm3-2.strasbourg.iot-lab.info', 'm3-19.strasbourg.iot-lab.info', 'm3-20.strasbourg.iot-lab.info', 'm3-29.strasbourg.iot-lab.info', 'm3-30.strasbourg.iot-lab.info', 'm3-47.strasbourg.iot-lab.info', 'm3-48.strasbourg.iot-lab.info', 'm3-53.strasbourg.iot-lab.info', 'm3-54.strasbourg.iot-lab.info', 'm3-5.strasbourg.iot-lab.info', 'm3-6.strasbourg.iot-lab.info', 'm3-21.strasbourg.iot-lab.info', 'm3-22.strasbourg.iot-lab.info', 'm3-33.strasbourg.iot-lab.info', 'm3-34.strasbourg.iot-lab.info', 'm3-49.strasbourg.iot-lab.info', 'm3-50.strasbourg.iot-lab.info', 'm3-57.strasbourg.iot-lab.info', 'm3-58.strasbourg.iot-lab.info', 'm3-9.strasbourg.iot-lab.info', 'm3-10.strasbourg.iot-lab.info', 'm3-23.strasbourg.iot-lab.info', 'm3-24.strasbourg.iot-lab.info', 'm3-37.strasbourg.iot-lab.info', 'm3-38.strasbourg.iot-lab.info', 'm3-51.strasbourg.iot-lab.info', 'm3-52.strasbourg.iot-lab.info', 'm3-61.strasbourg.iot-lab.info', 'm3-62.strasbourg.iot-lab.info']
+02:50:31 SUCCESS Total iotlab-motes: 30
+02:50:31 INFO extracting firmware definitions.
+02:50:31 VERBOSE extracting firmware component names
+02:50:31 VERBOSE extracting firmware log descriptions.
+02:50:31 VERBOSE extracting 6top return codes.
+02:50:31 VERBOSE extracting 6top states.
+02:50:31 INFO starting RPC server
+02:51:42 SUCCESS Setting mote b286 as root
+02:51:43 ERROR b286 [IEEE802154E] wrong state 1 in startSlot, at slotOffset 1
+02:51:44 INFO registering DAGroot 05-43-32-ff-03-d8-b2-86
+02:52:45 SUCCESS a284 [IEEE802154E] synchronized at slotOffset 0
+02:54:10 SUCCESS a984 [IEEE802154E] synchronized at slotOffset 0
+02:54:10 SUCCESS 9986 [IEEE802154E] synchronized at slotOffset 0
+02:54:10 SUCCESS a685 [IEEE802154E] synchronized at slotOffset 0
+02:54:10 SUCCESS a487 [IEEE802154E] synchronized at slotOffset 0
+02:54:24 SUCCESS 9083 [IEEE802154E] synchronized at slotOffset 0
+02:54:28 SUCCESS a386 [IEEE802154E] synchronized at slotOffset 0
+02:54:40 SUCCESS 9789 [IEEE802154E] synchronized at slotOffset 0
+02:54:42 SUCCESS a488 [IEEE802154E] synchronized at slotOffset 0
+02:54:43 SUCCESS a186 [IEEE802154E] synchronized at slotOffset 0
+02:54:50 ERROR a984 [IEEE802154E] got desynchronized at slotOffset 81
+02:54:57 SUCCESS a788 [IEEE802154E] synchronized at slotOffset 0
+02:55:01 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:03 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:04 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:09 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 85)
+02:55:11 SUCCESS 9084 [IEEE802154E] synchronized at slotOffset 0
+02:55:12 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:55:15 SUCCESS 9589 [IEEE802154E] synchronized at slotOffset 0
+02:55:15 SUCCESS b786 [IEEE802154E] synchronized at slotOffset 0
+02:55:15 SUCCESS b086 [IEEE802154E] synchronized at slotOffset 0
+02:55:18 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:55:22 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:55:22 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:55:24 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:25 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:28 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:28 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:30 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:32 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:55:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 85)
+02:55:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:55:39 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:40 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:40 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:48 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:48 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:49 SUCCESS a385 [IEEE802154E] synchronized at slotOffset 0
+02:55:50 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:50 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:52 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:54 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:56 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:55:56 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:57 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:55:58 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:00 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:02 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:03 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:04 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:04 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:06 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:06 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 85)
+02:56:07 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:08 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:08 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:08 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:09 SUCCESS b586 [IEEE802154E] synchronized at slotOffset 0
+02:56:09 SUCCESS 9287 [IEEE802154E] synchronized at slotOffset 0
+02:56:11 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:12 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:12 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:13 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:13 SUCCESS b885 [IEEE802154E] synchronized at slotOffset 0
+02:56:13 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:14 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:14 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:15 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:16 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:17 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:18 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:18 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:18 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:20 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:21 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:22 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:24 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:24 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:28 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:28 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:29 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:30 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:30 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:31 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:32 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:32 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:33 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:34 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:39 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:39 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:39 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:40 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:40 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:44 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:44 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:47 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:56:47 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 85)
+02:56:47 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:49 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:50 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:51 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:53 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:53 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:54 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:56 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:56:56 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:57 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:58 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:56:59 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:00 SUCCESS b386 [IEEE802154E] synchronized at slotOffset 0
+02:57:01 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:57:03 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:06 SUCCESS 9788 [IEEE802154E] synchronized at slotOffset 0
+02:57:06 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:07 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:08 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:09 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:10 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:11 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:12 SUCCESS 9387 [IEEE802154E] synchronized at slotOffset 0
+02:57:12 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:14 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:15 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:17 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:19 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:21 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:25 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:27 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:29 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:29 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:29 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:31 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:57:31 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:57:32 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:32 SUCCESS a988 [IEEE802154E] synchronized at slotOffset 0
+02:57:32 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:33 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:34 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:35 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:57:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:39 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:40 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:57:41 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:41 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:41 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:44 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:44 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:44 SUCCESS a984 [IEEE802154E] synchronized at slotOffset 0
+02:57:45 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:45 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:50 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:51 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:51 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:53 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:57:53 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:55 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:57:56 ERROR a284 [ICMPv6RPL] no free packet buffer (code location 2)
+02:57:56 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:56 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:56 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:57 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:57:58 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:01 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:01 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:02 SUCCESS 9890 [IEEE802154E] synchronized at slotOffset 0
+02:58:03 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:58:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:58:06 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:07 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:10 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:11 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:12 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:13 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:17 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:19 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:58:21 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:21 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:22 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:58:25 WARNING a284 [FORWARDING] packet to forward is dropped (owner 18, length 51)
+02:58:25 WARNING a284 [FORWARDING] packet to forward is dropped (owner 18, length 51)
+02:58:28 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:58:29 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:58:30 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:31 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:31 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:31 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:32 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:32 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:33 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:34 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:35 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:35 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:58:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:58:36 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:58:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:39 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:39 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:40 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:41 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:42 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:42 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:43 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:43 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:44 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:46 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:47 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:58:48 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:49 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:50 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:50 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:50 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:51 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:51 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:51 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:52 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:53 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:54 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:56 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:58 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:58:58 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:00 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:59:02 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:02 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:03 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:04 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:04 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:04 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:04 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:05 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:05 SUCCESS a585 [IEEE802154E] synchronized at slotOffset 0
+02:59:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:05 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:06 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:08 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:09 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:59:09 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:10 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:10 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:11 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:59:12 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:12 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:14 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:16 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:16 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:17 SUCCESS 9689 [IEEE802154E] synchronized at slotOffset 0
+02:59:18 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:18 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:18 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:19 SUCCESS a786 [IEEE802154E] synchronized at slotOffset 0
+02:59:19 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:19 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:20 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:20 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:22 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:22 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:22 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:24 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:25 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:29 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:30 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:32 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:59:33 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:34 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:34 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:34 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:35 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:35 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:36 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:36 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:37 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:39 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:40 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:40 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:41 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:42 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:43 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:43 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:44 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:45 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:46 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:47 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:48 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+02:59:48 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 85)
+02:59:50 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:50 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:51 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:52 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:54 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:54 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:54 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:55 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:56 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:57 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:58 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+02:59:59 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:59 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+02:59:59 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:00 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:00 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:01 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:01 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:01 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:02 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:02 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+03:00:03 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+03:00:03 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:03 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:04 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:05 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:07 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:08 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:08 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:09 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:10 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:10 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:11 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:11 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:12 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:13 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:13 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:14 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:14 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:16 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:17 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:18 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:19 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:21 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:25 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:27 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:27 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:27 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:28 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:29 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:30 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:31 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:33 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:33 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:34 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:34 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:35 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:35 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:36 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:37 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:38 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:39 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:39 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:40 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:41 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+03:00:41 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+03:00:41 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 85)
+03:00:41 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+03:00:42 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:43 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:43 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:43 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:44 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:45 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+03:00:47 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:48 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:48 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:48 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:48 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:49 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:50 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:50 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:51 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:51 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:51 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:51 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:52 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:53 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:53 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:54 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+03:00:55 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:55 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:55 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:57 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:58 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:58 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:00:59 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:00:59 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+03:01:01 WARNING a284 [FORWARDING] packet to forward is dropped (owner 17, length 51)
+03:01:03 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:04 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:05 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:01:07 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:09 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:09 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:09 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:11 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:11 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:11 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:13 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:13 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:15 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:15 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:15 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:17 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:17 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:17 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:17 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:18 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:19 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:20 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:01:21 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:21 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:22 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:23 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:23 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:24 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:25 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:25 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:01:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:26 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:01:27 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:27 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:27 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:29 WARNING m3-1.strasbourg.iot-lab.info; exit loop
+03:01:29 WARNING m3-2.strasbourg.iot-lab.info; exit loop
+03:01:29 WARNING m3-19.strasbourg.iot-lab.info; exit loop
+03:01:29 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:01:29 WARNING a284 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:30 WARNING m3-20.strasbourg.iot-lab.info; exit loop
+03:01:30 ERROR Unknown exception: [Errno 9] Bad file descriptor
+03:01:30 ERROR Traceback (most recent call last):
+03:01:30 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/transport.py", line 2143, in run
+03:01:30 ERROR     self._channel_handler_table[ptype](chan, m)
+03:01:30 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/channel.py", line 1047, in _feed
+03:01:30 ERROR     self.in_buffer.feed(s)
+03:01:30 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/buffered_pipe.py", line 102, in feed
+03:01:30 ERROR     self._event.set()
+03:01:30 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 130, in set
+03:01:30 ERROR     self._pipe.set()
+03:01:30 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 67, in set
+03:01:30 ERROR     os.write(self._wfd, b"*")
+03:01:30 ERROR OSError: [Errno 9] Bad file descriptor
+03:01:30 ERROR 
+03:01:30 WARNING m3-29.strasbourg.iot-lab.info; exit loop
+03:01:30 WARNING m3-30.strasbourg.iot-lab.info; exit loop
+03:01:31 WARNING m3-47.strasbourg.iot-lab.info; exit loop
+03:01:31 WARNING m3-48.strasbourg.iot-lab.info; exit loop
+03:01:32 WARNING m3-53.strasbourg.iot-lab.info; exit loop
+03:01:32 WARNING m3-54.strasbourg.iot-lab.info; exit loop
+03:01:32 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:32 WARNING m3-5.strasbourg.iot-lab.info; exit loop
+03:01:32 ERROR Unknown exception: [Errno 9] Bad file descriptor
+03:01:32 ERROR Traceback (most recent call last):
+03:01:32 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/transport.py", line 2143, in run
+03:01:32 ERROR     self._channel_handler_table[ptype](chan, m)
+03:01:32 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/channel.py", line 1047, in _feed
+03:01:32 ERROR     self.in_buffer.feed(s)
+03:01:32 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/buffered_pipe.py", line 102, in feed
+03:01:32 ERROR     self._event.set()
+03:01:32 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 130, in set
+03:01:32 ERROR     self._pipe.set()
+03:01:32 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 67, in set
+03:01:32 ERROR     os.write(self._wfd, b"*")
+03:01:32 ERROR OSError: [Errno 9] Bad file descriptor
+03:01:32 ERROR 
+03:01:32 WARNING m3-6.strasbourg.iot-lab.info; exit loop
+03:01:32 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:33 WARNING m3-21.strasbourg.iot-lab.info; exit loop
+03:01:33 ERROR Unknown exception: [Errno 9] Bad file descriptor
+03:01:33 ERROR Traceback (most recent call last):
+03:01:33 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/transport.py", line 2143, in run
+03:01:33 ERROR     self._channel_handler_table[ptype](chan, m)
+03:01:33 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/channel.py", line 1047, in _feed
+03:01:33 ERROR     self.in_buffer.feed(s)
+03:01:33 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/buffered_pipe.py", line 102, in feed
+03:01:33 ERROR     self._event.set()
+03:01:33 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 130, in set
+03:01:33 ERROR     self._pipe.set()
+03:01:33 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 67, in set
+03:01:33 ERROR     os.write(self._wfd, b"*")
+03:01:33 ERROR OSError: [Errno 9] Bad file descriptor
+03:01:33 ERROR 
+03:01:33 WARNING m3-22.strasbourg.iot-lab.info; exit loop
+03:01:34 WARNING m3-33.strasbourg.iot-lab.info; exit loop
+03:01:34 WARNING m3-34.strasbourg.iot-lab.info; exit loop
+03:01:34 WARNING m3-49.strasbourg.iot-lab.info; exit loop
+03:01:35 WARNING m3-50.strasbourg.iot-lab.info; exit loop
+03:01:35 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:35 WARNING m3-57.strasbourg.iot-lab.info; exit loop
+03:01:36 WARNING m3-58.strasbourg.iot-lab.info; exit loop
+03:01:36 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:36 WARNING m3-9.strasbourg.iot-lab.info; exit loop
+03:01:36 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 85)
+03:01:37 WARNING m3-10.strasbourg.iot-lab.info; exit loop
+03:01:37 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:37 WARNING m3-23.strasbourg.iot-lab.info; exit loop
+03:01:38 WARNING m3-24.strasbourg.iot-lab.info; exit loop
+03:01:38 WARNING m3-37.strasbourg.iot-lab.info; exit loop
+03:01:38 WARNING 9589 [FORWARDING] packet to forward is dropped (owner 16, length 51)
+03:01:38 WARNING m3-38.strasbourg.iot-lab.info; exit loop
+03:01:39 WARNING m3-51.strasbourg.iot-lab.info; exit loop
+03:01:39 WARNING m3-52.strasbourg.iot-lab.info; exit loop
+03:01:40 WARNING m3-61.strasbourg.iot-lab.info; exit loop
+03:01:40 WARNING m3-62.strasbourg.iot-lab.info; exit loop
+03:03:31 VERBOSE loading logging configuration: config/logging.conf
+03:03:31 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsniotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+03:03:31 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+03:03:38 SUCCESS m3-1.strasbourg.iot-lab.info Ok.
+03:03:42 SUCCESS m3-2.strasbourg.iot-lab.info Ok.
+03:03:46 SUCCESS m3-19.strasbourg.iot-lab.info Ok.
+03:03:50 SUCCESS m3-20.strasbourg.iot-lab.info Ok.
+03:03:54 SUCCESS m3-29.strasbourg.iot-lab.info Ok.
+03:03:58 SUCCESS m3-30.strasbourg.iot-lab.info Ok.
+03:04:03 SUCCESS m3-47.strasbourg.iot-lab.info Ok.
+03:04:07 SUCCESS m3-48.strasbourg.iot-lab.info Ok.
+03:04:11 SUCCESS m3-53.strasbourg.iot-lab.info Ok.
+03:04:15 SUCCESS m3-54.strasbourg.iot-lab.info Ok.
+03:04:19 SUCCESS m3-5.strasbourg.iot-lab.info Ok.
+03:04:23 SUCCESS m3-6.strasbourg.iot-lab.info Ok.
+03:04:27 SUCCESS m3-21.strasbourg.iot-lab.info Ok.
+03:04:32 SUCCESS m3-22.strasbourg.iot-lab.info Ok.
+03:04:36 SUCCESS m3-33.strasbourg.iot-lab.info Ok.
+03:04:40 SUCCESS m3-34.strasbourg.iot-lab.info Ok.
+03:04:44 SUCCESS m3-49.strasbourg.iot-lab.info Ok.
+03:04:48 SUCCESS m3-50.strasbourg.iot-lab.info Ok.
+03:04:52 SUCCESS m3-57.strasbourg.iot-lab.info Ok.
+03:04:56 SUCCESS m3-58.strasbourg.iot-lab.info Ok.
+03:05:00 SUCCESS m3-9.strasbourg.iot-lab.info Ok.
+03:05:05 SUCCESS m3-10.strasbourg.iot-lab.info Ok.
+03:05:09 SUCCESS m3-23.strasbourg.iot-lab.info Ok.
+03:05:13 SUCCESS m3-24.strasbourg.iot-lab.info Ok.
+03:05:17 SUCCESS m3-37.strasbourg.iot-lab.info Ok.
+03:05:21 SUCCESS m3-38.strasbourg.iot-lab.info Ok.
+03:05:25 SUCCESS m3-51.strasbourg.iot-lab.info Ok.
+03:05:29 SUCCESS m3-52.strasbourg.iot-lab.info Ok.
+03:05:33 SUCCESS m3-61.strasbourg.iot-lab.info Ok.
+03:05:37 SUCCESS m3-62.strasbourg.iot-lab.info Ok.
+03:05:37 SUCCESS discovered following iotlab-motes: ['m3-1.strasbourg.iot-lab.info', 'm3-2.strasbourg.iot-lab.info', 'm3-19.strasbourg.iot-lab.info', 'm3-20.strasbourg.iot-lab.info', 'm3-29.strasbourg.iot-lab.info', 'm3-30.strasbourg.iot-lab.info', 'm3-47.strasbourg.iot-lab.info', 'm3-48.strasbourg.iot-lab.info', 'm3-53.strasbourg.iot-lab.info', 'm3-54.strasbourg.iot-lab.info', 'm3-5.strasbourg.iot-lab.info', 'm3-6.strasbourg.iot-lab.info', 'm3-21.strasbourg.iot-lab.info', 'm3-22.strasbourg.iot-lab.info', 'm3-33.strasbourg.iot-lab.info', 'm3-34.strasbourg.iot-lab.info', 'm3-49.strasbourg.iot-lab.info', 'm3-50.strasbourg.iot-lab.info', 'm3-57.strasbourg.iot-lab.info', 'm3-58.strasbourg.iot-lab.info', 'm3-9.strasbourg.iot-lab.info', 'm3-10.strasbourg.iot-lab.info', 'm3-23.strasbourg.iot-lab.info', 'm3-24.strasbourg.iot-lab.info', 'm3-37.strasbourg.iot-lab.info', 'm3-38.strasbourg.iot-lab.info', 'm3-51.strasbourg.iot-lab.info', 'm3-52.strasbourg.iot-lab.info', 'm3-61.strasbourg.iot-lab.info', 'm3-62.strasbourg.iot-lab.info']
+03:05:37 SUCCESS Total iotlab-motes: 30
+03:05:37 INFO extracting firmware definitions.
+03:05:37 VERBOSE extracting firmware component names
+03:05:37 VERBOSE extracting firmware log descriptions.
+03:05:37 VERBOSE extracting 6top return codes.
+03:05:37 VERBOSE extracting 6top states.
+03:05:37 INFO starting RPC server
+03:05:46 SUCCESS Setting mote b286 as root
+03:05:46 ERROR b286 [IEEE802154E] wrong state 1 in startSlot, at slotOffset 1
+03:05:47 INFO registering DAGroot 05-43-32-ff-03-d8-b2-86
+03:05:52 SUCCESS a487 [IEEE802154E] synchronized at slotOffset 0
+03:06:15 SUCCESS b786 [IEEE802154E] synchronized at slotOffset 0
+03:06:15 SUCCESS b586 [IEEE802154E] synchronized at slotOffset 0
+03:06:15 SUCCESS 9889 [IEEE802154E] synchronized at slotOffset 0
+03:06:45 SUCCESS a585 [IEEE802154E] synchronized at slotOffset 0
+03:07:09 SUCCESS b386 [IEEE802154E] synchronized at slotOffset 0
+03:07:13 SUCCESS a984 [IEEE802154E] synchronized at slotOffset 0
+03:07:15 SUCCESS 9689 [IEEE802154E] synchronized at slotOffset 0
+03:07:39 SUCCESS a284 [IEEE802154E] synchronized at slotOffset 0
+03:07:52 SUCCESS a488 [IEEE802154E] synchronized at slotOffset 0
+03:07:54 SUCCESS 9789 [IEEE802154E] synchronized at slotOffset 0
+03:07:56 SUCCESS a186 [IEEE802154E] synchronized at slotOffset 0
+03:07:56 SUCCESS b086 [IEEE802154E] synchronized at slotOffset 0
+03:08:14 SUCCESS b885 [IEEE802154E] synchronized at slotOffset 0
+03:08:40 SUCCESS a484 [IEEE802154E] synchronized at slotOffset 0
+03:08:40 SUCCESS a786 [IEEE802154E] synchronized at slotOffset 0
+03:08:44 SUCCESS 9986 [IEEE802154E] synchronized at slotOffset 0
+03:08:44 SUCCESS 9788 [IEEE802154E] synchronized at slotOffset 0
+03:09:14 SUCCESS 9387 [IEEE802154E] synchronized at slotOffset 0
+03:09:37 SUCCESS 9589 [IEEE802154E] synchronized at slotOffset 0
+03:10:33 SUCCESS a988 [IEEE802154E] synchronized at slotOffset 0
+03:10:41 SUCCESS a385 [IEEE802154E] synchronized at slotOffset 0
+03:10:52 SUCCESS 9689 [OPENWSN] booted
+03:11:23 SUCCESS a386 [IEEE802154E] synchronized at slotOffset 0
+03:11:38 SUCCESS 9084 [IEEE802154E] synchronized at slotOffset 0
+03:11:38 SUCCESS 9083 [IEEE802154E] synchronized at slotOffset 0
+03:12:02 SUCCESS a788 [IEEE802154E] synchronized at slotOffset 0
+03:12:20 SUCCESS 9890 [IEEE802154E] synchronized at slotOffset 0
+03:14:11 SUCCESS a685 [IEEE802154E] synchronized at slotOffset 0
+03:14:11 SUCCESS 9287 [IEEE802154E] synchronized at slotOffset 0
+03:17:05 WARNING m3-1.strasbourg.iot-lab.info; exit loop
+03:17:06 WARNING m3-2.strasbourg.iot-lab.info; exit loop
+03:17:06 WARNING m3-19.strasbourg.iot-lab.info; exit loop
+03:17:06 ERROR Unknown exception: [Errno 9] Bad file descriptor
+03:17:06 ERROR Traceback (most recent call last):
+03:17:06 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/transport.py", line 2143, in run
+03:17:06 ERROR     self._channel_handler_table[ptype](chan, m)
+03:17:06 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/channel.py", line 1047, in _feed
+03:17:06 ERROR     self.in_buffer.feed(s)
+03:17:06 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/buffered_pipe.py", line 102, in feed
+03:17:06 ERROR     self._event.set()
+03:17:06 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 130, in set
+03:17:06 ERROR     self._pipe.set()
+03:17:06 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 67, in set
+03:17:06 ERROR     os.write(self._wfd, b"*")
+03:17:06 ERROR OSError: [Errno 9] Bad file descriptor
+03:17:06 ERROR 
+03:17:06 WARNING m3-20.strasbourg.iot-lab.info; exit loop
+03:17:07 WARNING m3-29.strasbourg.iot-lab.info; exit loop
+03:17:07 WARNING m3-30.strasbourg.iot-lab.info; exit loop
+03:17:08 WARNING m3-47.strasbourg.iot-lab.info; exit loop
+03:17:08 WARNING m3-48.strasbourg.iot-lab.info; exit loop
+03:17:08 WARNING m3-53.strasbourg.iot-lab.info; exit loop
+03:17:09 WARNING m3-54.strasbourg.iot-lab.info; exit loop
+03:17:09 WARNING m3-5.strasbourg.iot-lab.info; exit loop
+03:17:10 WARNING m3-6.strasbourg.iot-lab.info; exit loop
+03:17:10 WARNING m3-21.strasbourg.iot-lab.info; exit loop
+03:17:11 WARNING m3-22.strasbourg.iot-lab.info; exit loop
+03:17:11 WARNING m3-33.strasbourg.iot-lab.info; exit loop
+03:17:11 WARNING m3-34.strasbourg.iot-lab.info; exit loop
+03:17:12 WARNING m3-49.strasbourg.iot-lab.info; exit loop
+03:17:12 WARNING m3-50.strasbourg.iot-lab.info; exit loop
+03:17:13 WARNING m3-57.strasbourg.iot-lab.info; exit loop
+03:17:13 WARNING m3-58.strasbourg.iot-lab.info; exit loop
+03:17:13 WARNING m3-9.strasbourg.iot-lab.info; exit loop
+03:17:14 WARNING m3-10.strasbourg.iot-lab.info; exit loop
+03:17:15 WARNING m3-23.strasbourg.iot-lab.info; exit loop
+03:17:15 WARNING m3-24.strasbourg.iot-lab.info; exit loop
+03:17:15 WARNING m3-37.strasbourg.iot-lab.info; exit loop
+03:17:16 WARNING m3-38.strasbourg.iot-lab.info; exit loop
+03:17:16 WARNING m3-51.strasbourg.iot-lab.info; exit loop
+03:17:17 WARNING m3-52.strasbourg.iot-lab.info; exit loop
+03:17:17 WARNING m3-61.strasbourg.iot-lab.info; exit loop
+03:17:18 WARNING m3-62.strasbourg.iot-lab.info; exit loop
+03:19:03 VERBOSE loading logging configuration: config/logging.conf
+03:19:03 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsniotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+03:19:03 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+03:19:08 SUCCESS m3-1.strasbourg.iot-lab.info Ok.
+03:19:12 SUCCESS m3-2.strasbourg.iot-lab.info Ok.
+03:19:17 SUCCESS m3-19.strasbourg.iot-lab.info Ok.
+03:19:21 SUCCESS m3-20.strasbourg.iot-lab.info Ok.
+03:19:25 SUCCESS m3-29.strasbourg.iot-lab.info Ok.
+03:19:29 SUCCESS m3-30.strasbourg.iot-lab.info Ok.
+03:19:33 SUCCESS m3-47.strasbourg.iot-lab.info Ok.
+03:19:39 SUCCESS m3-48.strasbourg.iot-lab.info Ok.
+03:19:43 SUCCESS m3-53.strasbourg.iot-lab.info Ok.
+03:19:47 SUCCESS m3-54.strasbourg.iot-lab.info Ok.
+03:19:51 SUCCESS m3-5.strasbourg.iot-lab.info Ok.
+03:19:56 SUCCESS m3-6.strasbourg.iot-lab.info Ok.
+03:20:00 SUCCESS m3-21.strasbourg.iot-lab.info Ok.
+03:20:04 SUCCESS m3-22.strasbourg.iot-lab.info Ok.
+03:20:09 SUCCESS m3-33.strasbourg.iot-lab.info Ok.
+03:20:13 SUCCESS m3-34.strasbourg.iot-lab.info Ok.
+03:20:17 SUCCESS m3-49.strasbourg.iot-lab.info Ok.
+03:20:21 SUCCESS m3-50.strasbourg.iot-lab.info Ok.
+03:20:25 SUCCESS m3-57.strasbourg.iot-lab.info Ok.
+03:20:31 SUCCESS m3-58.strasbourg.iot-lab.info Ok.
+03:20:35 SUCCESS m3-9.strasbourg.iot-lab.info Ok.
+03:20:39 SUCCESS m3-10.strasbourg.iot-lab.info Ok.
+03:20:44 SUCCESS m3-23.strasbourg.iot-lab.info Ok.
+03:20:48 SUCCESS m3-24.strasbourg.iot-lab.info Ok.
+03:20:52 SUCCESS m3-37.strasbourg.iot-lab.info Ok.
+03:20:55 WARNING MoteProbe@m3-38.strasbourg.iot-lab.info: invalid serial frame: ( 2B) 7e-7e packet too short
+03:20:56 SUCCESS m3-38.strasbourg.iot-lab.info Ok.
+03:21:01 SUCCESS m3-51.strasbourg.iot-lab.info Ok.
+03:21:05 SUCCESS m3-52.strasbourg.iot-lab.info Ok.
+03:21:10 SUCCESS m3-61.strasbourg.iot-lab.info Ok.
+03:21:14 SUCCESS m3-62.strasbourg.iot-lab.info Ok.
+03:21:14 SUCCESS discovered following iotlab-motes: ['m3-1.strasbourg.iot-lab.info', 'm3-2.strasbourg.iot-lab.info', 'm3-19.strasbourg.iot-lab.info', 'm3-20.strasbourg.iot-lab.info', 'm3-29.strasbourg.iot-lab.info', 'm3-30.strasbourg.iot-lab.info', 'm3-47.strasbourg.iot-lab.info', 'm3-48.strasbourg.iot-lab.info', 'm3-53.strasbourg.iot-lab.info', 'm3-54.strasbourg.iot-lab.info', 'm3-5.strasbourg.iot-lab.info', 'm3-6.strasbourg.iot-lab.info', 'm3-21.strasbourg.iot-lab.info', 'm3-22.strasbourg.iot-lab.info', 'm3-33.strasbourg.iot-lab.info', 'm3-34.strasbourg.iot-lab.info', 'm3-49.strasbourg.iot-lab.info', 'm3-50.strasbourg.iot-lab.info', 'm3-57.strasbourg.iot-lab.info', 'm3-58.strasbourg.iot-lab.info', 'm3-9.strasbourg.iot-lab.info', 'm3-10.strasbourg.iot-lab.info', 'm3-23.strasbourg.iot-lab.info', 'm3-24.strasbourg.iot-lab.info', 'm3-37.strasbourg.iot-lab.info', 'm3-38.strasbourg.iot-lab.info', 'm3-51.strasbourg.iot-lab.info', 'm3-52.strasbourg.iot-lab.info', 'm3-61.strasbourg.iot-lab.info', 'm3-62.strasbourg.iot-lab.info']
+03:21:14 SUCCESS Total iotlab-motes: 30
+03:21:14 INFO extracting firmware definitions.
+03:21:14 VERBOSE extracting firmware component names
+03:21:14 VERBOSE extracting firmware log descriptions.
+03:21:14 VERBOSE extracting 6top return codes.
+03:21:14 VERBOSE extracting 6top states.
+03:21:14 INFO starting RPC server
+03:23:22 SUCCESS Setting mote b286 as root
+03:32:03 WARNING m3-1.strasbourg.iot-lab.info; exit loop
+03:32:04 WARNING m3-2.strasbourg.iot-lab.info; exit loop
+03:32:04 ERROR Unknown exception: [Errno 32] Broken pipe
+03:32:04 ERROR Traceback (most recent call last):
+03:32:04 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/transport.py", line 2143, in run
+03:32:04 ERROR     self._channel_handler_table[ptype](chan, m)
+03:32:04 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/channel.py", line 1047, in _feed
+03:32:04 ERROR     self.in_buffer.feed(s)
+03:32:04 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/buffered_pipe.py", line 102, in feed
+03:32:04 ERROR     self._event.set()
+03:32:04 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 130, in set
+03:32:04 ERROR     self._pipe.set()
+03:32:04 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 67, in set
+03:32:04 ERROR     os.write(self._wfd, b"*")
+03:32:04 ERROR OSError: [Errno 32] Broken pipe
+03:32:04 ERROR 
+03:32:04 WARNING m3-19.strasbourg.iot-lab.info; exit loop
+03:32:05 WARNING m3-20.strasbourg.iot-lab.info; exit loop
+03:32:05 WARNING m3-29.strasbourg.iot-lab.info; exit loop
+03:32:06 WARNING m3-30.strasbourg.iot-lab.info; exit loop
+03:32:06 WARNING m3-47.strasbourg.iot-lab.info; exit loop
+03:32:07 WARNING m3-48.strasbourg.iot-lab.info; exit loop
+03:32:07 WARNING m3-53.strasbourg.iot-lab.info; exit loop
+03:32:08 WARNING m3-54.strasbourg.iot-lab.info; exit loop
+03:32:08 WARNING m3-5.strasbourg.iot-lab.info; exit loop
+03:32:09 WARNING m3-6.strasbourg.iot-lab.info; exit loop
+03:32:09 WARNING m3-21.strasbourg.iot-lab.info; exit loop
+03:32:10 WARNING m3-22.strasbourg.iot-lab.info; exit loop
+03:32:10 WARNING m3-33.strasbourg.iot-lab.info; exit loop
+03:32:11 WARNING m3-34.strasbourg.iot-lab.info; exit loop
+03:32:11 WARNING m3-49.strasbourg.iot-lab.info; exit loop
+03:32:12 WARNING m3-50.strasbourg.iot-lab.info; exit loop
+03:32:12 WARNING m3-57.strasbourg.iot-lab.info; exit loop
+03:32:13 WARNING m3-58.strasbourg.iot-lab.info; exit loop
+03:32:13 WARNING m3-9.strasbourg.iot-lab.info; exit loop
+03:32:14 WARNING m3-10.strasbourg.iot-lab.info; exit loop
+03:32:14 WARNING m3-23.strasbourg.iot-lab.info; exit loop
+03:32:15 WARNING m3-24.strasbourg.iot-lab.info; exit loop
+03:32:15 WARNING m3-37.strasbourg.iot-lab.info; exit loop
+03:32:16 WARNING m3-38.strasbourg.iot-lab.info; exit loop
+03:32:16 ERROR Unknown exception: [Errno 32] Broken pipe
+03:32:16 ERROR Traceback (most recent call last):
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/transport.py", line 2143, in run
+03:32:16 ERROR     self._channel_handler_table[ptype](chan, m)
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/channel.py", line 1047, in _feed
+03:32:16 ERROR     self.in_buffer.feed(s)
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/buffered_pipe.py", line 102, in feed
+03:32:16 ERROR     self._event.set()
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 130, in set
+03:32:16 ERROR     self._pipe.set()
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 67, in set
+03:32:16 ERROR     os.write(self._wfd, b"*")
+03:32:16 ERROR OSError: [Errno 32] Broken pipe
+03:32:16 ERROR 
+03:32:16 WARNING m3-51.strasbourg.iot-lab.info; exit loop
+03:32:16 WARNING m3-52.strasbourg.iot-lab.info; exit loop
+03:32:16 ERROR Unknown exception: [Errno 32] Broken pipe
+03:32:16 ERROR Traceback (most recent call last):
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/transport.py", line 2143, in run
+03:32:16 ERROR     self._channel_handler_table[ptype](chan, m)
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/channel.py", line 1047, in _feed
+03:32:16 ERROR     self.in_buffer.feed(s)
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/buffered_pipe.py", line 102, in feed
+03:32:16 ERROR     self._event.set()
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 130, in set
+03:32:16 ERROR     self._pipe.set()
+03:32:16 ERROR   File "/Users/dzakyzf/lain/iotlab/openwsniotlab/venv/lib/python2.7/site-packages/paramiko/pipe.py", line 67, in set
+03:32:16 ERROR     os.write(self._wfd, b"*")
+03:32:16 ERROR OSError: [Errno 32] Broken pipe
+03:32:16 ERROR 
+03:32:16 WARNING m3-61.strasbourg.iot-lab.info; exit loop
+03:32:17 WARNING m3-62.strasbourg.iot-lab.info; exit loop
+03:33:16 VERBOSE loading logging configuration: config/logging.conf
+03:33:16 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsniotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+03:33:16 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+03:33:22 SUCCESS m3-1.strasbourg.iot-lab.info Ok.
+03:33:26 SUCCESS m3-2.strasbourg.iot-lab.info Ok.
+03:33:31 SUCCESS m3-19.strasbourg.iot-lab.info Ok.
+03:33:35 SUCCESS m3-20.strasbourg.iot-lab.info Ok.
+03:33:39 SUCCESS m3-29.strasbourg.iot-lab.info Ok.
+03:33:45 SUCCESS m3-30.strasbourg.iot-lab.info Ok.
+03:33:49 SUCCESS m3-47.strasbourg.iot-lab.info Ok.
+03:33:53 SUCCESS m3-48.strasbourg.iot-lab.info Ok.
+03:33:57 SUCCESS m3-53.strasbourg.iot-lab.info Ok.
+03:34:01 SUCCESS m3-54.strasbourg.iot-lab.info Ok.
+03:34:05 SUCCESS m3-5.strasbourg.iot-lab.info Ok.
+03:34:09 SUCCESS m3-6.strasbourg.iot-lab.info Ok.
+03:34:13 SUCCESS m3-21.strasbourg.iot-lab.info Ok.
+03:34:17 SUCCESS m3-22.strasbourg.iot-lab.info Ok.
+03:34:23 SUCCESS m3-33.strasbourg.iot-lab.info Ok.
+03:34:27 SUCCESS m3-34.strasbourg.iot-lab.info Ok.
+03:34:31 SUCCESS m3-49.strasbourg.iot-lab.info Ok.
+03:34:35 SUCCESS m3-50.strasbourg.iot-lab.info Ok.
+03:34:39 SUCCESS m3-57.strasbourg.iot-lab.info Ok.
+03:34:43 SUCCESS m3-58.strasbourg.iot-lab.info Ok.
+03:34:47 SUCCESS m3-9.strasbourg.iot-lab.info Ok.
+03:34:51 SUCCESS m3-10.strasbourg.iot-lab.info Ok.
+03:34:56 SUCCESS m3-23.strasbourg.iot-lab.info Ok.
+03:35:00 SUCCESS m3-24.strasbourg.iot-lab.info Ok.
+03:35:04 SUCCESS m3-37.strasbourg.iot-lab.info Ok.
+03:35:08 SUCCESS m3-38.strasbourg.iot-lab.info Ok.
+03:35:12 SUCCESS m3-51.strasbourg.iot-lab.info Ok.
+03:35:16 SUCCESS m3-52.strasbourg.iot-lab.info Ok.
+03:35:20 SUCCESS m3-61.strasbourg.iot-lab.info Ok.
+03:35:24 SUCCESS m3-62.strasbourg.iot-lab.info Ok.
+03:35:24 SUCCESS discovered following iotlab-motes: ['m3-1.strasbourg.iot-lab.info', 'm3-2.strasbourg.iot-lab.info', 'm3-19.strasbourg.iot-lab.info', 'm3-20.strasbourg.iot-lab.info', 'm3-29.strasbourg.iot-lab.info', 'm3-30.strasbourg.iot-lab.info', 'm3-47.strasbourg.iot-lab.info', 'm3-48.strasbourg.iot-lab.info', 'm3-53.strasbourg.iot-lab.info', 'm3-54.strasbourg.iot-lab.info', 'm3-5.strasbourg.iot-lab.info', 'm3-6.strasbourg.iot-lab.info', 'm3-21.strasbourg.iot-lab.info', 'm3-22.strasbourg.iot-lab.info', 'm3-33.strasbourg.iot-lab.info', 'm3-34.strasbourg.iot-lab.info', 'm3-49.strasbourg.iot-lab.info', 'm3-50.strasbourg.iot-lab.info', 'm3-57.strasbourg.iot-lab.info', 'm3-58.strasbourg.iot-lab.info', 'm3-9.strasbourg.iot-lab.info', 'm3-10.strasbourg.iot-lab.info', 'm3-23.strasbourg.iot-lab.info', 'm3-24.strasbourg.iot-lab.info', 'm3-37.strasbourg.iot-lab.info', 'm3-38.strasbourg.iot-lab.info', 'm3-51.strasbourg.iot-lab.info', 'm3-52.strasbourg.iot-lab.info', 'm3-61.strasbourg.iot-lab.info', 'm3-62.strasbourg.iot-lab.info']
+03:35:24 SUCCESS Total iotlab-motes: 30
+03:35:24 INFO extracting firmware definitions.
+03:35:24 VERBOSE extracting firmware component names
+03:35:24 VERBOSE extracting firmware log descriptions.
+03:35:24 VERBOSE extracting 6top return codes.
+03:35:24 VERBOSE extracting 6top states.
+03:35:25 INFO starting RPC server
+03:35:48 SUCCESS Setting mote b286 as root
+03:35:49 ERROR b286 [OPENSERIAL] wrong CRC in input Buffer
+03:35:49 ERROR b286 [IEEE802154E] wrong state 1 in startSlot, at slotOffset 1
+03:35:50 INFO registering DAGroot 05-43-32-ff-03-d8-b2-86
+03:36:07 SUCCESS 9788 [IEEE802154E] synchronized at slotOffset 0
+03:36:07 SUCCESS a685 [IEEE802154E] synchronized at slotOffset 0
+03:36:07 SUCCESS b586 [IEEE802154E] synchronized at slotOffset 0
+03:36:07 SUCCESS 9789 [IEEE802154E] synchronized at slotOffset 0
+03:36:31 SUCCESS b386 [IEEE802154E] synchronized at slotOffset 0
+03:36:31 SUCCESS 9387 [IEEE802154E] synchronized at slotOffset 0
+03:36:45 SUCCESS a488 [IEEE802154E] synchronized at slotOffset 0
+03:36:57 SUCCESS a284 [IEEE802154E] synchronized at slotOffset 0
+03:36:58 SUCCESS b086 [IEEE802154E] synchronized at slotOffset 0
+03:36:58 SUCCESS b885 [IEEE802154E] synchronized at slotOffset 0
+03:36:59 SUCCESS 9287 [IEEE802154E] synchronized at slotOffset 0
+03:37:01 SUCCESS 9589 [IEEE802154E] synchronized at slotOffset 0
+03:37:18 SUCCESS 9889 [IEEE802154E] synchronized at slotOffset 0
+03:37:32 SUCCESS a788 [IEEE802154E] synchronized at slotOffset 0
+03:37:38 SUCCESS a484 [IEEE802154E] synchronized at slotOffset 0
+03:37:48 SUCCESS 9890 [IEEE802154E] synchronized at slotOffset 0
+03:37:48 SUCCESS a988 [IEEE802154E] synchronized at slotOffset 0
+03:37:48 SUCCESS a487 [IEEE802154E] synchronized at slotOffset 0
+03:37:50 SUCCESS a385 [IEEE802154E] synchronized at slotOffset 0
+03:38:08 SUCCESS a585 [IEEE802154E] synchronized at slotOffset 0
+03:38:08 SUCCESS 9084 [IEEE802154E] synchronized at slotOffset 0
+03:38:08 SUCCESS 9689 [IEEE802154E] synchronized at slotOffset 0
+03:38:20 SUCCESS a984 [IEEE802154E] synchronized at slotOffset 0
+03:38:50 SUCCESS a786 [IEEE802154E] synchronized at slotOffset 0
+03:38:51 SUCCESS b786 [IEEE802154E] synchronized at slotOffset 0
+03:39:09 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:39:20 ERROR b586 [IEEE802154E] wdAckDuration overflows while at state 13 in slotOffset 65
+03:39:39 SUCCESS 9889 [OPENWSN] booted
+03:39:39 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:40:11 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:40:33 SUCCESS 9084 [OPENWSN] booted
+03:40:41 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:40:46 SUCCESS 9889 [IEEE802154E] synchronized at slotOffset 0
+03:41:07 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:41:33 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:41:57 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:42:04 SUCCESS a186 [IEEE802154E] synchronized at slotOffset 0
+03:42:19 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:42:37 ERROR a487 [IEEE802154E] wdAckDuration overflows while at state 13 in slotOffset 94
+03:42:37 ERROR a487 [IEEE802154E] wrong state 0 in end of frame, at slotOffset 94
+03:42:37 SUCCESS 9986 [IEEE802154E] synchronized at slotOffset 0
+03:42:43 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:43:06 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:43:19 ERROR a984 [IEEE802154E] the received packet format is not supported (code location 3)
+03:43:30 ERROR a487 [FORWARDING] maxretries reached (counter: 1)
+03:43:35 SUCCESS a386 [IEEE802154E] synchronized at slotOffset 0
+03:44:36 SUCCESS 9084 [IEEE802154E] synchronized at slotOffset 0
+03:44:38 SUCCESS 9083 [IEEE802154E] synchronized at slotOffset 0
+04:02:33 ERROR b586 [IEEE802154E] wdAckDuration overflows while at state 13 in slotOffset 65
+04:02:33 ERROR b586 [IEEE802154E] wrong state 0 in end of frame, at slotOffset 65
+04:30:00 ERROR b386 [IEEE802154E] wdAckDuration overflows while at state 13 in slotOffset 48
+04:30:00 ERROR b386 [IEEE802154E] wrong state 0 in end of frame, at slotOffset 48
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:50 WARNING [Errno 54] Connection reset by peer
+04:35:51 WARNING m3-10.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-6.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-49.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-20.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-9.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-21.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-30.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-48.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-38.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-23.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-50.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-34.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-24.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-61.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-22.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-53.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-62.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-29.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-19.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-51.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-54.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-37.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-52.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-33.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-57.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-5.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-58.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-47.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-1.strasbourg.iot-lab.info; exit loop
+04:35:51 WARNING m3-2.strasbourg.iot-lab.info; exit loop
+05:03:10 VERBOSE loading logging configuration: config/logging.conf
+05:03:10 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsniotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+05:03:10 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+05:03:15 SUCCESS m3-10.paris.iot-lab.info Ok.
+05:03:19 SUCCESS m3-11.paris.iot-lab.info Ok.
+05:03:19 SUCCESS discovered following iotlab-motes: ['m3-10.paris.iot-lab.info', 'm3-11.paris.iot-lab.info']
+05:03:19 SUCCESS Total iotlab-motes: 2
+05:03:19 INFO extracting firmware definitions.
+05:03:19 VERBOSE extracting firmware component names
+05:03:19 VERBOSE extracting firmware log descriptions.
+05:03:19 VERBOSE extracting 6top return codes.
+05:03:19 VERBOSE extracting 6top states.
+05:03:19 INFO starting RPC server
+05:08:56 WARNING [Errno 54] Connection reset by peer
+05:08:56 WARNING [Errno 54] Connection reset by peer
+05:08:57 WARNING m3-10.paris.iot-lab.info; exit loop
+05:08:57 WARNING m3-11.paris.iot-lab.info; exit loop
+05:14:31 VERBOSE loading logging configuration: config/logging.conf
+05:14:31 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsniotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+05:14:31 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+05:14:36 SUCCESS m3-95.grenoble.iot-lab.info Ok.
+05:14:41 SUCCESS m3-100.grenoble.iot-lab.info Ok.
+05:14:41 SUCCESS discovered following iotlab-motes: ['m3-95.grenoble.iot-lab.info', 'm3-100.grenoble.iot-lab.info']
+05:14:41 SUCCESS Total iotlab-motes: 2
+05:14:41 INFO extracting firmware definitions.
+05:14:41 VERBOSE extracting firmware component names
+05:14:41 VERBOSE extracting firmware log descriptions.
+05:14:41 VERBOSE extracting 6top return codes.
+05:14:41 VERBOSE extracting 6top states.
+05:14:41 INFO starting RPC server
+05:17:57 SUCCESS Setting mote b080 as root
+05:17:57 ERROR b080 [IEEE802154E] wrong state 1 in startSlot, at slotOffset 1
+05:17:57 INFO registering DAGroot 05-43-32-ff-03-dc-b0-80
+05:31:02 SUCCESS a770 [IEEE802154E] synchronized at slotOffset 0
+05:33:31 ERROR a770 [IEEE802154E] got desynchronized at slotOffset 81
+05:37:00 WARNING [Errno 54] Connection reset by peer
+05:37:00 WARNING [Errno 54] Connection reset by peer
+05:37:01 WARNING m3-95.grenoble.iot-lab.info; exit loop
+05:37:01 WARNING m3-100.grenoble.iot-lab.info; exit loop
+05:43:41 VERBOSE loading logging configuration: config/logging.conf
+05:43:41 INFO initializing OV Server with options:
+	- log files directory     = /Users/dzakyzf/Library/Logs/openvisualizer
+	- data files directory    = /Users/dzakyzf/Library/Application Support/openvisualizer
+	- host address server     = localhost
+	- port number server      = 9000
+	- firmware path           = /Users/dzakyzf/lain/iotlab/openwsniotlab/openwsn-fw
+	- use page zero           = False
+	- use VCD logger          = False
+	- baudrates to probe      = [115200]
+05:43:41 INFO /Users/dzakyzf/Library/Application Support/openvisualizer/exp_log.txt
+05:43:49 SUCCESS m3-43.strasbourg.iot-lab.info Ok.
+05:43:53 SUCCESS m3-44.strasbourg.iot-lab.info Ok.
+05:43:53 SUCCESS discovered following iotlab-motes: ['m3-43.strasbourg.iot-lab.info', 'm3-44.strasbourg.iot-lab.info']
+05:43:53 SUCCESS Total iotlab-motes: 2
+05:43:53 INFO extracting firmware definitions.
+05:43:53 VERBOSE extracting firmware component names
+05:43:53 VERBOSE extracting firmware log descriptions.
+05:43:53 VERBOSE extracting 6top return codes.
+05:43:53 VERBOSE extracting 6top states.
+05:43:53 INFO starting RPC server
+05:47:20 SUCCESS Setting mote 9285 as root
+05:47:21 ERROR 9285 [IEEE802154E] wrong state 1 in startSlot, at slotOffset 1
+05:47:21 INFO registering DAGroot 05-43-32-ff-03-dd-92-85
+05:50:39 SUCCESS Setting mote 9285 as root
+05:50:39 ERROR 9285 [IEEE802154E] got desynchronized at slotOffset 51
+05:50:40 WARNING unregistering DAGroot 05-43-32-ff-03-dd-92-85
+05:50:46 SUCCESS Setting mote a684 as root
+05:50:47 ERROR a684 [IEEE802154E] wrong state 1 in startSlot, at slotOffset 1
+05:50:47 INFO registering DAGroot 05-43-32-ff-03-da-a6-84
+05:52:53 SUCCESS Setting mote a684 as root
+05:52:53 ERROR a684 [IEEE802154E] got desynchronized at slotOffset 72
+05:52:54 WARNING unregistering DAGroot 05-43-32-ff-03-da-a6-84
+05:53:02 SUCCESS Setting mote 9285 as root
+05:53:03 ERROR 9285 [IEEE802154E] wrong state 1 in startSlot, at slotOffset 1
+05:53:03 INFO registering DAGroot 05-43-32-ff-03-dd-92-85
+05:53:57 SUCCESS a684 [IEEE802154E] synchronized at slotOffset 0
+05:55:24 ERROR a684 [IEEE802154E] got desynchronized at slotOffset 0
+05:56:39 WARNING m3-43.strasbourg.iot-lab.info; exit loop
+05:56:40 WARNING m3-44.strasbourg.iot-lab.info; exit loop

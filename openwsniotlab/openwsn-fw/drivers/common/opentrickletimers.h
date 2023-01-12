@@ -117,8 +117,8 @@ typedef struct
     uint8_t sc_at_start_t;
     uint8_t sc_at_end_t;
     uint8_t sc_ambr;
-    uint32_t t_min; // t_start
-    uint32_t t_max; // t_end
+    uint32_t t_start;
+    uint32_t t_end;
 
     uint16_t DIOtransmit_collision;
     uint8_t Nnbr;
@@ -127,19 +127,19 @@ typedef struct
     uint16_t prev_ops_ambr;
     uint32_t counter_ambr;
     float ambr;
+    float ptransmit;
+    float ptransmit_collision;
 
 #if use_qtrickle == TRUE
     bool is_explore;
     uint8_t current_action;
-    float ptransmit;
-    float ptransmit_collision;
     // skip 0 index, since 0 * 0 and 0 * 1 will be the same
     float q_table[(DEFAULT_DIO_INTERVAL_DOUBLINGS + 1) * 2];
 #endif
 
 #if adaptive_epsilon == TRUE
     float total_reward;
-    float prev_total_reward;
+    float average_reward;
 #endif
 
 } opentrickletimers_vars_t;

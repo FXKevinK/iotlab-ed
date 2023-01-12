@@ -68,6 +68,7 @@ void icmpv6rpl_init(void)
     icmpv6rpl_vars.ParentIndex = -1;
     icmpv6rpl_vars.daoSent = FALSE;
     icmpv6rpl_vars.dioSent = FALSE;
+    icmpv6rpl_vars.dioScheduled = FALSE;
 
     if (idmanager_getIsDAGroot() == TRUE)
     {
@@ -292,13 +293,25 @@ void icmpv6rpl_sendDone(OpenQueueEntry_t *msg, owerror_t error)
                   (errorparameter_t)0);
     }
 
+    uint8_t code = ((ICMPv6_ht *)(msg->payload))->code;
+
     // I'm not busy sending DIO/DAO anymore
     if (packetfunctions_isBroadcastMulticast(&(msg->l2_nextORpreviousHop)))
     {
-        icmpv6rpl_vars.busySendingDIO = FALSE;
+
+        if(code == IANA_ICMPv6_RPL_DIO){
+            icmpv6rpl_vars.busySendingDIO = FALSE;
+            if(error == E_SUCCESS){
+                icmpv6rpl_vars.dioSent = TRUE;
+            }
+        }
+
 #if RPL_DIS_TRANSMISSION == TRUE
-        icmpv6rpl_vars.busySendingDIS = FALSE;
+        if(code == IANA_ICMPv6_RPL_DIS){
+            icmpv6rpl_vars.busySendingDIS = FALSE;
+        }
 #endif
+
     }
     else
     {
@@ -1193,7 +1206,7 @@ owerror_t sendDIO(void)
     if (icmpv6_send(msg) == E_SUCCESS)
     {
         icmpv6rpl_vars.busySendingDIO = TRUE;
-        icmpv6rpl_vars.dioSent = TRUE;
+        icmpv6rpl_vars.dioScheduled = TRUE;
     }
     else
     {
@@ -1546,6 +1559,25 @@ void icmpv6rpl_setdioSent(bool value)
     icmpv6rpl_vars.dioSent = value;
 }
 
+bool icmpv6rpl_getdioScheduled(void)
+{
+    if (icmpv6rpl_allowSendingDIO() == FALSE)
+    {
+        return FALSE;
+    }
+    return icmpv6rpl_vars.dioScheduled;
+}
+
+void icmpv6rpl_setdioScheduled(bool value)
+{
+    if (icmpv6rpl_allowSendingDIO() == FALSE)
+    {
+        return;
+    }
+    icmpv6rpl_vars.dioScheduled = value;
+}
+
+
 void icmpv6rpl_resetAll(void)
 {
     icmpv6rpl_killPreferredParent();
@@ -1566,6 +1598,7 @@ void icmpv6rpl_resetAll(void)
 
     icmpv6rpl_vars.daoSent = FALSE;
     icmpv6rpl_vars.dioSent = FALSE;
+    icmpv6rpl_vars.dioScheduled = FALSE;
 #if RPL_DIS_TRANSMISSION == TRUE
     icmpv6rpl_vars.busySendingDIS = FALSE;
     icmpv6rpl_vars.creatingDIS = FALSE;
