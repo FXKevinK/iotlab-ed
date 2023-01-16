@@ -32,6 +32,10 @@ class ACPBTrickle(object):
         self.redundancy_constant = self.settings.k_max
         self.i_max = i_max
         self.used = 0
+        self.average_reward = 0
+        self.total_reward = 0
+        self.listen_period = 0
+        self.DIOtransmit_actual = 0
 
         # constants of this timer instance
         # min_interval is expected to given in milliseconds
@@ -49,9 +53,9 @@ class ACPBTrickle(object):
         self.start_t_record = None
         self.end_t_record = None
         self.is_dio_sent = False
-        self.Nstates = 1
+        self.Nstates = 0
         self.Ncells = 0
-        self.Nreset = 0
+        self.Nreset = 1
         self.poccupancy = 1
         self.preset = 1
         self.pfree = 1 - self.poccupancy
@@ -60,8 +64,7 @@ class ACPBTrickle(object):
         self.ptransmit_collision = 0
         self.DIOsurpress = 0
         self.DIOtransmit = 0
-        self.DIOtransmit_dis = 0
-        self.DIOtransmit_collision = 0
+        self.DIOtransmit_actual = 0
         self.m = 0
         self.Nnbr = 0
         self.kmax = self.settings.k_max
@@ -73,8 +76,7 @@ class ACPBTrickle(object):
     def is_running(self):
         return self.state == self.STATE_RUNNING
 
-    def increment_diotransmit_dis(self, is_broadcast):
-        self.DIOtransmit_dis += 1
+
 
     def start(self, note=None):
         # Section 4.2:
@@ -108,7 +110,6 @@ class ACPBTrickle(object):
         #       "inconsistent" transmission, Trickle does nothing.  Trickle can
         #       also reset its timer in response to external "events".
         self.Nreset += 1
-        self.calculate_preset()
 
         # Algorithm 1
         if self.flag:
@@ -145,6 +146,11 @@ class ACPBTrickle(object):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_t')
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_start_t')
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
+
+        self.Nstates += 1
+        self.calculate_preset()
+        self.log_result()
+
         self.counter = 0
         self.redundancy_constant = self.calculate_k()
         self._schedule_event_at_t_and_i()
@@ -185,6 +191,7 @@ class ACPBTrickle(object):
         self.listen_period = self.t - self.t_start
         t_range = self.t_end - self.t_start
         self.Ncells = self.ceil_division(t_range, slotframe_duration_ms)
+        self.Ncells = max(self.Ncells, 1)
 
         cur_asn = self.engine.getAsn()
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
@@ -205,7 +212,7 @@ class ACPBTrickle(object):
                   self.ptransmit, "pfree", self.pfree, "Ncells", self.Ncells)
 
         def t_callback():
-            self.reset_is_dio_sent()
+            self.is_dio_sent = False
             if self.counter < self.redundancy_constant or self.redundancy_constant == 0:
                 #  Section 4.2:
                 #    4.  At time t, Trickle transmits if and only if the
@@ -246,19 +253,17 @@ class ACPBTrickle(object):
         def i_callback():
             if self.is_dio_sent:
                 self.DIOtransmit += 1
-                if self.is_dio_not_sent():
-                    self.DIOtransmit_collision += 1
             else:
                 self.DIOsurpress += 1
 
             self.calculate_pfree()
             self.calculate_ptransmit()
-            self.calculate_preset()
-            self.log_result()
+
+            self.total_reward += self.pfree
+            self.average_reward = self.total_reward / self.Nstates
 
             # ===== Start new interval
 
-            self.reset_is_dio_sent()
             # doubling the interval
             #
             # Section 4.2:
@@ -268,7 +273,6 @@ class ACPBTrickle(object):
             #       length I to be the time specified by Imax.
             self.interval = self.interval * 2
             self.m += 1
-            self.Nstates += 1
             if self.max_interval < self.interval:
                 self.interval = self.max_interval
                 self.m = self.i_max
@@ -286,22 +290,20 @@ class ACPBTrickle(object):
 
     def calculate_preset(self):
         self.preset = self.Nreset / self.Nstates
+        assert self.preset <= 1
         self.pstable = 1 - self.preset
 
     def calculate_ptransmit(self):
         self.ptransmit = self.DIOtransmit / self.Nstates
-        self.ptransmit_collision = (
-            self.DIOtransmit_collision / self.DIOtransmit) if self.DIOtransmit else 0
+        assert self.ptransmit <= 1
 
     def calculate_pfree(self):
         if self.end_t_record is not None and self.start_t_record is not None:
             self.used = self.end_t_record - self.start_t_record
-            # if self.used > 0: self.used -= self.is_dio_truly_sent()
-            if self.Ncells < self.used:
-                self.Ncells = self.used
-            self.Ncells = max(self.Ncells, 1)
+            if self.Ncells < self.used: self.Ncells = self.used
             occ = self.used / self.Ncells
             self.poccupancy = occ
+            assert self.poccupancy <= 1
             self.pfree = 1 - self.poccupancy
 
     def getOpsMC(self):
@@ -316,28 +318,6 @@ class ACPBTrickle(object):
             asn_ = cur + 1
         return asn_
 
-    def reset_is_dio_sent(self):
-        self.mote.tsch.set_is_dio_scheduled(False)
-        self.mote.tsch.set_is_dio_sent(False)
-        self.mote.sixlowpan.set_is_dio_sent(False)
-        self.is_dio_sent = False
-
-    def is_dio_not_sent(self):
-        if (
-            not self.mote.sixlowpan.is_dio_sent or
-            not self.mote.tsch.is_dio_scheduled or
-            not self.mote.tsch.is_dio_sent
-        ):
-            return True
-        return False
-
-    def is_dio_truly_sent(self):
-        result = int(self.mote.tsch.is_dio_scheduled)
-        result *= int(self.mote.tsch.is_dio_sent)
-        result *= int(self.is_dio_sent)
-        result *= int(self.mote.sixlowpan.is_dio_sent)
-        return result
-
     def ceil_division(self, a, b):
         return int(math.ceil(old_div(a, b)))
 
@@ -349,7 +329,6 @@ class ACPBTrickle(object):
             'poccupancy': self.poccupancy,
             'DIOtransmit': self.DIOtransmit,
             'DIOsurpress': self.DIOsurpress,
-            'DIOtransmit_collision': self.DIOtransmit_collision,
             'Nreset': self.Nreset,
             'preset': self.preset,
             'pstable': self.pstable,
@@ -358,7 +337,7 @@ class ACPBTrickle(object):
             'listen_period': self.listen_period,
             'used': self.used,
             'Ncells': self.Ncells,
-            'is_dio_truly_sent': self.is_dio_truly_sent(),
+            "average_reward": self.average_reward,
         }
 
         self.log(

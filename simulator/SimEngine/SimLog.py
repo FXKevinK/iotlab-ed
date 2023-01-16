@@ -85,6 +85,9 @@ LOG_RPL_LOCAL_REPAIR = {
 LOG_RPL_JOINED = {u'type': u'rpl.joined',
                       u'keys': [u'_mote_id']}
 
+LOG_TRICKLE_RESET = {u'type': u'trickle.reset',
+                   u'keys': [u'_mote_id', u'reset_type']}
+
 # === 6LoWPAN
 LOG_SIXLOWPAN_PKT_TX = {u'type': u'sixlowpan.pkt.tx',
                         u'keys': [u'_mote_id', u'packet']}
@@ -138,6 +141,9 @@ LOG_TSCH_ADD_SLOTFRAME = {u'type': u'tsch.add_slotframe',
                           u'keys': [u'_mote_id', u'slotFrameHandle', u'length']}
 LOG_TSCH_DELETE_SLOTFRAME = {u'type': u'tsch.delete_slotframe',     u'keys': [
     u'_mote_id', u'slotFrameHandle', u'length']}
+
+LOG_MC_TR = {u'type': u'tsch.mctr',
+                   u'keys': [u'_mote_id', u'packet_type']}
 
 # === mote info
 LOG_RADIO_STATS = {u'type': u'radio.stats',               u'keys': [
@@ -229,7 +235,7 @@ class SimLog(object):
                 "Wrong keys passed to log() function for type {0}!\n    - expected {1}\n    - got      {2}".format(
                     simlog[u'type'],
                     sorted(simlog[u'keys']),
-                    sorted(content.keys()),
+                     sorted(content.keys()),
                 )
             )
 

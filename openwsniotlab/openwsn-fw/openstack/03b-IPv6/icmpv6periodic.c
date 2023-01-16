@@ -60,46 +60,11 @@ void icmpv6periodic_init(void)
     icmpv6periodic_vars.alreadyRunning = FALSE;
 }
 
-void icmpv6periodic_start_timer(opentimers_id_t id){
-    // opentimers_scheduleIn(
-    //     icmpv6periodic_vars.timer_id,
-    //     icmpv6periodic_vars.info.mote_duration,
-    //     TIME_MS,
-    //     TIMER_PERIODIC,
-    //     icmpv6periodic_timer_cb);
-    // icmpv6periodic_vars.alreadyRunning = TRUE;
-}
-
 void icmpv6periodic_begin(void){
-    // uint32_t waitDuration;
-    // uint32_t minDuration;
-    // uint32_t maxDuration;
-    // uint8_t nbr;
 
     if(icmpv6periodic_vars.alreadyRunning || opentimers_isRunning(icmpv6periodic_vars.timer_id)){
         return;
     }
-
-    // nbr = neighbors_getNumNeighbors();
-    // if(nbr < 1){
-    //     nbr = 1;
-    // }
-    // if(nbr > 6){
-    //     nbr = 6;
-    // }
-
-    // minDuration = icmpv6periodic_vars.info.mote_duration;
-    // maxDuration = minDuration * nbr;
-    // waitDuration = (openrandom_get16b() % (maxDuration - minDuration + 1)) + minDuration;
-
-    // LOG_INFO(COMPONENT_ICMPv6PERIODIC, ERR_DEBUG_1, waitDuration, PERIODIC_PORTION);
-
-    // opentimers_scheduleIn(
-    //     icmpv6periodic_vars.timer_id,
-    //     waitDuration,
-    //     TIME_MS,
-    //     TIMER_ONESHOT,
-    //     icmpv6periodic_start_timer);
 
     opentimers_scheduleIn(
         icmpv6periodic_vars.timer_id,

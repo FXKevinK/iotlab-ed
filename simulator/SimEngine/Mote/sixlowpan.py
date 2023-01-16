@@ -137,9 +137,14 @@ class Sixlowpan(object):
                 # DZAKY: DIO goes here (2)
                 self.mote.tsch.enqueue(frag)
 
-        if "type" in packet:
-            if packet[u'type'] == d.PKT_TYPE_DIO:
-                self.is_dio_sent = goOn
+        # if "type" in packet:
+        #     if packet[u'type'] in [
+        #         d.PKT_TYPE_JOIN_REQUEST,
+        #         d.PKT_TYPE_JOIN_RESPONSE,
+        #         d.PKT_TYPE_DIS,
+        #         d.PKT_TYPE_DAO,
+        #     ]:
+        #         print(packet['type'])
 
     def recvPacket(self, packet):
 
@@ -237,7 +242,7 @@ class Sixlowpan(object):
                             reason = SimEngine.SimLog.DROPREASON_RANK_ERROR
                         )
                         # reset Trickle timer
-                        self.mote.rpl.start_or_reset_trickle_timer(7)
+                        self.mote.rpl.start_or_reset_trickle_timer(6)
                         return
                     else:
                         # set Rank-Error and forward this packet

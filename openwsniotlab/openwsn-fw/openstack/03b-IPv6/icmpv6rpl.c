@@ -161,7 +161,7 @@ void icmpv6rpl_init(void)
     icmpv6rpl_vars.conf.optLen = 14;
     icmpv6rpl_vars.conf.flagsAPCS = DEFAULT_PATH_CONTROL_SIZE;
     icmpv6rpl_vars.conf.DIOIntDoubl = DEFAULT_DIO_INTERVAL_DOUBLINGS;
-    icmpv6rpl_vars.conf.DIOIntMin = DEFAULT_DIO_INTERVAL_MIN;
+    icmpv6rpl_vars.conf.DIOIntMin = 12;
     icmpv6rpl_vars.conf.DIORedun = DEFAULT_DIO_REDUNDANCY_CONSTANT;
     icmpv6rpl_vars.conf.maxRankIncrease = DEFAULT_RPL_MAXRANKINCREASE;
     icmpv6rpl_vars.conf.minHopRankIncrease = DEFAULT_RPL_MINHOPRANKINCREASE;

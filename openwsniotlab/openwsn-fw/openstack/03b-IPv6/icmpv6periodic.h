@@ -6,7 +6,7 @@
 
 #define app_pkPeriodSec 1
 #define app_pkLength 20
-#define PERIODIC_PORTION 0.07
+#define PERIODIC_PORTION 0.05
 
 BEGIN_PACK
 typedef struct
@@ -35,7 +35,6 @@ typedef struct
 
 void icmpv6periodic_init(void);
 void icmpv6periodic_sendDone(OpenQueueEntry_t *msg, owerror_t error);
-void icmpv6periodic_start_timer(opentimers_id_t id);
 void icmpv6periodic_begin(void);
 
 #endif

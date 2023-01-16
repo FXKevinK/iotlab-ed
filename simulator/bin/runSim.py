@@ -187,7 +187,9 @@ def merge_output_files(folder_path):
                     config = json.loads(inputfile.readline())
                     outputfile.write(json.dumps(config) + "\n")
                     outputfile.write(inputfile.read())
-        shutil.rmtree(os.path.join(folder_path, subfolder))
+        p_ = os.path.join(folder_path, subfolder)
+        if os.path.isdir(p_):
+            shutil.rmtree(p_, ignore_errors=True)
 
 # =========================== main ============================================
 

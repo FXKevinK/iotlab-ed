@@ -1,13 +1,12 @@
 # Terkait paper:
 - taruh penjelasan dan pembeda tentang adaptive epsilon
-- jelasin iot-lab + paremter experimentnya
 - ubah flowchart pake adaptive epsilon
 
 # Parameter:
 Topologies: 10 (5*2), 35 (5*7)
 OS: OpenWSN, Board: Arm M3 Cortex
 Slot duration: 10 ms, Slotframe length: 101
-Duration: 60minutes x 5
+Duration: 60minutes x 3
 Channel: 16
 Testbed: Fit IoT-LAb Lille
 Runtime: 60 minutes
@@ -72,6 +71,6 @@ allow more exploration in beginning, because ql need learn.
 allow more exploitation when reward converge. when fluctuate allow more exploration (to adapt).
 
 
-cd bin; python3.7 runSim.py --config config_5.json; cd ..
+cd simulator/bin; python3.7 runSim.py --config config_1.json; cd ../..
 
-cd bin; python3.7 compute_kpis.py; cd ..
+cd simulator/bin; python3.7 compute_kpis.py; cd ../..

@@ -1324,7 +1324,8 @@ class SchedulingFunctionMSF(SchedulingFunctionBase):
             cell_list = []
             if available_slots:
                 # prepare response
-                selected_slots = random.sample(available_slots, num_cells)
+                ncls = min(num_cells, len(available_slots))
+                selected_slots = random.sample(available_slots, ncls)
                 for cell in candidate_cells:
                     if cell[u'slotOffset'] in selected_slots:
                         cell_list.append(cell)

@@ -296,6 +296,7 @@ enum {
    ERR_PERIODIC_SEND                   = 0x57, // periodic {0} - {1}
    ERR_EXPERIMENT                      = 0x58, // experiment
    ERR_TIMER_MINUS                     = 0x59, // timer minus
+   ERR_UNDER_OVER_VALUE                = 0x5a, // value under/over limit {0} : {1}
 };
 
 //=========================== typedef =========================================

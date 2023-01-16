@@ -84,12 +84,14 @@ class Tsch(object):
         self.args_for_next_pending_bit_task = None
 
         self.is_dio_scheduled = False
-        self.is_dio_sent= False
+        self.is_dio_sent = False
+        self.is_dio_assigned = False
+
         self.eb_prob = float(self.settings.tsch_probBcast_ebProb)
-        trickle_method = self.settings.trickle_method or ""
-        self.use_sw = True if trickle_method == "ac" else False
+        self.trickle_method = self.settings.trickle_method or ""
+        self.use_sw = True if self.trickle_method == "ac" else False
         self.sw_tp = 0
-        self.sw_x = 0.5
+        self.sw_x = 50
         self.calculate_eb_sw()
 
         assert self.settings.phy_numChans <= len(d.TSCH_HOPPING_SEQUENCE)
@@ -337,14 +339,14 @@ class Tsch(object):
         assert link_type not in [True, False]
 
         slotframe = self.slotframes[slotframe_handle]
-
         # add cell
         cell = Cell(
             slotOffset,
             channelOffset,
             cellOptions,
             neighbor,
-            link_type
+            link_type,
+            self.mote
         )
         slotframe.add(cell)
 
@@ -493,17 +495,11 @@ class Tsch(object):
                 packet[u'mac'][u'dstMac']
             )
 
-        if "type" in packet:
-            if packet[u'type'] == d.PKT_TYPE_DIO:
-                self.is_dio_scheduled = goOn
+        # if "type" in packet:
+        #     if packet[u'type'] == d.PKT_TYPE_DIO:
+        #         self.is_dio_scheduled = goOn
 
         return goOn
-
-    def set_is_dio_sent(self, value):
-        self.is_dio_sent = value
-
-    def set_is_dio_scheduled(self, value):
-        self.is_dio_scheduled = value
 
     def dequeue(self, packet):
         if packet in self.txQueue:
@@ -650,6 +646,10 @@ class Tsch(object):
                 d.PKT_TYPE_DIS
             ]
             assert isACKed == False
+
+            # DZAKY: DIO goes here (6)
+            if self.pktToSend[u'type'] == d.PKT_TYPE_DIO:
+                self.mote.rpl.increase_dio_actual_sent()
 
             # EBs are never in txQueue, no need to remove.
             if self.pktToSend[u'type'] != d.PKT_TYPE_EB:
@@ -825,7 +825,7 @@ class Tsch(object):
                 and
                 active_cell
             ):
-                active_cell.increment_num_rx()
+                active_cell.increment_num_rx(packet)
 
             if self.mote.is_my_mac_addr(packet[u'mac'][u'dstMac']):
                 # link-layer unicast to me
@@ -1101,11 +1101,32 @@ class Tsch(object):
                 assert self.active_cell.is_tx_on()
                 send_pkt = True
 
-                if self.use_sw and self.active_cell.is_minimal_cell() and not self.mote.dagRoot:
-                    if self.pktToSend[u'type'] in [
-                        d.PKT_TYPE_DIO,
-                    ]:
-                        self.set_sw_after_dis()
+                # DZAKY: DIO goes here (4) check minimal cell packet
+                # if self.pktToSend[u'type'] in [
+                #     d.PKT_TYPE_EB,
+                #     d.PKT_TYPE_JOIN_REQUEST,
+                #     d.PKT_TYPE_JOIN_RESPONSE,
+                #     d.PKT_TYPE_DIS,
+                #     d.PKT_TYPE_DIO,
+                #     d.PKT_TYPE_DAO,
+                # ]:
+                #     print(self.pktToSend[u'type'], self.active_cell.is_minimal_cell())
+
+                if self.trickle_method == 'qt' and self.active_cell.is_minimal_cell():
+                    cur_asn = self.engine.getAsn()
+                    asn_t_start = self.mote.rpl.trickle_timer.asn_t_start
+                    asn_t_end = self.mote.rpl.trickle_timer.asn_t_end
+                    if asn_t_start and asn_t_end and cur_asn:
+                        if asn_t_start <= cur_asn and cur_asn <= asn_t_end:
+                            if self.pktToSend[u'type'] != d.PKT_TYPE_DIO:
+                                if random.uniform(0, 1) <= self.mote.rpl.trickle_timer.poccupancy:
+                                    send_pkt = False
+                                    self.waitingFor = None
+                                    self.pktToSend = None
+
+                if self.use_sw and self.active_cell.is_minimal_cell():
+                    cur_asn = self.engine.getAsn()
+                    if cur_asn <= self.end_sw_asn:
                         if self.sw_tp < 2:
                             self.sw_tp += 1
                         elif self.sw_tp >= 2:
@@ -1113,7 +1134,7 @@ class Tsch(object):
                             self.waitingFor = None
                             self.pktToSend = None
                         elif self.pktToSend[u'net'][u'dstIp'] == d.IPV6_ALL_RPL_NODES_ADDRESS:
-                            self.sw_x = 1
+                            self.sw_x = 100
                             send_pkt = False
                             self.waitingFor = None
                             self.pktToSend = None
@@ -1124,7 +1145,7 @@ class Tsch(object):
                         channel=self._get_physical_channel(self.active_cell)
                     )
                     # update cell stats
-                    self.active_cell.increment_num_tx()
+                    self.active_cell.increment_num_tx(self.pktToSend)
                     if self.pktToSend[u'mac'][u'dstMac'] == self.clock.source:
                         # we're going to send a frame to our time source; reset the
                         # keep-alive timer
@@ -1176,12 +1197,12 @@ class Tsch(object):
             pktToSend[u'mac'][u'pending_bit'] = True
         else:
             pktToSend[u'mac'][u'pending_bit'] = False
-        
-        # DZAKY: DIO goes here (4)
+
+        # DZAKY: DIO goes here (5)
         # on next slotframe, where DIO is ready to send
-        if "type" in pktToSend:
-            if pktToSend[u'type'] == d.PKT_TYPE_DIO:
-                self.is_dio_sent = True
+        # if "type" in pktToSend:
+        #     if pktToSend[u'type'] == d.PKT_TYPE_DIO:
+        #         self.is_dio_assigned = True
 
         # send packet to the radio
         self.mote.radio.startTx(channel, pktToSend)
@@ -1215,10 +1236,11 @@ class Tsch(object):
         slot_duration_s = self.settings.tsch_slotDuration
         slotframe_duration_s = slot_duration_s * self.settings.tsch_slotframeLength
         eb_interval = slotframe_duration_s * n
-        sw = eb_interval + (self.sw_x * eb_interval)
+        sw = eb_interval + ((self.sw_x/100) * eb_interval)
 
         cur_asn = self.engine.getAsn()
-        self.end_sw_asn = cur_asn + int(math.ceil(old_div(sw, slot_duration_s)))
+        self.end_sw_asn = cur_asn + \
+            int(math.ceil(old_div(sw, slot_duration_s)))
 
     def set_sw_after_dis(self):
         if not self.use_sw:
@@ -1832,7 +1854,8 @@ class Cell(object):
         channel_offset,
         options,
         mac_addr=None,
-        link_type=d.LINKTYPE_NORMAL
+        link_type=d.LINKTYPE_NORMAL,
+        mote=None
     ):
 
         # FIXME: is_advertising is not used effectively now
@@ -1846,6 +1869,8 @@ class Cell(object):
         self.options = options
         self.mac_addr = mac_addr
         self.link_type = link_type
+        self.log = SimEngine.SimLog.SimLog().log
+        self.mote = mote
 
         # back reference to slotframe; this will be set in SlotFrame.add()
         self.slotframe = None
@@ -1873,9 +1898,25 @@ class Cell(object):
     def __eq__(self, other):
         return str(self) == str(other)
 
-    def increment_num_tx(self):
-        self.num_tx += 1
+    def increment_ops(self, packet=None, is_rcv=False):
         self.all_ops += 1
+
+        if self.channel_offset == 0 and self.slot_offset == 0 and not self.mote.dagRoot:
+            type_ = u'ACK' if not packet else packet[u'type']
+            if is_rcv:
+                type_ += '_rcv'
+
+            self.log(
+                SimEngine.SimLog.LOG_MC_TR,
+                {
+                    "_mote_id":   self.mote.id,
+                    "packet_type": type_
+                }
+            )
+
+    def increment_num_tx(self, packet):
+        self.num_tx += 1
+        self.increment_ops(packet)
 
         # Seciton 5.3 of draft-ietf-6tisch-msf-00: "When NumTx reaches 256,
         # both NumTx and NumTxAck MUST be divided by 2.  That is, for example,
@@ -1886,13 +1927,13 @@ class Cell(object):
             self.num_tx /= 2
             self.num_tx_ack /= 2
 
-    def increment_num_tx_ack(self):
+    def increment_num_tx_ack(self, packet=None):
         self.num_tx_ack += 1
-        self.all_ops += 1
+        self.increment_ops(packet)
 
-    def increment_num_rx(self):
+    def increment_num_rx(self, packet):
         self.num_rx += 1
-        self.all_ops += 1
+        self.increment_ops(packet, True)
 
     def is_tx_on(self):
         return d.CELLOPTION_TX in self.options

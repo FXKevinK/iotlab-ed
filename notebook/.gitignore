@@ -1,2 +1,6 @@
 # created by virtualenv automatically
 consumption/
+exp3/
+figures/
+*.csv
+*.json

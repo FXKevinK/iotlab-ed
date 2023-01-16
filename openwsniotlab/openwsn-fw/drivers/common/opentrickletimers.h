@@ -32,14 +32,14 @@
 #define MINIMAL_CELL_BUSY_RATIO_SLOTFRAME 10
 
 // ignore ig
-#define DEFAULT_DIO_INTERVAL_MIN 12
-#define IMIN_1 (1 << DEFAULT_DIO_INTERVAL_MIN)
+#define DEFAULT_DIO_INTERVAL_MIN 5000
+// #define IMIN_1 (1 << DEFAULT_DIO_INTERVAL_MIN)
 
 // milliseconds, DIO_IMIN = 2 ^ DEFAULT_DIO_INTERVAL_MIN
 #if PYTHON_BOARD
-#define IMIN_2 (IMIN_1 * 60)
+#define IMIN_2 (DEFAULT_DIO_INTERVAL_MIN * 60)
 #else
-#define IMIN_2 IMIN_1
+#define IMIN_2 DEFAULT_DIO_INTERVAL_MIN
 #endif
 #define DEFAULT_DIO_IMIN_MS IMIN_2
 
@@ -120,7 +120,6 @@ typedef struct
     uint32_t t_start;
     uint32_t t_end;
 
-    uint16_t DIOtransmit_collision;
     uint8_t Nnbr;
     float epsilon;
 
@@ -128,13 +127,12 @@ typedef struct
     uint32_t counter_ambr;
     float ambr;
     float ptransmit;
-    float ptransmit_collision;
 
 #if use_qtrickle == TRUE
     bool is_explore;
     uint8_t current_action;
     // skip 0 index, since 0 * 0 and 0 * 1 will be the same
-    float q_table[(DEFAULT_DIO_INTERVAL_DOUBLINGS + 1) * 2];
+    float q_table[(DEFAULT_DIO_INTERVAL_DOUBLINGS + 2) * 2];
 #endif
 
 #if adaptive_epsilon == TRUE

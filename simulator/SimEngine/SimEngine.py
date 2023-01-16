@@ -378,8 +378,10 @@ class SimEngine(DiscreteEventEngine):
         # set random seed
         if   self.settings.exec_randomSeed == u'random':
             self.random_seed = random.randint(0, sys.maxsize)
-        if   self.settings.exec_randomSeed == u'run_id':
+        elif   self.settings.exec_randomSeed == u'run_id':
             self.random_seed = int(self.run_id)
+            if hasattr(self.settings, 'exec_randomSeed_add'):
+                self.random_seed += self.settings.exec_randomSeed_add
         elif self.settings.exec_randomSeed == u'context':
             # with context for exec_randomSeed, an MD5 value of
             # 'startTime-hostname-run_id' is used for a random seed

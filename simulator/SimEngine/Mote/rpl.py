@@ -79,6 +79,7 @@ class Rpl(object):
         self.count_dis = 0
         self.count_dio = 0
         self.count_dao = 0
+        self.DIOtransmit_actual = 0
 
     # ======================== public ==========================================
 
@@ -89,6 +90,9 @@ class Rpl(object):
 
     def get_rank(self):
         return self.of.rank
+
+    def increase_dio_actual_sent(self):
+        self.DIOtransmit_actual += 1 
 
     def getDagRank(self):
         if self.of.rank is None:
@@ -112,45 +116,35 @@ class Rpl(object):
             else:
                 self.trickle_timer.reset(note)
 
-    def increment_diotransmit_dis(self, is_broadcast):
-        self.trickle_timer.increment_diotransmit_dis(is_broadcast)
-
     def last_slotframe_callback(self):
         if self.mote.dagRoot:
             return
 
-        if not hasattr(self.mote, 'tsch'):
+        if self.of.get_preferred_parent() is None:
             return
 
-        minimal_cell = self.mote.tsch.get_cell(0, 0, None, 0)
-        if not minimal_cell:
-            return
+        minimal_cell = self.mote.tsch.get_minimal_cell()
 
-        cur_all_ops = minimal_cell.all_ops
-        curr_mbr = cur_all_ops / (self.end_slotframe+1)
+        cur_all_ops = None
+        curr_mbr = None
+        if minimal_cell:
+            cur_all_ops = minimal_cell.all_ops
+            curr_mbr = cur_all_ops / self.end_slotframe
 
-        if self.trickle_method == 'riata':
-            DIOtransmit = self.trickle_timer.DIOtransmit_log
-            DIOsurpress = self.trickle_timer.DIOsurpress_log
-            DIOtransmit_dis = self.trickle_timer.DIOtransmit_dis_log
-            DIOtransmit_collision = self.trickle_timer.DIOtransmit_collision_log
-        else:
-            DIOtransmit = self.trickle_timer.DIOtransmit
-            DIOsurpress = self.trickle_timer.DIOsurpress
-            DIOtransmit_dis = self.trickle_timer.DIOtransmit_dis
-            DIOtransmit_collision = self.trickle_timer.DIOtransmit_collision
+        DIOsurpress = self.trickle_timer.DIOsurpress
+        failed = int(self.count_dio)-int(self.DIOtransmit_actual)
 
         result = {
-            'DIOtransmit': DIOtransmit,
+            'pfailed': failed/max(int(self.count_dio), 1),
+            'count_dio': self.count_dio,
+            'failed': failed,
             'DIOsurpress': DIOsurpress,
-            'DIOtransmit_dis': DIOtransmit_dis,
-            'DIOtransmit_collision': DIOtransmit_collision,
-            'mbr': curr_mbr,
-            'ops': cur_all_ops,
-            "count_dis": self.count_dis,
-            "count_dio": self.count_dio,
-            "count_dao": self.count_dao,
+            'all_ops': cur_all_ops,
+            'curr_mbr': curr_mbr,
         }
+
+        if self.trickle_method in ['qt', 'riata']:
+            result['q_table'] = self.trickle_timer.q_table
 
         # log
         self.log(
@@ -292,12 +286,10 @@ class Rpl(object):
         else:
             if self.mote.is_my_ipv6_addr(packet[u'net'][u'dstIp']):
                 # unicast DIS; send unicast DIO back to the source
-                self.increment_diotransmit_dis(False)
                 self._send_DIO(packet[u'net'][u'srcIp'])
             elif packet[u'net'][u'dstIp'] == d.IPV6_ALL_RPL_NODES_ADDRESS:
                 # broadcast DIS
                 self.mote.tsch.set_sw_after_dis()
-                self.increment_diotransmit_dis(True)
                 self._send_DIO()
                 self.start_or_reset_trickle_timer(3)
             else:
@@ -320,7 +312,7 @@ class Rpl(object):
 
     def start_dis_timer(self):
         self.engine.scheduleIn(
-            delay=self.DEFAULT_DIS_INTERVAL_SECONDS,
+            delay=self.settings.rpl_disPeriod,
             cb=self.handle_dis_timer,
             uniqueTag=str(self.mote.id) + u'dis',
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS
@@ -957,7 +949,7 @@ class RplOF0(RplOFBase):
             )
 
             # reset Trickle Timer # already called in indicate_preferred_parent_change
-            # self.rpl.start_or_reset_trickle_timer(6)
+            # self.rpl.start_or_reset_trickle_timer()
         elif (
             (new_parent is None)
             and
