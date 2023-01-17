@@ -50,6 +50,87 @@ def parseCliParams():
         default    = 'config.json',
         help       = 'Location of the configuration file.',
     )
+
+    parser.add_argument(
+        '--algo',
+        dest       = 'algo',
+        action     = 'store',
+        default    = '',
+        help       = 'Trickle algorithm',
+    )
+
+    # changed param
+    parser.add_argument(
+        '--param_random',
+        dest       = 'param_random',
+        action     = 'store',
+        default    = '',
+        help       = 'exec_randomSeed',
+    )
+    parser.add_argument(
+        '--param_imin',
+        dest       = 'param_imin',
+        action     = 'store',
+        default    = '',
+        help       = 'dio_interval_min_s',
+    )
+    parser.add_argument(
+        '--param_lr',
+        dest       = 'param_lr',
+        action     = 'store',
+        default    = '',
+        help       = 'ql_learning_rate',
+    )
+    parser.add_argument(
+        '--param_dr',
+        dest       = 'param_dr',
+        action     = 'store',
+        default    = '',
+        help       = 'ql_discount_rate',
+    )
+    parser.add_argument(
+        '--param_ep',
+        dest       = 'param_ep',
+        action     = 'store',
+        default    = '',
+        help       = 'ql_epsilon',
+    )
+    parser.add_argument(
+        '--param_ad',
+        dest       = 'param_ad',
+        action     = 'store',
+        default    = '',
+        help       = 'ql_adaptive_epsilon',
+    )
+    parser.add_argument(
+        '--param_epdecay',
+        dest       = 'param_epdecay',
+        action     = 'store',
+        default    = '',
+        help       = 'ql_adaptive_decay_rate',
+    )
+    parser.add_argument(
+        '--param_runs',
+        dest       = 'param_runs',
+        action     = 'store',
+        default    = '',
+        help       = 'numRuns',
+    )
+    parser.add_argument(
+        '--param_motes',
+        dest       = 'param_motes',
+        action     = 'store',
+        default    = '',
+        help       = 'exec_numMotes',
+    )
+    parser.add_argument(
+        '--param_exp',
+        dest       = 'param_exp',
+        action     = 'store',
+        default    = '',
+        help       = 'log_directory_name',
+    )
+
     cliparams      = parser.parse_args()
     return cliparams.__dict__
 
@@ -196,12 +277,49 @@ def merge_output_files(folder_path):
 def main():
     
     #=== initialize
+    map_param = {
+        'param_random': 'exec_randomSeed',
+        'param_imin': 'dio_interval_min_s',
+        'param_lr': 'ql_learning_rate',
+        'param_dr': 'ql_discount_rate',
+        'param_ep': 'ql_epsilon',
+        'param_ad': 'ql_adaptive_epsilon',
+        'param_epdecay': 'ql_adaptive_decay_rate',
+        'param_runs': 'numRuns',
+        'param_motes': 'exec_numMotes',
+        'param_exp': 'log_directory_name'
+    }
     
     # cli params
     cliparams = parseCliParams()
 
+    changed_param = None
+    config_file = cliparams['config']
+    algo = cliparams['algo']
+    if algo:
+        config_file = 'base_config/config_{}.json'.format(algo)
+        print("config_file:", config_file)
+
+        param_exp = cliparams['param_exp']
+        param_motes = cliparams['param_motes']
+
+        assert param_exp and param_motes
+        changed_param = {
+            map_param['param_exp']: param_exp,
+            map_param['param_motes']: param_motes,
+        }
+
+        param_keys = [x for x in cliparams.keys() if str(x).startswith('param_')]
+        for key in param_keys:
+            key_t = map_param[key]
+            val = cliparams[key]
+            if key_t not in changed_param and val:
+                changed_param[key_t] = val
+    
+    print(json.dumps(changed_param,indent = 4))
+
     # sim config
-    simconfig = SimConfig.SimConfig(configfile=cliparams['config'])
+    simconfig = SimConfig.SimConfig(configfile=config_file, changed_param=changed_param)
     assert simconfig.version == 0
 
     #=== run simulations

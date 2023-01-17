@@ -71,16 +71,24 @@ typedef struct {
     uint8_t counter;
     uint16_t state;
     uint16_t Nreset;
+    uint16_t used;
+    uint16_t Ncells;
     uint16_t DIOtransmit;
     uint16_t DIOsurpress;
     uint16_t DIOtransmit_collision;
     uint16_t DIOtransmit_dis;
-    uint16_t pfree; // in xxxx int
-    uint16_t preset; // in xxxx int
+    uint16_t average_reward;
     uint16_t epsilon; // in xxxx int
+    uint16_t ptransmit;
+    uint16_t pfree; // in xxxx int
+    uint16_t poccupancy; // from 1 - pfree
+    uint16_t preset; // in xxxx int
+    uint16_t pstable; // from 1 - preset
     uint32_t listen_period;
-    // int16_t poccupancy; // from 1 - pfree
-    // uint16_t pstable; // from 1 - preset
+    uint32_t t_start;
+    uint32_t t;
+    uint32_t t_end;
+    uint32_t interval;
     // size 4+(2*9) = 22
 } opentrickletimers_debug_t;
 END_PACK
@@ -127,6 +135,7 @@ typedef struct
     uint32_t counter_ambr;
     float ambr;
     float ptransmit;
+    uint16_t used;
 
 #if use_qtrickle == TRUE
     bool is_explore;

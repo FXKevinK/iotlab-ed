@@ -74,3 +74,18 @@ allow more exploitation when reward converge. when fluctuate allow more explorat
 cd simulator/bin; python3.7 runSim.py --config config_1.json; cd ../..
 
 cd simulator/bin; python3.7 compute_kpis.py; cd ../..
+
+====================
+
+<!-- exp 3 -->
+cd simulator/bin; python3.7 runSim.py --algo=ac --param_exp=3 --param_motes=10 --param_imin=1; cd ../..
+cd simulator/bin; python3.7 runSim.py --algo=ac --param_exp=3 --param_motes=10 --param_imin=5; cd ../..
+cd simulator/bin; python3.7 runSim.py --algo=ac --param_exp=3 --param_motes=10 --param_imin=10; cd ../..
+
+cd simulator/bin; python3.7 runSim.py --algo=ac --param_exp=3 --param_motes=50 --param_imin=1; cd ../..
+cd simulator/bin; python3.7 runSim.py --algo=ac --param_exp=3 --param_motes=50 --param_imin=5; cd ../..
+cd simulator/bin; python3.7 runSim.py --algo=ac --param_exp=3 --param_motes=50 --param_imin=10; cd ../..
+
+cd simulator/bin; python3.7 runSim.py --algo=ac --param_exp=3 --param_motes=100 --param_imin=1; cd ../..
+cd simulator/bin; python3.7 runSim.py --algo=ac --param_exp=3 --param_motes=100 --param_imin=5; cd ../..
+cd simulator/bin; python3.7 runSim.py --algo=ac --param_exp=3 --param_motes=100 --param_imin=10; cd ../..

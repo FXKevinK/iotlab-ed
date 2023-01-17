@@ -703,7 +703,7 @@ port_INLINE void sixtop_sendEB(void) {
     memset(&addressToWrite, 0, sizeof(open_addr_t));
 
     if (
-            (ieee154e_isSynch() == FALSE) ||
+            (ieee154e_isSynch() == FASE) ||
             (IEEE802154_security_isConfigured() == FALSE) ||
             (icmpv6rpl_getMyDAGrank() == DEFAULTDAGRANK) ||
             icmpv6rpl_daoSent() == FALSE) {

@@ -225,7 +225,7 @@ class DiscreteEventEngine(threading.Thread):
         """
 
         if auto_correct and asn < self.asn:
-             asn = self.asn + 5
+             asn = self.asn + 1
 
         # make sure we are scheduling in the future
         assert asn > self.asn
@@ -393,11 +393,7 @@ class SimEngine(DiscreteEventEngine):
             md5.update(u'-'.join(context).encode('utf-8'))
             self.random_seed = int(md5.hexdigest(), 16) % sys.maxsize
         else:
-            assert isinstance(self.settings.exec_randomSeed, int)
-            self.random_seed = self.settings.exec_randomSeed
-
-        print("LOG", "random_seed", self.random_seed)
-        print("LOG", "trickle_method", self.settings.trickle_method)
+            self.random_seed = int(self.settings.exec_randomSeed)
 
         # apply the random seed; log the seed after self.log is initialized
         random.seed(a=self.random_seed)

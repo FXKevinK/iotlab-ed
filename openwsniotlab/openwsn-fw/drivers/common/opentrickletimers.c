@@ -580,12 +580,12 @@ void opentrickletimers_end_t_callback(opentimers_id_t id)
 
 void opentrickletimers_i_callback(opentimers_id_t id)
 {
-    uint16_t used = EMPTY_16;
     float occ = EMPTY_8;
 
     INTERRUPT_DECLARATION();
     DISABLE_INTERRUPTS();
 
+    opentrickletimers_vars.used = EMPTY_16;
     if (opentrickletimers_vars.is_dio_sent){
         opentrickletimers_vars.DIOtransmit += 1;
 #if use_qtrickle == TRUE
@@ -604,13 +604,13 @@ void opentrickletimers_i_callback(opentimers_id_t id)
     // calculate_pfree
     if (opentrickletimers_vars.start_ops != EMPTY_16 && opentrickletimers_vars.end_ops != EMPTY_16)
     {
-        used = opentrickletimers_vars.end_ops - opentrickletimers_vars.start_ops;
+        opentrickletimers_vars.used = opentrickletimers_vars.end_ops - opentrickletimers_vars.start_ops;
 
-        if(opentrickletimers_vars.Ncells < used){
-            opentrickletimers_vars.Ncells = used;
+        if(opentrickletimers_vars.Ncells < opentrickletimers_vars.used){
+            opentrickletimers_vars.Ncells = ozpentrickletimers_vars.used;
         }
 
-        occ = (float)used / opentrickletimers_vars.Ncells;
+        occ = (float)opentrickletimers_vars.used / opentrickletimers_vars.Ncells;
         opentrickletimers_vars.poccupancy = occ;
         if(opentrickletimers_vars.poccupancy < 0 || opentrickletimers_vars.poccupancy > 1){
             LOG_CRITICAL(COMPONENT_OPENTRICKLETIMERS, ERR_UNDER_OVER_VALUE,
@@ -669,11 +669,20 @@ void opentrickletimers_log_result(void)
     opentrickletimers_debug.counter = opentrickletimers_vars.C;
     opentrickletimers_debug.k = opentrickletimers_vars.K;
     opentrickletimers_debug.Nnbr = opentrickletimers_vars.Nnbr;
+    opentrickletimers_debug.used = opentrickletimers_vars.used;
+    opentrickletimers_debug.Ncells = opentrickletimers_vars.Ncells;
     opentrickletimers_debug.pfree = (uint16_t)(opentrickletimers_vars.pfree * 10000);
+    opentrickletimers_debug.poccupancy = (uint16_t)(opentrickletimers_vars.pfree * 10000);
     opentrickletimers_debug.preset = (uint16_t)(opentrickletimers_vars.preset * 10000);
+    opentrickletimers_debug.pstable = (uint16_t)(opentrickletimers_vars.pstable * 10000);
     opentrickletimers_debug.ptransmit = (uint16_t)(opentrickletimers_vars.ptransmit * 10000);
     opentrickletimers_debug.epsilon = (uint16_t)(opentrickletimers_vars.epsilon * 10000);
-    opentrickletimers_debug.listen_period = opentrickletimers_vars.listen_period;
+    opentrickletimers_debug.average_reward = (uint16_t)(opentrickletimers_vars.average_reward * 10000);
+    opentrickletimers_debug.listen_period = opentrickletimers_vars.listen_period / 1000;
+    opentrickletimers_debug.t_start = opentrickletimers_vars.t_start / 1000;
+    opentrickletimers_debug.t = opentrickletimers_vars.T / 1000;
+    opentrickletimers_debug.t_end = opentrickletimers_vars.t_end / 1000;
+    opentrickletimers_debug.interval = opentrickletimers_vars.I / 1000;
     openserial_print_exp(COMPONENT_OPENTRICKLETIMERS, ERR_EXPERIMENT, (uint8_t *)&opentrickletimers_debug, sizeof(opentrickletimers_debug_t));
 }
 

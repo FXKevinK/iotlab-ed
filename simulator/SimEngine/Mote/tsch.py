@@ -87,12 +87,22 @@ class Tsch(object):
         self.is_dio_sent = False
         self.is_dio_assigned = False
 
-        self.eb_prob = float(self.settings.tsch_probBcast_ebProb)
         self.trickle_method = self.settings.trickle_method or ""
         self.use_sw = True if self.trickle_method == "ac" else False
-        self.sw_tp = 0
-        self.sw_x = 50
-        self.calculate_eb_sw()
+
+        self.slot_duration_s = self.settings.tsch_slotDuration
+        self.slotframe_duration_s = self.slot_duration_s * self.settings.tsch_slotframeLength
+
+        self.i_eb_min_s = float(self.settings.eb_interval_s)
+        self.eb_prob = self.slotframe_duration_s / self.i_eb_min_s
+        self.first_per_slotframe = False
+        
+        if self.use_sw:
+            self.i_eb_max_s = self.i_eb_min_s * 3
+            self.sw_s = 0
+            self.sw_tp = 0
+            self.sw_x = 50
+            self.calculate_eb_sw()
 
         assert self.settings.phy_numChans <= len(d.TSCH_HOPPING_SEQUENCE)
         self.hopping_sequence = (
@@ -1227,20 +1237,65 @@ class Tsch(object):
             len(self.hopping_sequence)
         ]
 
+    def per_slotframe_callback(self):
+        if self.mote.dagRoot:
+            return
+
+        result = {
+            'eb_prob': self.eb_used_prob,
+            'nbr': len(self.neighbor_table),
+        }
+        if self.use_sw:
+            result['sw_s'] = self.sw_s
+        self.log(
+            SimEngine.SimLog.LOG_PER_SLOTFRAME,
+            {
+                u'_mote_id': self.mote.id,
+                u'result': result,
+            }
+        )
+        self.per_slotframe_trigger()
+
+
+    def per_slotframe_trigger(self):
+        tag_ = str(self.mote.id) + u'per_slotframe'
+
+        if self.engine.is_scheduled(tag_):
+            return
+
+        left_slotframe = 100
+
+        cur_asn = self.engine.getAsn()
+        asn_end = cur_asn + (self.settings.tsch_slotframeLength * left_slotframe)
+        if asn_end == self.engine.getAsn(): asn_end = self.engine.getAsn() + 1
+            
+        self.engine.scheduleAtAsn(
+            asn=asn_end,
+            cb=self.per_slotframe_callback,
+            uniqueTag=tag_,
+            intraSlotOrder=d.INTRASLOTORDER_STACKTASKS
+        )
+
     # EBs
     def calculate_eb_sw(self):
         if not self.use_sw:
             return
 
         n = 1 + len(self.neighbor_table)
-        slot_duration_s = self.settings.tsch_slotDuration
-        slotframe_duration_s = slot_duration_s * self.settings.tsch_slotframeLength
-        eb_interval = slotframe_duration_s * n
-        sw = eb_interval + ((self.sw_x/100) * eb_interval)
+        duration_s = self.slotframe_duration_s * n
 
+        # calculate eb
+        eb_interval_s = duration_s
+        eb_interval_s = max(eb_interval_s, self.i_eb_min_s)
+        eb_interval_s = min(eb_interval_s, self.i_eb_max_s)
+        self.eb_interval_s = eb_interval_s
+        self.eb_prob = self.slotframe_duration_s / self.eb_interval_s
+
+        # calculate sw
+        self.sw_s = duration_s + ((self.sw_x/100) * duration_s)
         cur_asn = self.engine.getAsn()
         self.end_sw_asn = cur_asn + \
-            int(math.ceil(old_div(sw, slot_duration_s)))
+            int(math.ceil(old_div(self.sw_s, self.slot_duration_s)))
 
     def set_sw_after_dis(self):
         if not self.use_sw:
@@ -1249,16 +1304,23 @@ class Tsch(object):
         cur_asn = self.engine.getAsn()
         if cur_asn >= self.end_sw_asn:
             self.sw_tp = 0
-            self.sw_x = 0.5
+            self.sw_x = 50
             self.calculate_eb_sw()
 
     def _decided_to_send_eb(self):
-        # short-hand
-        n = 1 + len(self.neighbor_table)
+        nbr = 1 + len(self.neighbor_table)
+        self.eb_used_prob = self.eb_prob
+
+        if self.settings.trickle_method == 'qt':
+            self.eb_used_prob = self.eb_prob + min(1 - self.eb_prob, self.eb_prob / nbr)
+    
+        if not self.first_per_slotframe:
+            self.first_per_slotframe = True
+            self.per_slotframe_callback()
 
         # following the Bayesian broadcasting algorithm
         return (
-            (random.random() < (old_div(self.eb_prob, n)))
+            (random.random() <= self.eb_used_prob)
             and
             self.iAmSendingEBs
         )

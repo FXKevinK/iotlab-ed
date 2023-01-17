@@ -55,13 +55,13 @@ class SimConfig(dict):
     _startTime          = None
     _log_directory_name = None
 
-    def __init__(self, configfile=None, configdata=None):
+    def __init__(self, configfile=None, configdata=None, changed_param=None):
 
         if SimConfig._startTime is None:
             # startTime needs to be initialized
             SimConfig._startTime = time.time()
 
-        if   configfile is not None:
+        if configfile is not None:
             # store params
             self.configfile = configfile
 
@@ -77,8 +77,42 @@ class SimConfig(dict):
         else:
             raise Exception()
 
+        self.config_temp = json.loads(self._raw_data)
+        if changed_param is not None and isinstance(changed_param, dict):
+            check_regular_param = {
+                'exec_randomSeed': str,
+                'dio_interval_min_s': int,
+                'ql_learning_rate': float,
+                'ql_discount_rate': float,
+                'ql_epsilon': float,
+                'ql_adaptive_epsilon': bool,
+                'ql_adaptive_decay_rate': float,
+            }
+            
+            for key, func in check_regular_param.items():
+                if key in changed_param:
+                    val = func(changed_param[key])
+                    self.config_temp['settings']['regular'][key] = val
+
+            key = 'numRuns'
+            if key in changed_param:
+                val = int(changed_param[key])
+                self.config_temp['execution'][key] = val
+
+            key = 'exec_numMotes'
+            if key in changed_param:
+                val = int(changed_param[key])
+                self.config_temp['settings']['combination'][key] = [val]
+
+            key = 'log_directory_name'
+            if key in changed_param:
+                val = "trickle {}".format(changed_param[key])
+                self.config_temp[key] = val
+        
+        self._raw_data = json.dumps(self.config_temp)
+
         # store config
-        self.config   = DotableDict(json.loads(self._raw_data))
+        self.config   = DotableDict(self.config_temp)
 
         # decide a directory name for log files
         if SimConfig._log_directory_name is None:
@@ -142,23 +176,29 @@ class SimConfig(dict):
             )
             index = len(subfolders) + 1
             log_directory_name = u'_'.join((method, str(index)))
+            exp_ = str(self.log_directory_name).split(" ")[-1]
 
-            if "exp1" in self.log_directory_name:
+            log_directory_name += '_exp{}'.format(exp_)
+
+            if "1" == exp_:
                 ql_learning_rate = self.config['settings']['regular']['ql_learning_rate']
                 ql_discount_rate = self.config['settings']['regular']['ql_discount_rate']
                 ql_epsilon = self.config['settings']['regular']['ql_epsilon']
                 log_directory_name = u'{}_lr{}-dr{}-ep{}'.format(log_directory_name, ql_learning_rate, ql_discount_rate, ql_epsilon)
-            elif "exp2" in self.log_directory_name:
+            elif "2" == exp_:
                 use_adaptive = self.config['settings']['regular']['ql_adaptive_epsilon']
                 adaptive_epsilon = "adaptive" if use_adaptive else "static"
                 ql_learning_rate = self.config['settings']['regular']['ql_learning_rate']
                 ql_discount_rate = self.config['settings']['regular']['ql_discount_rate']
                 epsilon_var = self.config['settings']['regular']['ql_adaptive_decay_rate'] if use_adaptive else self.config['settings']['regular']['ql_epsilon']
                 log_directory_name = u'{}_lr{}-dr{}-{}{}'.format(log_directory_name, ql_learning_rate, ql_discount_rate, adaptive_epsilon, epsilon_var)
-            elif "exp3" in self.log_directory_name:
+            elif "3" == exp_:
                 num_motes = self.config['settings']['combination']['exec_numMotes'][0]
                 imin = self.config['settings']['regular']['dio_interval_min_s']
                 log_directory_name = u'{}_n{}-i{}'.format(log_directory_name, num_motes, imin)
+            elif "eb" == exp_:
+                ei = self.config['settings']['regular']['eb_interval_s']
+                log_directory_name = u'{}_ei{}'.format(log_directory_name, ei)
 
         elif self.log_directory_name == u'startTime':
             # determine log_directory_name

@@ -46,6 +46,7 @@ DROPREASON_RANK_ERROR = u'rank_error'
 # === q-trickle
 LOG_TRICKLE = {u'type': u'log.trickle', u'keys': [u'_mote_id', u'result']}
 LOG_LAST_SLOTFRAME = {u'type': u'log.last_slotframe', u'keys': [u'_mote_id', u'result']}
+LOG_PER_SLOTFRAME = {u'type': u'log.per_slotframe', u'keys': [u'_mote_id', u'result']}
 
 # === app
 LOG_APP_TX = {u'type': u'app.tx',

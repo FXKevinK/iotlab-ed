@@ -21,6 +21,7 @@
         "ieee802154e.h": "c",
         "icmpv6rpl.h": "c",
         "sixtop.h": "c",
-        "opentimers.h": "c"
+        "opentimers.h": "c",
+        "neighbors.h": "c"
     }
 }

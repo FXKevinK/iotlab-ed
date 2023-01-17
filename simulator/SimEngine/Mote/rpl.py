@@ -80,6 +80,7 @@ class Rpl(object):
         self.count_dio = 0
         self.count_dao = 0
         self.DIOtransmit_actual = 0
+        self.first_joined = False
 
     # ======================== public ==========================================
 
@@ -154,7 +155,7 @@ class Rpl(object):
                 u'result': result,
             }
         )
-
+    
     def last_slotframe_trigger(self):
         tag_ = str(self.mote.id) + u'ambr'
         if self.engine.is_scheduled(tag_):
@@ -454,6 +455,15 @@ class Rpl(object):
         self.start_or_reset_trickle_timer(5)
         self.stop_dis_timer()
 
+        if not self.first_joined:
+            self.first_joined = True
+            self.log(
+                SimEngine.SimLog.LOG_RPL_JOINED,
+                {
+                    u'_mote_id': self.mote.id,
+                }
+            )
+
     # === DAO
 
     def _schedule_sendDAO(self, firstDAO=False):
@@ -478,13 +488,6 @@ class Rpl(object):
 
         if firstDAO:
             asnDiff = 1
-
-            self.log(
-                SimEngine.SimLog.LOG_RPL_JOINED,
-                {
-                    u'_mote_id': self.mote.id,
-                }
-            )
         else:
             asnDiff = int(math.ceil(
                 old_div(random.uniform(

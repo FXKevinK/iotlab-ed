@@ -215,6 +215,21 @@ def kpis_all(inputfile):
 
                 allstats[run_id][mote_id][key] = logline['result'][key]
 
+        elif logline['_type'] == SimLog.LOG_PER_SLOTFRAME['type']:
+            # shorthands
+            mote_id = logline['_mote_id']
+
+            # only log non-dagRoot
+            if mote_id == DAGROOT_ID:
+                continue
+            
+            for key in logline['result'].keys():
+                new_key = f'per_slotframe_{key}'
+                if new_key not in allstats[run_id][mote_id]:
+                    allstats[run_id][mote_id][new_key] = []
+
+                allstats[run_id][mote_id][new_key].append(logline['result'][key])
+
         elif logline['_type'] == SimLog.LOG_TRICKLE['type']:
             # trickle result
 
@@ -322,6 +337,7 @@ def kpis_all(inputfile):
         current_consumed = []
         lifetimes = []
         all_last_slotframe = {}
+        per_last_slotframe = {}
 
         trickle_stats = {}
 
@@ -557,10 +573,9 @@ def main():
     cliparams = parseCliParams()
 
     measured_metrics = {
-        'joining-time': 'mean',
-        'current-consumed': 'mean',
+        'joining-time': 'median',
+        'current-consumed': 'median',
         'last_all_ops': 'sum',
-        'last_curr_mbr': 'mean'
     }
 
     base_path = 'simData'
@@ -674,50 +689,45 @@ def main():
     df2 = df2.drop(['run_id'], axis=1, errors='ignore')
     df2.loc[:, df2.columns != 'method'] = df2.loc[:, df2.columns != 'method'].astype('float')
     
-    # temp
-    if num_runs > 1:
-        funcs = [np.mean, np.std]
-    else:
-        funcs = [np.mean]
-
+    funcs = [np.mean, np.std]
     df2 = df2.groupby('method').aggregate(funcs)
-
     df2.columns = df2.columns.map('-'.join)
     df2 = df2.reset_index()
+    df2 = df2.fillna(0)
 
-    # temp for exp3
-    values = df2['method'].values
-    new_values = []
-    sort_temp = []
-    parameter = []
-    for v in values:
-        # ac_2_n10-i5
-        m = v.split("_")[0]
-        m = str(m).upper()
+    # # temp for exp3
+    # values = df2['method'].values
+    # new_values = []
+    # sort_temp = []
+    # parameter = []
+    # for v in values:
+    #     # ac_2_n10-i5
+    #     m = v.split("_")[0]
+    #     m = str(m).upper()
 
-        n = v.split("_n")[1].split("-")[0]
-        i = v.split("-i")[1]
+    #     n = v.split("_n")[1].split("-")[0]
+    #     i = v.split("-i")[1]
 
-        new_values.append(m)
-        parameter.append(f"({n}, {i})")
+    #     new_values.append(m)
+    #     parameter.append(f"({n}, {i})")
 
-        if m == 'ORI':
-            id_ = 1
-        elif m == 'RIATA':
-            id_ = 2
-        elif m == 'AC':
-            id_ = 3
-        else:
-            id_ = 4
+    #     if m == 'ORI':
+    #         id_ = 1
+    #     elif m == 'RIATA':
+    #         id_ = 2
+    #     elif m == 'AC':
+    #         id_ = 3
+    #     else:
+    #         id_ = 4
 
-        sort_temp.append(f"{n}-{i}-{id_}")
+    #     sort_temp.append(f"{n}-{i}-{id_}")
 
-    df2['method'] = new_values
-    df2['parameter'] = parameter
+    # df2['method'] = new_values
+    # df2['parameter'] = parameter
 
-    df2['sort_temp'] = sort_temp
-    df2.sort_values(by='sort_temp', inplace=True, ignore_index=True)
-    df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
+    # df2['sort_temp'] = sort_temp
+    # df2.sort_values(by='sort_temp', inplace=True, ignore_index=True)
+    # df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
 
     df2.to_csv(path2, index=False)
 

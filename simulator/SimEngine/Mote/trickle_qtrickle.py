@@ -321,11 +321,11 @@ class QTrickle(object):
         result = {
             'state': self.Nstates,
             'm': self.m,
-            'pfree': self.pfree,
-            'poccupancy': self.poccupancy,
             'DIOtransmit': self.DIOtransmit,
             'DIOsurpress': self.DIOsurpress,
             'Nreset': self.Nreset,
+            'pfree': self.pfree,
+            'poccupancy': self.poccupancy,
             'preset': self.preset,
             'pstable': self.pstable,
             'counter': self.counter,

@@ -880,8 +880,6 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
         if os.path.exists(filepath_topo_len):
             topology = 'saved'
 
-        print("LOG", "topology", topology)
-
         if topology == 'grid':
             loop_n = int(np.sqrt(nodes_len))
             if loop_n**2 == nodes_len:
