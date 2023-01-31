@@ -113,9 +113,9 @@ bool opentrickletimers_initialize(opentimers_id_t id, opentimers_cbt cb)
     opentrickletimers_vars.DIOtransmit = 0;
     opentrickletimers_vars.DIOtransmit_dis = 0;
     opentrickletimers_vars.listen_period = 0;
-    opentrickletimers_vars.poccupancy = 1;
+    opentrickletimers_vars.pbusy = 1;
     opentrickletimers_vars.preset = 1;
-    opentrickletimers_vars.pfree = 1 - opentrickletimers_vars.poccupancy;
+    opentrickletimers_vars.pfree = 1 - opentrickletimers_vars.pbusy;
     opentrickletimers_vars.pstable = 1 - opentrickletimers_vars.preset;
 
     opentrickletimers_vars.prev_ops_ambr = EMPTY_16;
@@ -611,11 +611,11 @@ void opentrickletimers_i_callback(opentimers_id_t id)
         }
 
         occ = (float)opentrickletimers_vars.used / opentrickletimers_vars.Ncells;
-        opentrickletimers_vars.poccupancy = occ;
-        if(opentrickletimers_vars.poccupancy < 0 || opentrickletimers_vars.poccupancy > 1){
+        opentrickletimers_vars.pbusy = occ;
+        if(opentrickletimers_vars.pbusy < 0 || opentrickletimers_vars.pbusy > 1){
             LOG_CRITICAL(COMPONENT_OPENTRICKLETIMERS, ERR_UNDER_OVER_VALUE,
                         (errorparameter_t)1,
-                        (errorparameter_t)opentrickletimers_vars.poccupancy);
+                        (errorparameter_t)opentrickletimers_vars.pbusy);
         }
         opentrickletimers_vars.pfree = 1.0 - occ;
     }
@@ -672,7 +672,7 @@ void opentrickletimers_log_result(void)
     opentrickletimers_debug.used = opentrickletimers_vars.used;
     opentrickletimers_debug.Ncells = opentrickletimers_vars.Ncells;
     opentrickletimers_debug.pfree = (uint16_t)(opentrickletimers_vars.pfree * 10000);
-    opentrickletimers_debug.poccupancy = (uint16_t)(opentrickletimers_vars.pfree * 10000);
+    opentrickletimers_debug.pbusy = (uint16_t)(opentrickletimers_vars.pfree * 10000);
     opentrickletimers_debug.preset = (uint16_t)(opentrickletimers_vars.preset * 10000);
     opentrickletimers_debug.pstable = (uint16_t)(opentrickletimers_vars.pstable * 10000);
     opentrickletimers_debug.ptransmit = (uint16_t)(opentrickletimers_vars.ptransmit * 10000);

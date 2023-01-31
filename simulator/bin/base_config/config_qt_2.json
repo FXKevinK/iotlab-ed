@@ -7,7 +7,7 @@
     "settings": {
         "combination": {
             "exec_numMotes": [
-                10
+                50
             ]
         },
         "regular": {
@@ -44,28 +44,30 @@
             "conn_random_init_min_pdr": 0.5,
             "conn_random_init_min_neighbors": 3,
             "phy_numChans": 16,
-            "exec_randomSeed": "run_id",
+            "exec_randomSeed": "random",
             "motes_eui64": [],
             "conn_topology": "grid",
             "conn_grid_max_distance": 0.1,
             "dio_interval_doublings": 8,
-            "exec_minutesPerRun": 60,
+            "exec_minutesPerRun": 30,
             "app_pkPeriod": 1,
             "app_pkLength": 20,
             "k_max": 10,
-            "dio_interval_min_s": 5,
-            "eb_interval_s": 2,
+            "dio_interval_min_s": 1,
+            "eb_interval_s": 4,
             "trickle_method": "qt",
-            "ql_learning_rate": 0.2,
-            "ql_discount_rate": 0.8,
-            "ql_epsilon": 0.2,
-            "ql_adaptive_epsilon": true,
-            "ql_adaptive_decay_rate": 0.2,
+            "ql_learning_rate": 0.5,
+            "ql_discount_rate": 0.2,
+            "ql_epsilon": 0.5,
+            "algo_adaptive_epsilon": true,
+            "ql_adaptive_decay_rate": 0.01,
             "ql_adaptive_max_epsilon": 1,
-            "ql_adaptive_min_epsilon": 0.01
+            "ql_adaptive_min_epsilon": 0.01,
+            "algo_auto_eb": 3,
+            "trickle_use_ql": true
         }
     },
     "logging": "all",
-    "log_directory_name": "trickle exp3",
+    "log_directory_name": "trickle",
     "post": []
 }

@@ -53,7 +53,9 @@ def init_mote():
         'join_asn': None,
         'join_time_m': None,
         'sync_asn': None,
-        'sync_time_s': None,
+        'sync_time_m': None,
+        'rpljoin_asn': None,
+        'rpljoin_time_m': None,
         'charge_asn': None,
         'upstream_pkts': {},
         'latencies': [],
@@ -77,6 +79,7 @@ def kpis_all(inputfile):
 
     trickle_keys = []
     last_slotframe_keys = []
+    all_joined = {}
 
     time_ms = ['t', 't_start', 't_end', 'interval', 'listen_period']
 
@@ -114,9 +117,31 @@ def kpis_all(inputfile):
             if mote_id == DAGROOT_ID:
                 continue
 
+            if allstats[run_id][mote_id]['sync_time_m'] is not None:
+                continue
+            
             allstats[run_id][mote_id]['sync_asn'] = asn
-            allstats[run_id][mote_id]['sync_time_s'] = asn * \
-                file_settings['tsch_slotDuration']
+            allstats[run_id][mote_id]['sync_time_m'] = asn * \
+                file_settings['tsch_slotDuration'] / 60
+
+        elif logline['_type'] == SimLog.LOG_SECJOIN_JOINED['type']:
+            # joined
+
+            # shorthands
+            mote_id = logline['_mote_id']
+
+            # only log non-dagRoot join times
+            if mote_id == DAGROOT_ID:
+                continue
+
+            if allstats[run_id][mote_id]['join_time_m'] is not None:
+                continue
+
+            # populate
+            assert allstats[run_id][mote_id]['sync_asn'] is not None
+            allstats[run_id][mote_id]['join_asn'] = asn
+            allstats[run_id][mote_id]['join_time_m'] = asn * \
+                file_settings['tsch_slotDuration'] / 60
 
         elif logline['_type'] == SimLog.LOG_MC_TR['type']:
             # only log non-dagRoot sync times
@@ -129,21 +154,52 @@ def kpis_all(inputfile):
             packet_type = logline['packet_type']
             if packet_type not in allstats[run_id][mote_id]['mc_tr']:
                 allstats[run_id][mote_id]['mc_tr'][packet_type] = 0
-            
+
             allstats[run_id][mote_id]['mc_tr'][packet_type] += 1
+
+        elif logline['_type'] == SimLog.LOG_ALL_JOINED['type']:
+            all_joined['all_joined'] = logline['result']
+
+        elif logline['_type'] == SimLog.LOG_SIMULATOR_END['type']:
+            all_joined['end_slotframe'] = logline['result']
+
+        elif logline['_type'] == SimLog.LOG_PACKET_DROPPED['type']:
+            # only log non-dagRoot sync times
+            if mote_id == DAGROOT_ID:
+                continue
+
+            packet = logline['packet']
+
+            try:
+                if not packet[u'app'][u'is_trickle']:
+                    packet = None
+            except:
+                packet = None
+
+            if packet is None:
+                continue
+
+            if 'dio_drop' not in allstats[run_id][mote_id]:
+                allstats[run_id][mote_id]['dio_drop'] = {}
+
+            reason = logline['reason']
+            if reason not in allstats[run_id][mote_id]['dio_drop']:
+                allstats[run_id][mote_id]['dio_drop'][reason] = 0
+
+            allstats[run_id][mote_id]['dio_drop'][reason] += 1
 
         elif logline['_type'] == SimLog.LOG_TRICKLE_RESET['type']:
             # only log non-dagRoot sync times
             if mote_id == DAGROOT_ID:
                 continue
-            
+
             if 'tr_rst' not in allstats[run_id][mote_id]:
                 allstats[run_id][mote_id]['tr_rst'] = {}
 
             packet_type = logline['reset_type']
             if packet_type not in allstats[run_id][mote_id]['tr_rst']:
                 allstats[run_id][mote_id]['tr_rst'][packet_type] = 0
-            
+
             allstats[run_id][mote_id]['tr_rst'][packet_type] += 1
 
         elif logline['_type'] == SimLog.LOG_RPL_JOINED['type']:
@@ -156,10 +212,23 @@ def kpis_all(inputfile):
             if mote_id == DAGROOT_ID:
                 continue
 
+            if allstats[run_id][mote_id]['rpljoin_time_m'] is not None:
+                continue
+
             # populate
             assert allstats[run_id][mote_id]['sync_asn'] is not None
-            allstats[run_id][mote_id]['join_asn'] = asn
-            allstats[run_id][mote_id]['join_time_m'] = asn * file_settings['tsch_slotDuration'] / 60
+            allstats[run_id][mote_id]['rpljoin_asn'] = asn
+            allstats[run_id][mote_id]['rpljoin_time_m'] = asn * \
+                file_settings['tsch_slotDuration'] / 60
+
+            if 'rpljoin_dio_type' not in all_joined:
+                all_joined['rpljoin_dio_type'] = {}
+            
+            k = logline['dio_type']
+            if k not in all_joined['rpljoin_dio_type']:
+                all_joined['rpljoin_dio_type'][k] = 0
+
+            all_joined['rpljoin_dio_type'][k] += 1
 
         elif logline['_type'] == SimLog.LOG_APP_TX['type']:
             # packet transmission
@@ -208,7 +277,7 @@ def kpis_all(inputfile):
             # only log non-dagRoot
             if mote_id == DAGROOT_ID:
                 continue
-            
+
             for key in logline['result'].keys():
                 if key not in last_slotframe_keys:
                     last_slotframe_keys.append(key)
@@ -222,13 +291,14 @@ def kpis_all(inputfile):
             # only log non-dagRoot
             if mote_id == DAGROOT_ID:
                 continue
-            
+
             for key in logline['result'].keys():
                 new_key = f'per_slotframe_{key}'
                 if new_key not in allstats[run_id][mote_id]:
                     allstats[run_id][mote_id][new_key] = []
 
-                allstats[run_id][mote_id][new_key].append(logline['result'][key])
+                allstats[run_id][mote_id][new_key].append(
+                    logline['result'][key])
 
         elif logline['_type'] == SimLog.LOG_TRICKLE['type']:
             # trickle result
@@ -293,7 +363,8 @@ def kpis_all(inputfile):
                         # 1 mAh = 1 * 3600 seconds
                         # 1 hour = 3600 seconds
                         # 1 mAs = mC
-                        time = float((motestats['charge_asn']-motestats['sync_asn']) * file_settings['tsch_slotDuration'])
+                        time = float(
+                            (motestats['charge_asn']-motestats['sync_asn']) * file_settings['tsch_slotDuration'])
                         motestats['avg_current_uA'] = motestats['charge']/time
                         assert motestats['avg_current_uA'] > 0
                         motestats['lifetime_AA_years'] = (
@@ -332,15 +403,21 @@ def kpis_all(inputfile):
         app_packets_sent = 0
         app_packets_received = 0
         app_packets_lost = 0
-        joining_times = []
+        joining_times = {
+            'syncjoin': [],
+            'secjoin': [],
+            'sync_sec_diff': [],
+            'rpljoin': [],
+            'sec_rpl_diff': []
+        }
         us_latencies = []
         current_consumed = []
         lifetimes = []
         all_last_slotframe = {}
-        per_last_slotframe = {}
 
         trickle_stats = {}
 
+        dio_drop = {}
         mc_tr = {}
         tr_rst = {}
 
@@ -350,13 +427,19 @@ def kpis_all(inputfile):
             if mote_id == DAGROOT_ID:
                 continue
 
-            if 'mc_tr'in motestats:
+            if 'mc_tr' in motestats:
                 for key in motestats['mc_tr'].keys():
                     if key not in mc_tr:
                         mc_tr[key] = 0
                     mc_tr[key] += motestats['mc_tr'][key]
 
-            if 'tr_rst'in motestats:
+            if 'dio_drop' in motestats:
+                for key in motestats['dio_drop'].keys():
+                    if key not in dio_drop:
+                        dio_drop[key] = 0
+                    dio_drop[key] += motestats['dio_drop'][key]
+
+            if 'tr_rst' in motestats:
                 for key in motestats['tr_rst'].keys():
                     if key not in tr_rst:
                         tr_rst[key] = 0
@@ -369,9 +452,20 @@ def kpis_all(inputfile):
             app_packets_lost += motestats['upstream_num_lost']
 
             # joining times
-
+            if motestats['sync_time_m'] is not None:
+                joining_times['syncjoin'].append(motestats['sync_time_m'])
             if motestats['join_time_m'] is not None:
-                joining_times.append(motestats['join_time_m'])
+                joining_times['secjoin'].append(motestats['join_time_m'])
+            if motestats['rpljoin_time_m'] is not None:
+                joining_times['rpljoin'].append(motestats['rpljoin_time_m'])
+            
+            if motestats['sync_time_m'] is not None and motestats['join_time_m'] is not None:
+                diff = motestats['join_time_m'] - motestats['sync_time_m']
+                joining_times['sync_sec_diff'].append(diff)
+
+            if motestats['join_time_m'] is not None and motestats['rpljoin_time_m'] is not None:
+                diff = motestats['rpljoin_time_m'] - motestats['join_time_m']
+                joining_times['sec_rpl_diff'].append(diff)
 
             # trickle timer
 
@@ -415,51 +509,67 @@ def kpis_all(inputfile):
 
         allstats[run_id]['global-stats'] = {}
 
+        new_key = "global-stats-engine"
+        allstats[run_id]['global-stats'][new_key] = all_joined
+
         val = 1 - app_packets_lost / app_packets_sent if app_packets_sent > 0 else None
         new_key = "e2e-pdr"
         allstats[run_id]['global-stats'][new_key] = val
 
         val = us_latencies
         new_key = "e2e-latency"
-        allstats[run_id]['global-stats'][new_key] = generate_stats(new_key, val)
+        allstats[run_id]['global-stats'][new_key] = generate_stats(
+            new_key, val)
 
-        val = current_consumed # 'unit': 'mAs / mC'
+        val = current_consumed  # 'unit': 'mAs / mC'
         new_key = "current-consumed"
-        allstats[run_id]['global-stats'][new_key] = generate_stats(new_key, val)
+        allstats[run_id]['global-stats'][new_key] = generate_stats(
+            new_key, val)
 
-        val = joining_times # 'unit': 'minutes'
-        new_key = "joining-time"
-        allstats[run_id]['global-stats'][new_key] = generate_stats(new_key, val)
+        for k in joining_times.keys():
+            val = joining_times[k]  # 'unit': 'minutes'
+            new_key = f"{k}_time_m"
+            allstats[run_id]['global-stats'][new_key] = generate_stats(
+                new_key, val)
 
+        allstats[run_id]['global-stats']['global_dio_drop'] = dio_drop
         allstats[run_id]['global-stats']['global_mc_tr'] = mc_tr
         allstats[run_id]['global-stats']['global_tr_rst'] = tr_rst
+        allstats[run_id]['global-stats']['per_slotframe_run'] = int(file_settings['exec_numSlotframesPerRun'] / 100)
 
         for key in trickle_keys:
             val = trickle_stats[key]
             new_key = "trickle_{}".format(key)
-            stats = generate_stats(new_key, val)
+            if '_class' in key:
+                stats = {}
+                for k2 in val:
+                    if k2 not in stats:
+                        stats[k2] = 0
+                    stats[k2] += 1
+            else:
+                stats = generate_stats(new_key, val)
             allstats[run_id]['global-stats'][new_key] = stats
 
         for key in all_last_slotframe.keys():
-            if key == 'q_table':
+            if key == 'ql_table':
                 continue
 
             val = all_last_slotframe[key]
             new_key = "last_{}".format(key)
-            allstats[run_id]['global-stats'][new_key] = generate_stats(new_key, val)
+            allstats[run_id]['global-stats'][new_key] = generate_stats(
+                new_key, val)
 
     # === remove unnecessary stats
     remove_list = [
         'latencies',
-        'sync_asn',
         'charge_asn',
         'charge',
-        'join_asn',
         'upstream_pkts',
         'hops',
+        'sync_asn',
         'join_asn',
+        'rpljoin_asn',
         'lifetime_AA_years',
-        'sync_time_s',
         'upstream_num_lost',
         'upstream_num_rx',
         'upstream_num_tx'
@@ -473,13 +583,14 @@ def kpis_all(inputfile):
 
             # for key in all_last_slotframe.keys():
             #     if key in motestats:
-            #         if key == 'q_table':
+            #         if key == 'ql_table':
             #             continue
-            #         del motestats[key]            
+            #         del motestats[key]
 
     return allstats
 
 # =========================== main ============================================
+
 
 def generate_stats(new_key, val, attach_value=False):
     val = [float(x) for x in val if x is not None]
@@ -535,7 +646,8 @@ def generate_stats(new_key, val, attach_value=False):
         ),
     }
 
-    if attach_value: stats['values'] = val
+    if attach_value:
+        stats['values'] = val
     return [stats]
 
 
@@ -564,23 +676,77 @@ def parseCliParams():
         default='',
         help='additional path',
     )
+    parser.add_argument(
+        '--test',
+        dest='test',
+        action='store',
+        default='',
+        help='is_test',
+    )
 
     cliparams = parser.parse_args()
     return cliparams.__dict__
 
 
+def exp3_process(df_, measured_metrics, base_path):
+    c_ = df_.columns.to_list()
+    c_.remove('parameter')
+    c_.remove('method')
+
+    df_t = df_.pivot(index='parameter', columns='method', values=c_)
+    df_t = df_t.reset_index()
+    df_t.columns = df_t.columns.map('-'.join)
+
+    df_t['n'] = df_t['parameter-'].str.replace(
+        "(", "").str.replace(")", "").str.split(", ").str[0].astype(int)
+    df_t['i'] = df_t['parameter-'].str.replace(
+        "(", "").str.replace(")", "").str.split(", ").str[1].astype(int)
+    df_t.sort_values(by=['n', 'i'], inplace=True)
+
+    for c in df_t.columns:
+        method = c.split("-")[-1]
+        if len(method) > 1:
+            new_col_name = method + "-" + c.replace(f"-{method}", "")
+            df_t.rename(columns={c: new_col_name}, inplace=True)
+
+    target_ = list(measured_metrics.keys())
+    for col in target_:
+        temp_dic = {}
+        for i in df_t.columns[df_t.columns.str.contains(col)]:
+            if 'ORI' in i:
+                id_ = 10
+            elif 'RIATA' in i:
+                id_ = 20
+            elif 'AC' in i:
+                id_ = 30
+            else:
+                id_ = 40
+            if "-std" in i:
+                id_ += 1
+            temp_dic[i] = id_
+
+        sorted_cols = list(
+            dict(sorted(temp_dic.items(), key=lambda item: item[1])).keys())
+        cols = ["parameter-"] + sorted_cols
+        dftt = df_t[cols]
+
+        sub_keys = measured_metrics[col]
+        for sub_key in sub_keys:
+            new_key = f'{col}-{sub_key}'
+            path = os.path.join(base_path, f"{new_key}.csv")
+            dftt.to_csv(path, index=False, sep ='\t')
+
+
 def main():
     cliparams = parseCliParams()
 
-    measured_metrics = {
-        'joining-time': 'median',
-        'current-consumed': 'median',
-        'last_all_ops': 'sum',
-    }
+    with open('measured_metrics.json', 'r') as f:
+        measured_metrics = json.load(f)
 
     base_path = 'simData'
     add_path = str(cliparams['path'])
-    if add_path: base_path += f'/{add_path}'
+    if add_path:
+        base_path += f'/{add_path}'
     print(base_path)
 
     subfolders = list(
@@ -600,7 +766,7 @@ def main():
 
         for infile in glob.glob(os.path.join(subfolder, '*.dat')):
             print('\ngenerating KPIs for {0}'.format(infile))
-        
+
             # gather the kpis
             kpis = kpis_all(infile)
 
@@ -609,10 +775,11 @@ def main():
             with open(outfile, 'w') as f:
                 f.write(json.dumps(kpis, indent=4))
             print('KPIs saved in {0}'.format(outfile))
-        
+
     compare_ = str(cliparams['compare'])
 
-    if not compare_: return
+    if not compare_:
+        return
 
     num_runs = None
     num_nodes = None
@@ -620,7 +787,7 @@ def main():
     for subfolder in subfolders:
         if not os.path.isdir(subfolder):
             continue
-        
+
         mthd = subfolder.split('/')[-1]
         for infile in glob.glob(os.path.join(subfolder, '*.dat.json')):
             with open(infile, 'r') as f:
@@ -633,103 +800,121 @@ def main():
                     for mote_id in data[run_id].keys():
                         if mote_id == 'global-stats':
                             continue
-                        jd = data[run_id][mote_id]['join_time_m']
+                        jd = data[run_id][mote_id]['rpljoin_time_m']
                         if jd:
                             num_nodes += 1
 
-                    result['dead_nodes'] = len(data[run_id].keys()) - 1 - num_nodes
-                    result['alive_nodes'] = num_nodes
-
                     stats = data[run_id]['global-stats']
                     for key in measured_metrics.keys():
-                        sub_key = measured_metrics[key]
-                        new_key = f'{key}-{sub_key}'
-                        if key == 'e2e-pdr':
-                            value = stats[key]
-                        else:
-                            value = stats[key][0][sub_key]
-                        result[new_key] = value
+                        sub_keys = measured_metrics[key]
+                        for sub_key in sub_keys:
+                            new_key = f'{key}-{sub_key}'
+                            if key == 'e2e-pdr':
+                                value = stats[key]
+                            else:
+                                value = stats[key][0][sub_key]
+                            result[new_key] = value
 
-                    # # additional pfree
-                    # key = 'trickle_used'
-                    # sub_key = 'sum'
-                    # value1 = stats[key][0][sub_key]
+                    result['dead_nodes'] = len(
+                        data[run_id].keys()) - 1 - num_nodes
+                    result['alive_nodes'] = num_nodes
 
-                    # key = 'trickle_Ncells'
-                    # sub_key = 'sum'
-                    # value2 = stats[key][0][sub_key]
-
-                    # new_key = 'last_new_pree-mean'
-                    # result[new_key] = value1 / value2
-
-                    # # additional mbr
-                    # key = 'last_all_ops'
-                    # sub_key = 'max'
-                    # value = stats[key][0][sub_key] / 3565
-                    # new_key = 'last_i-sum'
-                    # result[new_key] = value
-
-                    # for key in measured_metrics.keys():
-                    #     subkey = measured_metrics[key]
-                    #     if subkey == 'sum':
-                    #         new_key = f'{key}-{sub_key}'
-                    #         result[new_key] /= num_nodes
-
-                    
                     if df_ is None:
                         df_ = pd.DataFrame(columns=result.keys())
-                    df_ = df_.append(result, ignore_index = True)
-    
-    path_ = os.path.join(base_path, 'comparison_all.csv')
-    df_.sort_values(by='method', inplace=True, ignore_index=True)
-    df_.to_csv(path_, index=False)
+                    df_ = df_.append(result, ignore_index=True)
 
-    path2 = os.path.join(base_path, 'comparison_merged.csv')
-    df2 = df_.copy()
-    df2 = df2.drop(['run_id'], axis=1, errors='ignore')
-    df2.loc[:, df2.columns != 'method'] = df2.loc[:, df2.columns != 'method'].astype('float')
-    
-    funcs = [np.mean, np.std]
-    df2 = df2.groupby('method').aggregate(funcs)
-    df2.columns = df2.columns.map('-'.join)
-    df2 = df2.reset_index()
-    df2 = df2.fillna(0)
+    if not df_.empty:
+        path_ = os.path.join(base_path, 'comparison_all.csv')
+        df_.sort_values(by='method', inplace=True, ignore_index=True)
+        df_.to_csv(path_, index=False, sep ='\t')
 
-    # # temp for exp3
-    # values = df2['method'].values
-    # new_values = []
-    # sort_temp = []
-    # parameter = []
-    # for v in values:
-    #     # ac_2_n10-i5
-    #     m = v.split("_")[0]
-    #     m = str(m).upper()
+        path2 = os.path.join(base_path, 'comparison_merged.csv')
+        df2 = df_.copy()
+        df2 = df2.drop(['run_id'], axis=1, errors='ignore')
+        df2.loc[:, df2.columns != 'method'] = df2.loc[:,
+                                                      df2.columns != 'method'].astype('float')
 
-    #     n = v.split("_n")[1].split("-")[0]
-    #     i = v.split("-i")[1]
+        base_func = [np.mean]
+        funcs = base_func if num_runs == 1 else base_func + [np.std]
 
-    #     new_values.append(m)
-    #     parameter.append(f"({n}, {i})")
+        df2 = df2.groupby('method').aggregate(funcs)
+        df2.columns = df2.columns.map('-'.join)
+        df2 = df2.reset_index()
+        df2 = df2.fillna(0)
 
-    #     if m == 'ORI':
-    #         id_ = 1
-    #     elif m == 'RIATA':
-    #         id_ = 2
-    #     elif m == 'AC':
-    #         id_ = 3
-    #     else:
-    #         id_ = 4
+        is_test = bool(cliparams.get('test', 0))
 
-    #     sort_temp.append(f"{n}-{i}-{id_}")
+        methods = df2['method'].values
+        if df2['method'].str.contains('exp1').sum():
+            new_values = []
+            for a in methods:
+                param = a.split('_')[-1].split('-')
+                for p in param:
+                    key = 'lr'
+                    if key in p:
+                        lr = p.replace(key, '')
+                    key = 'dr'
+                    if key in p:
+                        dr = p.replace(key, '')
+                name = f'({lr}, {dr})'
+                new_values.append(name)
+            df2['method'] = new_values
 
-    # df2['method'] = new_values
-    # df2['parameter'] = parameter
+        elif df2['method'].str.contains('exp2').sum():
+            new_values = []
+            for a in methods:
+                sp = a.split('_')
+                if 'ad1' in sp:
+                    sp.remove('ad1')
+                    ep_m = 'AD'
+                    ep_v = sp[-1].replace("epdecay", "")
+                else:
+                    sp.remove('ad0')
+                    ep_m = 'ST'
+                    ep_v = sp[-1].split('ep')[-1]
+                name = f'{ep_m} {ep_v}'
+                new_values.append(name)
+            df2['method'] = new_values
 
-    # df2['sort_temp'] = sort_temp
-    # df2.sort_values(by='sort_temp', inplace=True, ignore_index=True)
-    # df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
+        elif df2['method'].str.contains('exp3').sum() and not is_test:
+            new_values = []
+            sort_temp = []
+            parameter = []
+            for v in methods:
+                param = v.split('_')
+                for p in param:
+                    key = 'imin'
+                    if key in p:
+                        i = p.replace(key, '')
+                    key = 'motes'
+                    if key in p:
+                        n = p.replace(key, '')
 
-    df2.to_csv(path2, index=False)
+                m = str(param[0]).upper()
+                new_values.append(m)
+                parameter.append(f"({n}, {i})")
+
+                if m == 'ORI':
+                    id_ = 1
+                elif m == 'RIATA':
+                    id_ = 2
+                elif m == 'AC':
+                    id_ = 3
+                else:
+                    id_ = 4
+
+                sort_temp.append(f"{n}-{i}-{id_}")
+
+            df2['method'] = new_values
+            df2['parameter'] = parameter
+
+            df2['sort_temp'] = sort_temp
+            df2.sort_values(by='sort_temp', inplace=True, ignore_index=True)
+            df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
+
+            exp3_process(df2, measured_metrics, base_path)
+
+        df2.to_csv(path2, index=False, sep ='\t')
 
 
 if __name__ == '__main__':

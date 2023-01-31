@@ -82,21 +82,19 @@ class Tsch(object):
         # pending bit
         self.pending_bit_enabled = False
         self.args_for_next_pending_bit_task = None
-
-        self.is_dio_scheduled = False
-        self.is_dio_sent = False
-        self.is_dio_assigned = False
-
         self.trickle_method = self.settings.trickle_method or ""
         self.use_sw = True if self.trickle_method == "ac" else False
 
         self.slot_duration_s = self.settings.tsch_slotDuration
-        self.slotframe_duration_s = self.slot_duration_s * self.settings.tsch_slotframeLength
+        self.slotframe_duration_s = self.slot_duration_s * \
+            self.settings.tsch_slotframeLength
 
         self.i_eb_min_s = float(self.settings.eb_interval_s)
         self.eb_prob = self.slotframe_duration_s / self.i_eb_min_s
         self.first_per_slotframe = False
-        
+        self.first_joined = False
+        self.eb_used_prob = self.eb_prob
+
         if self.use_sw:
             self.i_eb_max_s = self.i_eb_min_s * 3
             self.sw_s = 0
@@ -114,6 +112,10 @@ class Tsch(object):
             slotframe_handle=0,
             length=self.settings.tsch_slotframeLength
         )
+
+        if not self.first_per_slotframe:
+            self.first_per_slotframe = True
+            self.per_slotframe_callback()
 
     # ======================== public ==========================================
 
@@ -283,6 +285,10 @@ class Tsch(object):
     def startSendingEBs(self):
         self.iAmSendingEBs = True
 
+        if not self.first_joined:
+            self.engine.add_joined()
+            self.first_joined = True
+
     def stopSendingEBs(self):
         self.iAmSendingEBs = True
 
@@ -356,7 +362,8 @@ class Tsch(object):
             cellOptions,
             neighbor,
             link_type,
-            self.mote
+            self.mote,
+            self.engine
         )
         slotframe.add(cell)
 
@@ -399,11 +406,33 @@ class Tsch(object):
                 return len(self.txQueue) - rindex - 1
         return None
 
+    def log_dio_process(self, pkt, code, is_trickle=False):
+        if pkt:
+            if 'type' in pkt:
+                if pkt[u'type'] == d.PKT_TYPE_DIO and pkt[u'mac'][u'dstMac'] == d.BROADCAST_ADDRESS:
+                    if (is_trickle and pkt[u'app'][u'is_trickle']) or not is_trickle:
+                        dio_id = pkt[u'app'][u'dio_id']
+                        self.mote.rpl.increase_dio_actual_sent(code, dio_id)
+
+                        # print(dio_id, code, self.engine.getAsn())
+                        # 2 3 1041
+                        # 2 31 1111
+                        # 2 32 1111
+                        # 2 4 1111
+                        # 2 5 1111
+                        # 2 6 1111
+                        # 2 7 1111
+                    
     def enqueue(self, packet, priority=False):
 
         assert packet[u'type'] != d.PKT_TYPE_EB
         assert u'srcMac' in packet[u'mac']
         assert u'dstMac' in packet[u'mac']
+
+        if getattr(self.settings, "algo_dis_prio", 0) in [1, 3]:
+            if packet[u'type'] == d.PKT_TYPE_DIO:
+                if packet[u'app'][u'dis_req']:
+                    priority = True
 
         goOn = True
 
@@ -488,6 +517,9 @@ class Tsch(object):
                 packet[u'mac'][u'priority'] = False
 
                 # DZAKY: DIO goes here (3)
+                pkt = packet
+                self.log_dio_process(pkt, 3)
+
                 # add to txQueue
                 self.txQueue += [packet]
 
@@ -507,7 +539,6 @@ class Tsch(object):
 
         # if "type" in packet:
         #     if packet[u'type'] == d.PKT_TYPE_DIO:
-        #         self.is_dio_scheduled = goOn
 
         return goOn
 
@@ -586,7 +617,31 @@ class Tsch(object):
                     break
             # if no packet is found, packet_to_send remains None
 
-        return packet_to_send
+        pkt = packet_to_send
+
+        if getattr(self.settings, "algo_auto_eb", 0) in [2, 3] and cell.is_minimal_cell() and pkt:
+            cur_asn = self.engine.getAsn()
+            asn_t_start = self.mote.rpl.trickle_timer.asn_t_start
+            asn_t_end = self.mote.rpl.trickle_timer.asn_t_end
+            if asn_t_start is not None and asn_t_end is not None and cur_asn is not None:
+                if asn_t_start <= cur_asn and cur_asn <= asn_t_end:
+                    if pkt[u'type'] != d.PKT_TYPE_DIO:
+                        if random.uniform(0, 1) < self.mote.rpl.trickle_timer.pbusy:
+                            pkt = None
+
+        if self.use_sw and cell.is_minimal_cell() and pkt:
+            cur_asn = self.engine.getAsn()
+            if cur_asn <= self.end_sw_asn:
+                if self.sw_tp < 2:
+                    self.sw_tp += 1
+                elif self.sw_tp >= 2:
+                    pkt = None
+                elif pkt[u'type'] == d.PKT_TYPE_DIS and pkt[u'net'][u'dstIp'] == d.IPV6_ALL_RPL_NODES_ADDRESS:
+                    self.sw_x = 100
+                    pkt = None
+
+        self.log_dio_process(pkt, 31)
+        return pkt
 
     def get_num_packet_in_tx_queue(self, dst_mac_addr=None):
         if dst_mac_addr is None:
@@ -599,6 +654,12 @@ class Tsch(object):
                     )
                 ]
             )
+
+    def get_queue_usage(self):
+        return len(self.txQueue) / self.txQueueSize
+
+    def get_queue_left(self):
+        return self.txQueueSize - len(self.txQueue)
 
     def remove_packets_in_tx_queue(self, type, dstMac=None):
         i = 0
@@ -647,6 +708,10 @@ class Tsch(object):
             }
         )
 
+        # DZAKY: DIO goes here (6)
+        pkt = self.pktToSend
+        self.log_dio_process(pkt, 6)
+        self.log_dio_process(pkt, 7, is_trickle=True)
         if self.pktToSend[u'mac'][u'dstMac'] == d.BROADCAST_ADDRESS:
             # I just sent a broadcast packet
 
@@ -656,10 +721,6 @@ class Tsch(object):
                 d.PKT_TYPE_DIS
             ]
             assert isACKed == False
-
-            # DZAKY: DIO goes here (6)
-            if self.pktToSend[u'type'] == d.PKT_TYPE_DIO:
-                self.mote.rpl.increase_dio_actual_sent()
 
             # EBs are never in txQueue, no need to remove.
             if self.pktToSend[u'type'] != d.PKT_TYPE_EB:
@@ -1032,6 +1093,9 @@ class Tsch(object):
             (u'backoff_remaining_delay' in packet_to_send)
         ):
             del packet_to_send[u'backoff_remaining_delay']
+
+        pkt = packet_to_send
+        self.log_dio_process(pkt, 32)
         return active_cell, packet_to_send
 
     def _schedule_next_active_slot(self):
@@ -1109,7 +1173,6 @@ class Tsch(object):
                 self._action_RX()
             else:
                 assert self.active_cell.is_tx_on()
-                send_pkt = True
 
                 # DZAKY: DIO goes here (4) check minimal cell packet
                 # if self.pktToSend[u'type'] in [
@@ -1122,44 +1185,19 @@ class Tsch(object):
                 # ]:
                 #     print(self.pktToSend[u'type'], self.active_cell.is_minimal_cell())
 
-                if self.trickle_method == 'qt' and self.active_cell.is_minimal_cell():
-                    cur_asn = self.engine.getAsn()
-                    asn_t_start = self.mote.rpl.trickle_timer.asn_t_start
-                    asn_t_end = self.mote.rpl.trickle_timer.asn_t_end
-                    if asn_t_start and asn_t_end and cur_asn:
-                        if asn_t_start <= cur_asn and cur_asn <= asn_t_end:
-                            if self.pktToSend[u'type'] != d.PKT_TYPE_DIO:
-                                if random.uniform(0, 1) <= self.mote.rpl.trickle_timer.poccupancy:
-                                    send_pkt = False
-                                    self.waitingFor = None
-                                    self.pktToSend = None
+                pkt = self.pktToSend
+                self.log_dio_process(pkt, 4)
 
-                if self.use_sw and self.active_cell.is_minimal_cell():
-                    cur_asn = self.engine.getAsn()
-                    if cur_asn <= self.end_sw_asn:
-                        if self.sw_tp < 2:
-                            self.sw_tp += 1
-                        elif self.sw_tp >= 2:
-                            send_pkt = False
-                            self.waitingFor = None
-                            self.pktToSend = None
-                        elif self.pktToSend[u'net'][u'dstIp'] == d.IPV6_ALL_RPL_NODES_ADDRESS:
-                            self.sw_x = 100
-                            send_pkt = False
-                            self.waitingFor = None
-                            self.pktToSend = None
-
-                if send_pkt:
-                    self._action_TX(
-                        pktToSend=self.pktToSend,
-                        channel=self._get_physical_channel(self.active_cell)
-                    )
-                    # update cell stats
-                    self.active_cell.increment_num_tx(self.pktToSend)
-                    if self.pktToSend[u'mac'][u'dstMac'] == self.clock.source:
-                        # we're going to send a frame to our time source; reset the
-                        # keep-alive timer
-                        self._reset_keep_alive_timer()
+                self._action_TX(
+                    pktToSend=self.pktToSend,
+                    channel=self._get_physical_channel(self.active_cell)
+                )
+                # update cell stats
+                self.active_cell.increment_num_tx(self.pktToSend)
+                if self.pktToSend[u'mac'][u'dstMac'] == self.clock.source:
+                    # we're going to send a frame to our time source; reset the
+                    # keep-alive timer
+                    self._reset_keep_alive_timer()
         else:
             # do nothing
             pass
@@ -1210,9 +1248,8 @@ class Tsch(object):
 
         # DZAKY: DIO goes here (5)
         # on next slotframe, where DIO is ready to send
-        # if "type" in pktToSend:
-        #     if pktToSend[u'type'] == d.PKT_TYPE_DIO:
-        #         self.is_dio_assigned = True
+        pkt = pktToSend
+        self.log_dio_process(pkt, 5)
 
         # send packet to the radio
         self.mote.radio.startTx(channel, pktToSend)
@@ -1241,10 +1278,23 @@ class Tsch(object):
         if self.mote.dagRoot:
             return
 
+        cell = self.get_minimal_cell()
+        all_ops = cell.all_ops if cell else 0
+
+        cur_asn = self.engine.getAsn()
+        slotframe_iteration = int(old_div(cur_asn, self.settings.tsch_slotframeLength)) + 1
+
         result = {
             'eb_prob': self.eb_used_prob,
             'nbr': len(self.neighbor_table),
+            'mbr': all_ops/slotframe_iteration,
         }
+
+        metric_to_measure = ['pbusy', 'pfree', 'ptransmit', 'preset', 'pstable' 'pfailed', 'psent', 'epsilon']
+        for k in metric_to_measure:
+            val = getattr(self.mote.rpl.trickle_timer, k, None)
+            result[k] = val
+
         if self.use_sw:
             result['sw_s'] = self.sw_s
         self.log(
@@ -1256,19 +1306,20 @@ class Tsch(object):
         )
         self.per_slotframe_trigger()
 
-
     def per_slotframe_trigger(self):
         tag_ = str(self.mote.id) + u'per_slotframe'
 
         if self.engine.is_scheduled(tag_):
             return
 
-        left_slotframe = 100
+        per_slotframe = int(self.settings.exec_numSlotframesPerRun / 100)
 
         cur_asn = self.engine.getAsn()
-        asn_end = cur_asn + (self.settings.tsch_slotframeLength * left_slotframe)
-        if asn_end == self.engine.getAsn(): asn_end = self.engine.getAsn() + 1
-            
+        asn_end = cur_asn + \
+            (self.settings.tsch_slotframeLength * per_slotframe)
+        if asn_end == self.engine.getAsn():
+            asn_end = self.engine.getAsn() + 1
+
         self.engine.scheduleAtAsn(
             asn=asn_end,
             cb=self.per_slotframe_callback,
@@ -1308,15 +1359,14 @@ class Tsch(object):
             self.calculate_eb_sw()
 
     def _decided_to_send_eb(self):
-        nbr = 1 + len(self.neighbor_table)
+        nbr = len(self.neighbor_table)
         self.eb_used_prob = self.eb_prob
 
-        if self.settings.trickle_method == 'qt':
-            self.eb_used_prob = self.eb_prob + min(1 - self.eb_prob, self.eb_prob / nbr)
-    
-        if not self.first_per_slotframe:
-            self.first_per_slotframe = True
-            self.per_slotframe_callback()
+        if getattr(self.settings, "algo_auto_eb", 0) in [1, 3]:
+            max_ = 1 - self.eb_prob
+            self.eb_used_prob = self.eb_prob + (max_ / pow(2, nbr))
+
+        assert 0 <= self.eb_used_prob <= 1
 
         # following the Bayesian broadcasting algorithm
         return (
@@ -1910,6 +1960,7 @@ class SlotFrame(object):
 
 
 class Cell(object):
+
     def __init__(
         self,
         slot_offset,
@@ -1917,7 +1968,8 @@ class Cell(object):
         options,
         mac_addr=None,
         link_type=d.LINKTYPE_NORMAL,
-        mote=None
+        mote=None,
+        engine=None
     ):
 
         # FIXME: is_advertising is not used effectively now
@@ -1933,6 +1985,7 @@ class Cell(object):
         self.link_type = link_type
         self.log = SimEngine.SimLog.SimLog().log
         self.mote = mote
+        self.engine = engine
 
         # back reference to slotframe; this will be set in SlotFrame.add()
         self.slotframe = None
@@ -1962,6 +2015,9 @@ class Cell(object):
 
     def increment_ops(self, packet=None, is_rcv=False):
         self.all_ops += 1
+
+        if self.is_minimal_cell():
+            self.engine.add_ops()
 
         if self.channel_offset == 0 and self.slot_offset == 0 and not self.mote.dagRoot:
             type_ = u'ACK' if not packet else packet[u'type']
@@ -2010,7 +2066,8 @@ class Cell(object):
         if (
             self.slot_offset == 0 and
             self.channel_offset == 0 and
-            d.CELLOPTION_SHARED in self.options
+            d.CELLOPTION_SHARED in self.options and
+            self.mac_addr is None
         ):
             return True
         else:

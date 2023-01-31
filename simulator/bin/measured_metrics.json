@@ -1,0 +1,8 @@
+{
+    "trickle_pfailed": ["mean"],
+    "trickle_pbusy": ["mean"],
+    "current-consumed": ["mean"],
+    "rpljoin_time_m": ["mean"],
+    "last_count_dio": ["sum"],
+    "last_failed_dio": ["sum"]
+}

@@ -55,7 +55,11 @@ class SimConfig(dict):
     _startTime          = None
     _log_directory_name = None
 
-    def __init__(self, configfile=None, configdata=None, changed_param=None):
+    def __init__(self, configfile=None, configdata=None, changed_param=None, map_param=None):
+
+        if changed_param and map_param:
+            self.changed_param = changed_param
+            self.map_param = {map_param[key]: str(key).replace('param_', "") for key in map_param}
 
         if SimConfig._startTime is None:
             # startTime needs to be initialized
@@ -77,16 +81,23 @@ class SimConfig(dict):
         else:
             raise Exception()
 
-        self.config_temp = json.loads(self._raw_data)
         if changed_param is not None and isinstance(changed_param, dict):
+            self.config_temp = json.loads(self._raw_data)
             check_regular_param = {
                 'exec_randomSeed': str,
                 'dio_interval_min_s': int,
                 'ql_learning_rate': float,
                 'ql_discount_rate': float,
                 'ql_epsilon': float,
-                'ql_adaptive_epsilon': bool,
+                'algo_adaptive_epsilon': int,
                 'ql_adaptive_decay_rate': float,
+                'algo_auto_eb': int,
+                'eb_interval_s': float,
+                'exec_minutesPerRun': int,
+                'algo_dis_prio': int,
+                'algo_use_ql': int,
+                'algo_auto_t': int,
+                'algo_auto_k': int
             }
             
             for key, func in check_regular_param.items():
@@ -109,10 +120,10 @@ class SimConfig(dict):
                 val = "trickle {}".format(changed_param[key])
                 self.config_temp[key] = val
         
-        self._raw_data = json.dumps(self.config_temp)
+            self._raw_data = json.dumps(self.config_temp)
 
         # store config
-        self.config   = DotableDict(self.config_temp)
+        self.config   = DotableDict(json.loads(self._raw_data))
 
         # decide a directory name for log files
         if SimConfig._log_directory_name is None:
@@ -176,29 +187,38 @@ class SimConfig(dict):
             )
             index = len(subfolders) + 1
             log_directory_name = u'_'.join((method, str(index)))
-            exp_ = str(self.log_directory_name).split(" ")[-1]
 
-            log_directory_name += '_exp{}'.format(exp_)
+            used_changed_param = self.changed_param.copy()
+            key = 'log_directory_name'
+            exp_ = self.changed_param[key]
+            log_directory_name += u'_{}{}'.format(self.map_param[key], exp_)
+            used_changed_param.pop(key, None)
 
             if "1" == exp_:
-                ql_learning_rate = self.config['settings']['regular']['ql_learning_rate']
-                ql_discount_rate = self.config['settings']['regular']['ql_discount_rate']
-                ql_epsilon = self.config['settings']['regular']['ql_epsilon']
-                log_directory_name = u'{}_lr{}-dr{}-ep{}'.format(log_directory_name, ql_learning_rate, ql_discount_rate, ql_epsilon)
-            elif "2" == exp_:
-                use_adaptive = self.config['settings']['regular']['ql_adaptive_epsilon']
+                use_adaptive = getattr(self.config['settings']['regular'], "algo_adaptive_epsilon", 0)
                 adaptive_epsilon = "adaptive" if use_adaptive else "static"
                 ql_learning_rate = self.config['settings']['regular']['ql_learning_rate']
                 ql_discount_rate = self.config['settings']['regular']['ql_discount_rate']
                 epsilon_var = self.config['settings']['regular']['ql_adaptive_decay_rate'] if use_adaptive else self.config['settings']['regular']['ql_epsilon']
                 log_directory_name = u'{}_lr{}-dr{}-{}{}'.format(log_directory_name, ql_learning_rate, ql_discount_rate, adaptive_epsilon, epsilon_var)
-            elif "3" == exp_:
-                num_motes = self.config['settings']['combination']['exec_numMotes'][0]
-                imin = self.config['settings']['regular']['dio_interval_min_s']
-                log_directory_name = u'{}_n{}-i{}'.format(log_directory_name, num_motes, imin)
-            elif "eb" == exp_:
-                ei = self.config['settings']['regular']['eb_interval_s']
-                log_directory_name = u'{}_ei{}'.format(log_directory_name, ei)
+
+                used_changed_param.pop("algo_adaptive_epsilon", None)
+                used_changed_param.pop("ql_learning_rate", None)
+                used_changed_param.pop("ql_discount_rate", None)
+                used_changed_param.pop("ql_adaptive_decay_rate", None)
+                used_changed_param.pop("ql_epsilon", None)
+            elif "2" == exp_:
+                ql_learning_rate = self.config['settings']['regular']['ql_learning_rate']
+                ql_discount_rate = self.config['settings']['regular']['ql_discount_rate']
+                ql_epsilon = self.config['settings']['regular']['ql_epsilon']
+                log_directory_name = u'{}_lr{}-dr{}-ep{}'.format(log_directory_name, ql_learning_rate, ql_discount_rate, ql_epsilon)
+
+                used_changed_param.pop("ql_learning_rate", None)
+                used_changed_param.pop("ql_discount_rate", None)
+                used_changed_param.pop("ql_epsilon", None)
+
+            for key in used_changed_param:
+                log_directory_name += u'_{}{}'.format(self.map_param[key], self.changed_param[key])
 
         elif self.log_directory_name == u'startTime':
             # determine log_directory_name

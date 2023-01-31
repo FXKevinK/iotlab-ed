@@ -81,7 +81,7 @@ typedef struct {
     uint16_t epsilon; // in xxxx int
     uint16_t ptransmit;
     uint16_t pfree; // in xxxx int
-    uint16_t poccupancy; // from 1 - pfree
+    uint16_t pbusy; // from 1 - pfree
     uint16_t preset; // in xxxx int
     uint16_t pstable; // from 1 - preset
     uint32_t listen_period;
@@ -110,7 +110,7 @@ typedef struct
     float preset;
     float pstable;
     float pfree;
-    float poccupancy;
+    float pbusy;
     uint32_t listen_period;
     uint16_t Ncells;
     uint16_t start_ops;

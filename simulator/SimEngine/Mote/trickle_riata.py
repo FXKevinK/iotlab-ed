@@ -55,21 +55,20 @@ class RiataTrickle(object):
         self.Nstates = 0
         self.Ncells = 0
         self.Nreset = 1
-        self.poccupancy = 1
+        self.pbusy = 1
         self.preset = 1
-        self.pfree = 1 - self.poccupancy
+        self.pfree = 1 - self.pbusy
         self.pstable = 1 - self.preset
         self.ptransmit = 0
         self.DIOsurpress = 0
         self.DIOtransmit = 0
-        self.DIOtransmit_actual = 0
         self.m_riata = 1 # m as interval states
         self.DIOsent = 0
         self.kmax = self.settings.k_max
         self.t_start = 0
         self.t_end = 0
         self.t = 0
-        self.q_table = np.zeros([2, 2]).tolist()
+        self.ql_table = np.zeros([2, 2]).tolist()
         self.alpha = self.settings.ql_learning_rate
         self.betha = self.settings.ql_discount_rate
         self.epsilon = self.settings.ql_epsilon
@@ -197,7 +196,7 @@ class RiataTrickle(object):
 
         def t_callback():
             self.is_dio_sent = False
-            self.is_explore = random.uniform(0, 1) <= self.epsilon
+            self.is_explore = random.uniform(0, 1) < self.epsilon
             if self.is_explore:
                 # populate
                 if self.m_riata not in self.counter: self.counter[self.m_riata] = 0
@@ -210,7 +209,7 @@ class RiataTrickle(object):
                     pass
             else:
                 # Exploit learned values
-                change = np.argmax(self.q_table[self.prev_state])
+                change = np.argmax(self.ql_table[self.prev_state])
                 if self.prev_state:
                     self.is_dio_sent = False if change else True
                 else:
@@ -310,21 +309,21 @@ class RiataTrickle(object):
 
     def calculate_preset(self):
         self.preset = self.Nreset / self.Nstates
-        assert self.preset <= 1
+        assert 0 <= self.preset <= 1
         self.pstable = 1 - self.preset
 
     def calculate_ptransmit(self):
         self.ptransmit = self.DIOtransmit / self.Nstates
-        assert self.ptransmit <= 1
+        assert 0 <= self.ptransmit <= 1
 
     def calculate_pfree(self):
         if self.end_t_record is not None and self.start_t_record is not None:
             self.used = self.end_t_record - self.start_t_record
             if self.Ncells < self.used: self.Ncells = self.used
             occ = self.used / self.Ncells
-            self.poccupancy = occ
-            assert self.poccupancy <= 1
-            self.pfree = 1 - self.poccupancy
+            self.pbusy = occ
+            assert 0 <= self.pbusy <= 1
+            self.pfree = 1 - self.pbusy
 
     def getOpsMC(self):
         minimal_cell = self.mote.tsch.get_minimal_cell()
@@ -344,7 +343,7 @@ class RiataTrickle(object):
             'state': self.Nstates,
             'm': self.m_riata,
             'pfree': self.pfree,
-            'poccupancy': self.poccupancy,
+            'pbusy': self.pbusy,
             'DIOtransmit': self.DIOtransmit,
             'DIOsurpress': self.DIOsurpress,
             'Nreset': self.Nreset,
@@ -391,12 +390,12 @@ class RiataTrickle(object):
         if change:
             next_state = not next_state
 
-        next_action_value = np.max(self.q_table[next_state])
-        old_value = self.q_table[current_state][change]
+        next_action_value = np.max(self.ql_table[next_state])
+        old_value = self.ql_table[current_state][change]
         td_learning = (reward + self.betha * next_action_value) - old_value
 
         new_value = (1 - self.alpha) * old_value + self.alpha * td_learning
-        self.q_table[current_state][change] = new_value
+        self.ql_table[current_state][change] = new_value
 
     def calculate_k(self):
         total = 0

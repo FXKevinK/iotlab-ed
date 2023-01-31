@@ -31,6 +31,9 @@ LOG_SIMULATOR_STATE = {u'type': u'simulator.state',
 LOG_SIMULATOR_RANDOM_SEED = {
     u'type': u'simulator.random_seed',     u'keys': [u'value']}
 
+LOG_ALL_JOINED = {u'type': u'simulator.all_joined', u'keys': [u'result']}
+LOG_SIMULATOR_END = {u'type': u'simulator.end', u'keys': [u'result']}
+
 # === packet drops
 LOG_PACKET_DROPPED = {u'type': u'packet_dropped',
                       u'keys': [u'_mote_id', u'packet', u'reason']}
@@ -84,7 +87,7 @@ LOG_RPL_CHURN = {u'type': u'rpl.churn',
 LOG_RPL_LOCAL_REPAIR = {
     u'type': u'rpl.local_repair',          u'keys': [u'_mote_id']}
 LOG_RPL_JOINED = {u'type': u'rpl.joined',
-                      u'keys': [u'_mote_id']}
+                      u'keys': [u'_mote_id', 'dio_type']}
 
 LOG_TRICKLE_RESET = {u'type': u'trickle.reset',
                    u'keys': [u'_mote_id', u'reset_type']}

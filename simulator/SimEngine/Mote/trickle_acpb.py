@@ -35,7 +35,6 @@ class ACPBTrickle(object):
         self.average_reward = 0
         self.total_reward = 0
         self.listen_period = 0
-        self.DIOtransmit_actual = 0
 
         # constants of this timer instance
         # min_interval is expected to given in milliseconds
@@ -56,15 +55,14 @@ class ACPBTrickle(object):
         self.Nstates = 0
         self.Ncells = 0
         self.Nreset = 1
-        self.poccupancy = 1
+        self.pbusy = 1
         self.preset = 1
-        self.pfree = 1 - self.poccupancy
+        self.pfree = 1 - self.pbusy
         self.pstable = 1 - self.preset
         self.ptransmit = 0
         self.ptransmit_collision = 0
         self.DIOsurpress = 0
         self.DIOtransmit = 0
-        self.DIOtransmit_actual = 0
         self.m = 0
         self.Nnbr = 0
         self.kmax = self.settings.k_max
@@ -109,7 +107,6 @@ class ACPBTrickle(object):
         #       step 2.  If I is equal to Imin when Trickle hears an
         #       "inconsistent" transmission, Trickle does nothing.  Trickle can
         #       also reset its timer in response to external "events".
-        self.Nreset += 1
 
         # Algorithm 1
         if self.flag:
@@ -117,6 +114,7 @@ class ACPBTrickle(object):
             self.m = self.flag
             self.flag = None
             self._start_next_interval()
+            self.Nreset += 1
         elif self.min_interval < self.interval:
             self.interval = self.min_interval
             self.flag = self.m
@@ -124,6 +122,7 @@ class ACPBTrickle(object):
             self.transmitted = 0
             self.suppressed = 0
             self._start_next_interval()
+            self.Nreset += 1
         else:
             # if the interval is equal to the minimum value, do nothing
             pass
@@ -290,21 +289,21 @@ class ACPBTrickle(object):
 
     def calculate_preset(self):
         self.preset = self.Nreset / self.Nstates
-        assert self.preset <= 1
+        assert 0 <= self.preset <= 1
         self.pstable = 1 - self.preset
 
     def calculate_ptransmit(self):
         self.ptransmit = self.DIOtransmit / self.Nstates
-        assert self.ptransmit <= 1
+        assert 0 <= self.ptransmit <= 1
 
     def calculate_pfree(self):
         if self.end_t_record is not None and self.start_t_record is not None:
             self.used = self.end_t_record - self.start_t_record
             if self.Ncells < self.used: self.Ncells = self.used
             occ = self.used / self.Ncells
-            self.poccupancy = occ
-            assert self.poccupancy <= 1
-            self.pfree = 1 - self.poccupancy
+            self.pbusy = occ
+            assert 0 <= self.pbusy <= 1
+            self.pfree = 1 - self.pbusy
 
     def getOpsMC(self):
         minimal_cell = self.mote.tsch.get_minimal_cell()
@@ -326,7 +325,7 @@ class ACPBTrickle(object):
             'state': self.Nstates,
             'm': self.m,
             'pfree': self.pfree,
-            'poccupancy': self.poccupancy,
+            'pbusy': self.pbusy,
             'DIOtransmit': self.DIOtransmit,
             'DIOsurpress': self.DIOsurpress,
             'Nreset': self.Nreset,

@@ -344,6 +344,8 @@ class DiscreteEventEngine(threading.Thread):
             if (slotframe_iteration % LOG_EVERY_N) == 0:
                 print(u'   slotframe_iteration: {0}/{1}'.format(slotframe_iteration, self.settings.exec_numSlotframesPerRun-1))
 
+        self._routine_on_end_slotframe()
+
         # schedule next statistics collection
         self.scheduleAtAsn(
             asn              = self.asn + self.settings.tsch_slotframeLength,
@@ -366,11 +368,36 @@ class DiscreteEventEngine(threading.Thread):
     def _routine_thread_ended(self):
         pass
 
+    def _routine_on_end_slotframe(self):
+        pass
+
 
 class SimEngine(DiscreteEventEngine):
 
     DAGROOT_ID = 0
     DESTORY_WAITING_SECONDS = 5
+    joined_motes = 0
+    all_ops = 0
+    all_joined_ops = 0
+
+    def add_ops(self):
+        self.all_ops += 1
+
+    def add_joined(self):
+        self.joined_motes += 1
+        if self.joined_motes == self.settings.exec_numMotes:
+            slotframe_iteration = int(old_div(self.asn, self.settings.tsch_slotframeLength))
+            time_m = self.asn * self.settings.tsch_slotDuration / 60
+            result = {
+                'joined': self.joined_motes,
+                'slotframe': slotframe_iteration,
+                'time_m': time_m,
+                'all_ops': self.all_ops / self.settings.exec_numMotes,
+                'mbr': self.all_ops / slotframe_iteration / self.settings.exec_numMotes
+            }
+            self.all_joined_ops = self.all_ops
+            self.log(SimLog.LOG_ALL_JOINED, {"result": result})
+            
 
     def _init_additional_local_variables(self):
         self.settings                   = SimSettings.SimSettings()
@@ -443,6 +470,22 @@ class SimEngine(DiscreteEventEngine):
         # boot all motes
         for i in range(len(self.motes)):
             self.motes[i].boot()
+    
+    def _routine_on_end_slotframe(self):
+        slotframe_iteration = int(old_div(self.asn, self.settings.tsch_slotframeLength))
+
+        if slotframe_iteration == self.settings.exec_numSlotframesPerRun - 1:
+            time_m = self.asn * self.settings.tsch_slotDuration / 60
+            diff_ops = self.all_ops-self.all_joined_ops
+            result = {
+                'slotframe': slotframe_iteration,
+                'time_m': time_m,
+                'all_ops': self.all_ops / self.settings.exec_numMotes,
+                'diff_ops': diff_ops / self.settings.exec_numMotes,
+                'mbr_diff_ops': diff_ops / slotframe_iteration / self.settings.exec_numMotes,
+                'mbr_all_ops': self.all_ops / slotframe_iteration / self.settings.exec_numMotes
+            }
+            self.log(SimLog.LOG_SIMULATOR_END, {"result": result})
 
     def _routine_thread_started(self):
         # log

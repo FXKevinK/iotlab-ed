@@ -69,7 +69,7 @@ class Rpl(object):
         self.dodagId = None
         self.of = RplOFNone(self)
         self.trickle_timer = trickle_class(
-            callback=self._send_DIO,
+            callback=self._send_DIO_Trickle,
             mote=self.mote
         )
         self.parentChildfromDAOs = {}      # dictionary containing parents of each node
@@ -78,22 +78,27 @@ class Rpl(object):
 
         self.count_dis = 0
         self.count_dio = 0
+        self.count_dio_trickle = 0
         self.count_dao = 0
-        self.DIOtransmit_actual = 0
+        self.DIOtransmit_all = {}
         self.first_joined = False
+        self.received_DIS = {}
 
     # ======================== public ==========================================
 
     # getters/setters
 
-    def get_all_cp(self):
-        return self.count_dis, self.count_dio, self.count_dao
-
     def get_rank(self):
         return self.of.rank
 
-    def increase_dio_actual_sent(self):
-        self.DIOtransmit_actual += 1 
+    def increase_dio_actual_sent(self, pos, dio_id):
+        if dio_id is None:
+            return
+
+        if pos not in self.DIOtransmit_all:
+            self.DIOtransmit_all[pos] = {dio_id}
+        else:
+            self.DIOtransmit_all[pos].add(dio_id)
 
     def getDagRank(self):
         if self.of.rank is None:
@@ -116,6 +121,24 @@ class Rpl(object):
                 self.trickle_timer.start(note)
             else:
                 self.trickle_timer.reset(note)
+    
+    def get_set_size(self, data):
+        if data:
+            return len(set(data))
+        return 0
+
+
+    def get_failed_dio(self, is_prob=False, is_trickle=False):
+        if is_trickle:
+            count_ = self.count_dio_trickle
+            transmit_ = self.get_set_size(self.DIOtransmit_all.get(7, 0))
+        else:
+            count_ = self.count_dio
+            transmit_ = self.get_set_size(self.DIOtransmit_all.get(6, 0))
+
+        failed = int(count_)-int(transmit_)
+        if is_prob: failed = failed/max(int(count_), 1)
+        return failed
 
     def last_slotframe_callback(self):
         if self.mote.dagRoot:
@@ -124,28 +147,22 @@ class Rpl(object):
         if self.of.get_preferred_parent() is None:
             return
 
-        minimal_cell = self.mote.tsch.get_minimal_cell()
-
-        cur_all_ops = None
-        curr_mbr = None
-        if minimal_cell:
-            cur_all_ops = minimal_cell.all_ops
-            curr_mbr = cur_all_ops / self.end_slotframe
-
         DIOsurpress = self.trickle_timer.DIOsurpress
-        failed = int(self.count_dio)-int(self.DIOtransmit_actual)
 
         result = {
-            'pfailed': failed/max(int(self.count_dio), 1),
             'count_dio': self.count_dio,
-            'failed': failed,
-            'DIOsurpress': DIOsurpress,
-            'all_ops': cur_all_ops,
-            'curr_mbr': curr_mbr,
+            'count_dio_trickle': self.count_dio_trickle,
+            'failed_dio': self.get_failed_dio(),
+            'failed_dio_trickle': self.get_failed_dio(is_trickle=True),
+            'trickle_surpress': DIOsurpress,
         }
 
-        if self.trickle_method in ['qt', 'riata']:
-            result['q_table'] = self.trickle_timer.q_table
+        for k in self.DIOtransmit_all.keys():
+            new_key = f'DIOtransmit_{k}'
+            result[new_key] = self.get_set_size(self.DIOtransmit_all[k])
+
+        if hasattr(self.trickle_timer, 'ql_table'):
+            result['ql_table'] = self.trickle_timer.ql_table
 
         # log
         self.log(
@@ -234,7 +251,7 @@ class Rpl(object):
             # don't change the clock source
 
             # trigger a DIO which advertises infinite rank
-            self._send_DIO()
+            self._send_DIO_disreq(dio_type='no_parent')
 
             # stop the trickle timer
             self.trickle_timer.stop()
@@ -285,17 +302,32 @@ class Rpl(object):
             # ignore DIS
             pass
         else:
+            reset = False
             if self.mote.is_my_ipv6_addr(packet[u'net'][u'dstIp']):
                 # unicast DIS; send unicast DIO back to the source
-                self._send_DIO(packet[u'net'][u'srcIp'])
+                self._send_DIO_disreq(packet[u'net'][u'srcIp'])
             elif packet[u'net'][u'dstIp'] == d.IPV6_ALL_RPL_NODES_ADDRESS:
                 # broadcast DIS
                 self.mote.tsch.set_sw_after_dis()
-                self._send_DIO()
-                self.start_or_reset_trickle_timer(3)
+                self._send_DIO_disreq()
+
+                if getattr(self.settings, "algo_dis_prio", 0) in [2, 3]:
+                    neighbor_mac = packet[u'mac'][u'srcMac']
+                    if neighbor_mac not in self.received_DIS:
+                        self.received_DIS[neighbor_mac] = 0
+                    self.received_DIS[neighbor_mac] += 1
+
+                    if self.received_DIS[neighbor_mac] >= 2:
+                        reset = True
+                        self.received_DIS = {}
+                else:
+                    reset = True
             else:
                 # shouldn't happen
                 assert False
+            
+            if reset:
+                self.start_or_reset_trickle_timer(3)
 
     def _get_dis_mode(self):
         if u'dis_unicast' in self.settings.rpl_extensions:
@@ -349,12 +381,30 @@ class Rpl(object):
 
     # === DIO
 
-    def _send_DIO(self, dstIp=None):
+    def _send_DIO_disreq(self, dst=None, dio_type='dis'):
+        # DZAKY except qt not use dis req
+        req = False
+        if getattr(self.settings, "algo_dis_prio", 0) in [1, 3]:
+            req = True
+
+        self._send_DIO(dstIp=dst, dis_req=req, dio_type=dio_type)
+
+    def _send_DIO_Trickle(self):
+        self._send_DIO(dstIp=None, is_trickle=True, dio_type='trickle')
+
+    def _send_DIO(self, dstIp=None, is_trickle=False, dis_req=False, dio_type=None):
         if self.dodagId is None:
             # seems we performed local repair
             return
 
-        dio = self._create_DIO(dstIp)
+        dio_id = None
+        if dstIp is None:
+            self.count_dio += 1
+            dio_id = self.count_dio
+            if is_trickle:
+                self.count_dio_trickle += 1
+
+        dio = self._create_DIO(dstIp, is_trickle, dio_id, dis_req, dio_type)
 
         # log
         self.log(
@@ -365,11 +415,10 @@ class Rpl(object):
             }
         )
 
-        self.count_dio += 1
         # DZAKY: DIO goes here (1)
         self.mote.sixlowpan.sendPacket(dio)
 
-    def _create_DIO(self, dstIp=None):
+    def _create_DIO(self, dstIp=None, is_trickle=False, dio_id=None, dis_req=False, dio_type=None):
 
         assert self.dodagId is not None
 
@@ -387,7 +436,10 @@ class Rpl(object):
             u'app': {
                 u'rank':          rank,
                 u'dodagId':       self.dodagId,
-                u'count':         self.count_dio
+                u'dio_id':        dio_id,
+                u'dis_req':       dis_req,
+                u'is_trickle':    int(is_trickle),
+                u'dio_type':      dio_type
             },
             u'net': {
                 u'srcIp':         self.mote.get_ipv6_link_local_addr(),
@@ -445,9 +497,9 @@ class Rpl(object):
         if self.getPreferredParent() is not None:
             if packet[u'app'][u'dodagId'] != self.dodagId:
                 # (re)join the RPL network
-                self.join_dodag(packet[u'app'][u'dodagId'])
+                self.join_dodag(packet[u'app'][u'dodagId'], packet[u'app'][u'dio_type'])
 
-    def join_dodag(self, dodagId=None):
+    def join_dodag(self, dodagId=None, dio_type=None):
         # re-join the DODAG without receiving a DIO
         assert dodagId is not None
         self.dodagId = dodagId
@@ -461,6 +513,7 @@ class Rpl(object):
                 SimEngine.SimLog.LOG_RPL_JOINED,
                 {
                     u'_mote_id': self.mote.id,
+                    u'dio_type': dio_type
                 }
             )
 

@@ -65,7 +65,7 @@ def parseCliParams():
         dest       = 'param_random',
         action     = 'store',
         default    = '',
-        help       = 'exec_randomSeed',
+    help       = 'exec_randomSeed',
     )
     parser.add_argument(
         '--param_imin',
@@ -100,7 +100,7 @@ def parseCliParams():
         dest       = 'param_ad',
         action     = 'store',
         default    = '',
-        help       = 'ql_adaptive_epsilon',
+        help       = 'algo_adaptive_epsilon',
     )
     parser.add_argument(
         '--param_epdecay',
@@ -124,12 +124,57 @@ def parseCliParams():
         help       = 'exec_numMotes',
     )
     parser.add_argument(
-        '--param_exp',
-        dest       = 'param_exp',
+        '--param_ebi',
+        dest       = 'param_ebi',
         action     = 'store',
         default    = '',
-        help       = 'log_directory_name',
+        help       = 'eb_interval_s',
     )
+    parser.add_argument(
+        '--param_minutes',
+        dest       = 'param_minutes',
+        action     = 'store',
+        default    = '',
+        help       = 'exec_minutesPerRun',
+    )
+
+    # Algo
+    parser.add_argument(
+        '--param_disprio',
+        dest       = 'param_disprio',
+        action     = 'store',
+        default    = '',
+        help       = 'algo_dis_prio',
+    )
+    parser.add_argument(
+        '--param_autoeb',
+        dest       = 'param_autoeb',
+        action     = 'store',
+        default    = '',
+        help       = 'algo_auto_eb',
+    )
+    parser.add_argument(
+        '--param_autok',
+        dest       = 'param_autok',
+        action     = 'store',
+        default    = '',
+        help       = 'algo_auto_k',
+    )
+    parser.add_argument(
+        '--param_autot',
+        dest       = 'param_autot',
+        action     = 'store',
+        default    = '',
+        help       = 'algo_auto_t',
+    )
+    parser.add_argument(
+        '--param_ql',
+        dest       = 'param_ql',
+        action     = 'store',
+        default    = '',
+        help       = 'algo_use_ql',
+    )
+
 
     cliparams      = parser.parse_args()
     return cliparams.__dict__
@@ -283,11 +328,18 @@ def main():
         'param_lr': 'ql_learning_rate',
         'param_dr': 'ql_discount_rate',
         'param_ep': 'ql_epsilon',
-        'param_ad': 'ql_adaptive_epsilon',
+        'param_ad': 'algo_adaptive_epsilon',
         'param_epdecay': 'ql_adaptive_decay_rate',
         'param_runs': 'numRuns',
         'param_motes': 'exec_numMotes',
-        'param_exp': 'log_directory_name'
+        'param_exp': 'log_directory_name',
+        'param_autoeb': 'algo_auto_eb',
+        'param_ebi': 'eb_interval_s',
+        'param_minutes' :'exec_minutesPerRun',
+        'param_disprio': 'algo_dis_prio',
+        'param_ql': 'algo_use_ql',
+        'param_autot': 'algo_auto_t',
+        'param_autok': 'algo_auto_k',
     }
     
     # cli params
@@ -300,13 +352,13 @@ def main():
         config_file = 'base_config/config_{}.json'.format(algo)
         print("config_file:", config_file)
 
-        param_exp = cliparams['param_exp']
-        param_motes = cliparams['param_motes']
+        if 'qt' in algo:
+            param_exp = str(algo).split("_")[-1]
+        else:
+            param_exp = 3
 
-        assert param_exp and param_motes
         changed_param = {
             map_param['param_exp']: param_exp,
-            map_param['param_motes']: param_motes,
         }
 
         param_keys = [x for x in cliparams.keys() if str(x).startswith('param_')]
@@ -316,10 +368,10 @@ def main():
             if key_t not in changed_param and val:
                 changed_param[key_t] = val
     
-    print(json.dumps(changed_param,indent = 4))
+        print(json.dumps(changed_param,indent = 4))
 
     # sim config
-    simconfig = SimConfig.SimConfig(configfile=config_file, changed_param=changed_param)
+    simconfig = SimConfig.SimConfig(configfile=config_file, changed_param=changed_param, map_param=map_param)
     assert simconfig.version == 0
 
     #=== run simulations

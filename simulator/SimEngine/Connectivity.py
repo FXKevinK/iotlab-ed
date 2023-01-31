@@ -41,11 +41,12 @@ import numpy as np
 import os
 # =========================== defines =========================================
 
-CONN_TYPE_TRACE         = u'trace'
+CONN_TYPE_TRACE = u'trace'
 
 # =========================== helpers =========================================
 
 # =========================== classes =========================================
+
 
 class Connectivity(object):
     # ===== start singleton
@@ -72,8 +73,8 @@ class Connectivity(object):
         # singletons (quicker access, instead of recreating every time)
         assert sim_engine
         self.settings = SimSettings.SimSettings()
-        self.engine   = sim_engine
-        self.log      = SimLog.SimLog().log
+        self.engine = sim_engine
+        self.log = SimLog.SimLog().log
 
         # short-hands and local variables
         self.num_channels = self.settings.phy_numChans
@@ -88,9 +89,9 @@ class Connectivity(object):
         self._schedule_propagate()
 
     def destroy(self):
-        cls           = type(self)
+        cls = type(self)
         cls._instance = None
-        cls._init     = False
+        cls._init = False
 
     def get_pdr(self, src_id, dst_id, channel):
         assert isinstance(src_id, int)
@@ -110,7 +111,7 @@ class Connectivity(object):
         """ Simulate the propagation of frames in a slot. """
 
         # local shorthands
-        asn        = self.engine.getAsn()
+        asn = self.engine.getAsn()
         slotOffset = asn % self.settings.tsch_slotframeLength
 
         # get all motes TXing or RXing on this slot organized by channel
@@ -157,7 +158,7 @@ class Connectivity(object):
 
             for listener_id in receivers_by_channel[channel]:
                 sentAck = self.engine.motes[listener_id].radio.rxDone(
-                    packet = None,
+                    packet=None,
                 )
                 assert sentAck is False
 
@@ -257,9 +258,9 @@ class Connectivity(object):
                     lockon_random_value = random.random()
                     lockon_transmission = transmissions_by_channel[channel][0]
                     packet_pdr = self.get_pdr(
-                        src_id  = lockon_transmission[u'tx_mote_id'],
-                        dst_id  = listener_id,
-                        channel = channel
+                        src_id=lockon_transmission[u'tx_mote_id'],
+                        dst_id=listener_id,
+                        channel=channel
                     )
 
                 # this souldn't really happen
@@ -269,8 +270,8 @@ class Connectivity(object):
                 # lockon transmission selected
                 # all other transmissions are now intereferers
                 assert (
-                        detected_transmissions ==
-                        (len(interfering_transmissions) + 1)
+                    detected_transmissions ==
+                    (len(interfering_transmissions) + 1)
                 )
 
                 # decide whether listener receives
@@ -347,29 +348,29 @@ class Connectivity(object):
         FIXME: only schedule for next active slot.
         '''
         self.engine.scheduleAtAsn(
-            asn              = self.engine.getAsn() + 1,
-            cb               = self.propagate,
-            uniqueTag        = (None, u'Connectivity.propagate'),
-            intraSlotOrder   = d.INTRASLOTORDER_PROPAGATE,
+            asn=self.engine.getAsn() + 1,
+            cb=self.propagate,
+            uniqueTag=(None, u'Connectivity.propagate'),
+            intraSlotOrder=d.INTRASLOTORDER_PROPAGATE,
         )
 
     def _get_listener_id_list(self, channel):
         returnVal = []
         for mote in self.engine.motes:
             if (
-                    (mote.radio.state == d.RADIO_STATE_RX)
-                    and
-                    (mote.radio.channel == channel)
-                ):
+                (mote.radio.state == d.RADIO_STATE_RX)
+                and
+                (mote.radio.channel == channel)
+            ):
                 returnVal.append(mote.id)
         return returnVal
 
     def _compute_pdr_with_interference(
-            self,
-            listener_id,
-            lockon_transmission,
-            interfering_transmissions
-        ):
+        self,
+        listener_id,
+        lockon_transmission,
+        interfering_transmissions
+    ):
 
         # shorthand
         channel = lockon_transmission[u'channel']
@@ -379,7 +380,7 @@ class Connectivity(object):
 
         # === compute the SINR
 
-        noise_mW   = self._dBm_to_mW(
+        noise_mW = self._dBm_to_mW(
             self.engine.motes[listener_id].radio.noisepower
         )
 
@@ -409,7 +410,8 @@ class Connectivity(object):
                 interference_mW = 0.0
             totalInterference_mW += interference_mW
 
-        sinr_dB = self._mW_to_dBm(old_div(signal_mW, (totalInterference_mW + noise_mW)))
+        sinr_dB = self._mW_to_dBm(
+            old_div(signal_mW, (totalInterference_mW + noise_mW)))
 
         # === compute the interference PDR
 
@@ -428,9 +430,9 @@ class Connectivity(object):
         # === compute the resulting PDR
 
         lockon_pdr = self.get_pdr(
-            src_id  = lockon_tx_mote_id,
-            dst_id  = listener_id,
-            channel = channel)
+            src_id=lockon_tx_mote_id,
+            dst_id=listener_id,
+            channel=channel)
         returnVal = lockon_pdr * interference_pdr
 
         return returnVal
@@ -479,12 +481,12 @@ class Connectivity(object):
         maxRssi = max(rssi_pdr_table.keys())
 
         floorRssi = int(math.floor(rssi))
-        if  floorRssi < minRssi:
+        if floorRssi < minRssi:
             pdr = 0.0
         elif floorRssi >= maxRssi:
             pdr = 1.0
         else:
-            pdrLow  = rssi_pdr_table[floorRssi]
+            pdrLow = rssi_pdr_table[floorRssi]
             pdrHigh = rssi_pdr_table[floorRssi+1]
             # linear interpolation
             pdr = (pdrHigh - pdrLow) * (rssi - float(floorRssi)) + pdrLow
@@ -495,8 +497,8 @@ class Connectivity(object):
 
 
 class ConnectivityMatrixBase(object):
-    LINK_PERFECT = {u'pdr' : 1.00, u'rssi':  -10}
-    LINK_NONE    = {u'pdr' :    0, u'rssi': -1000}
+    LINK_PERFECT = {u'pdr': 1.00, u'rssi': -10}
+    LINK_NONE = {u'pdr':    0, u'rssi': -1000}
 
     def __init__(self, connectivity):
         # local variables
@@ -555,7 +557,7 @@ class ConnectivityMatrixBase(object):
         for src_id in self._matrix:
             line += [str(src_id)]
         line = '\t|'.join(line)
-        output  += [u'\t|'+line]
+        output += [u'\t|'+line]
 
         # body
         channel = d.TSCH_HOPPING_SEQUENCE[0]
@@ -566,12 +568,14 @@ class ConnectivityMatrixBase(object):
                 if src_id == dst_id:
                     line += [u'N/A']
                 else:
-                    line += [str(self._matrix[src_id][dst_id][channel][u'pdr'])]
+                    line += [str(self._matrix[src_id]
+                                 [dst_id][channel][u'pdr'])]
             line = u'\t|'.join(line)
             output += [line]
 
         output = u'\n'.join(output)
         print(output)
+
 
 class ConnectivityMatrixFullyMeshed(ConnectivityMatrixBase):
     """
@@ -639,7 +643,8 @@ class ConnectivityMatrixK7(ConnectivityMatrixBase):
 
         # load trace into memory and save metas (headers)
         with gzip.open(self.settings.conn_trace, u'r') as tracefile:
-            self.trace_header = json.loads(tracefile.readline().decode('utf-8'))
+            self.trace_header = json.loads(
+                tracefile.readline().decode('utf-8'))
             self.csv_header = tracefile.readline().decode('utf-8').strip().split(u',')
             self.start_date = dt.datetime.strptime(
                 self.trace_header[u'start_date'],
@@ -667,8 +672,8 @@ class ConnectivityMatrixK7(ConnectivityMatrixBase):
             # check if all the channels in the hopping sequence are
             # covered by ones listed in the header
             if set(d.TSCH_HOPPING_SEQUENCE).issubset(
-                    set(self.trace_header[u'channels'])
-                ):
+                set(self.trace_header[u'channels'])
+            ):
                 # the channels listed in the trace file are valid
                 pass
             else:
@@ -686,7 +691,7 @@ class ConnectivityMatrixK7(ConnectivityMatrixBase):
 
             numSlotframes = (
                 old_div((stop_date - self.start_date).total_seconds(),
-                self.settings.tsch_slotDuration)
+                        self.settings.tsch_slotDuration)
             )
             if self.settings.exec_numSlotframesPerRun > numSlotframes:
                 raise ValueError(u'exec_numSlotframesPerRun is too long')
@@ -762,10 +767,10 @@ class ConnectivityMatrixK7(ConnectivityMatrixBase):
         if self.asn_of_next_update:
             assert self.engine.getAsn() < self.asn_of_next_update
             self.engine.scheduleAtAsn(
-                asn            = self.asn_of_next_update,
-                cb             = self._update,
-                uniqueTag      = (u'ConnectivityMatrixK7', u'update matrix'),
-                intraSlotOrder = d.INTRASLOTORDER_STARTSLOT
+                asn=self.asn_of_next_update,
+                cb=self._update,
+                uniqueTag=(u'ConnectivityMatrixK7', u'update matrix'),
+                intraSlotOrder=d.INTRASLOTORDER_STARTSLOT
             )
 
     def _set_connectivity(self, row):
@@ -774,10 +779,10 @@ class ConnectivityMatrixK7(ConnectivityMatrixBase):
         """
         for channel in d.TSCH_HOPPING_SEQUENCE[:self.num_channels]:
             if (
-                    (row[u'channel'] is None)
-                    or
-                    (row[u'channel'] == channel)
-                ):
+                (row[u'channel'] is None)
+                or
+                (row[u'channel'] == channel)
+            ):
                 self.set_pdr(
                     row[u'src_id'],
                     row[u'dst_id'],
@@ -864,20 +869,22 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
 
         # for quick access
         random_square_side = self.settings.conn_random_square_side
-        init_min_pdr       = self.settings.conn_random_init_min_pdr
+        init_min_pdr = self.settings.conn_random_init_min_pdr
         init_min_neighbors = self.settings.conn_random_init_min_neighbors
-        topology           = self.settings.conn_topology
-        grid_max_dist      = self.settings.conn_grid_max_distance
+        topology = self.settings.conn_topology
+        grid_max_dist = self.settings.conn_grid_max_distance
 
         assert init_min_neighbors <= self.settings.exec_numMotes
 
         nodes_len = len(self.mote_id_list)
         position = []
         shape = []
-        available_position = [x for x in range(nodes_len - 1)]
+        available_position = [x for x in range(nodes_len)]
 
-        filepath_topo_len = f"{self.filepath}-{topology}-{nodes_len}.json"
-        if os.path.exists(filepath_topo_len):
+        filepath_topo_len = f"{self.filepath}-{topology}-{nodes_len}"
+        filepath_topo_len_json = filepath_topo_len + ".json"
+        filepath_topo_len_png = filepath_topo_len + ".png"
+        if os.path.exists(filepath_topo_len_json):
             topology = 'saved'
 
         if topology == 'grid':
@@ -900,22 +907,17 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
                         break
 
             assert len(shape) == 2
-            center_x = np.ceil(shape[0] / 2)
-            center_y = np.ceil(shape[1] / 2)
+            km = grid_max_dist * shape[1]
 
             grid = []
             for row in range(1, shape[0] + 1):
                 for col in range(1, shape[1] + 1):
-                    if row == center_x and col == center_y:
-                        continue
                     grid.append([row, col])
 
             grid = np.array(grid)
-            scaler = MinMaxScaler(feature_range=(0, shape[0] * grid_max_dist))
+            scaler = MinMaxScaler(feature_range=(0, km))
             scaler.fit(grid)
-
             grid_ = scaler.transform(grid)
-            [[center_x, center_y]] = scaler.transform([[center_x, center_y]])
 
             # scale vertical size
             next_ver = grid_[1]
@@ -923,17 +925,13 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
             if ver_diff > 0.1:
                 num_diff = ver_diff-0.1
                 grid_t = [[x[0], max(x[1]-num_diff, 0)] for x in grid_] 
-                center_y = max(center_y-num_diff, 0)
                 grid_ = np.array(grid_t)
 
             position = [(val[0], val[1]) for val in grid_]
 
-        elif topology == "random":
-            center_x = np.ceil(random_square_side / 2)
-            center_y = np.ceil(random_square_side / 2)
         elif topology == "saved":
             # reading the data from the file
-            with open(filepath_topo_len) as f:
+            with open(filepath_topo_len_json) as f:
                 data = f.read()
             js = json.loads(data)
 
@@ -944,8 +942,6 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
             for key in js.keys():
                 row, col = js[key]
                 position[int(key)] = (row, col)
-            center_x = position[0][0]
-            center_y = position[0][1]
 
         # determine coordinates of the motes
         for idx, target_mote_id in enumerate(self.mote_id_list):
@@ -954,7 +950,12 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
 
                 # select a tentative coordinate
                 if target_mote_id == 0:
-                    self.coordinates[target_mote_id] = (center_x, center_y)
+                    if topology != 'random':
+                        choice = available_position[0]
+                        self.coordinates[target_mote_id] = position[choice]
+                        available_position.remove(choice)
+                    else:
+                        self.coordinates[target_mote_id] = (0, 0)
                     mote_is_deployed = True
                     continue
 
@@ -977,11 +978,11 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
                 for deployed_mote_id in self.coordinates:
                     rssi = self.pister_hack.compute_rssi(
                         {
-                            u'mote'      : self._get_mote(target_mote_id),
+                            u'mote': self._get_mote(target_mote_id),
                             u'coordinate': coordinate
                         },
                         {
-                            u'mote'      : self._get_mote(deployed_mote_id),
+                            u'mote': self._get_mote(deployed_mote_id),
                             u'coordinate': self.coordinates[deployed_mote_id]
                         }
                     )
@@ -1005,18 +1006,18 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
 
                 # determine whether we deploy this mote or not
                 if (
-                        (
-                            (len(self.coordinates) <= init_min_neighbors)
-                            and
-                            (len(self.coordinates) == good_pdr_count)
-                        )
-                        or
-                        (
-                            (init_min_neighbors < len(self.coordinates))
-                            and
-                            (init_min_neighbors <= good_pdr_count)
-                        )
-                    ):
+                    (
+                        (len(self.coordinates) <= init_min_neighbors)
+                        and
+                        (len(self.coordinates) == good_pdr_count)
+                    )
+                    or
+                    (
+                        (init_min_neighbors < len(self.coordinates))
+                        and
+                        (init_min_neighbors <= good_pdr_count)
+                    )
+                ):
                     # fix the coordinate of the mote
                     self.coordinates[target_mote_id] = coordinate
                     # copy the rssi and pdr values to other channels
@@ -1026,7 +1027,7 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
                             deployed_mote_id,
                             base_channel
                         )
-                        pdr  = self.get_pdr(
+                        pdr = self.get_pdr(
                             target_mote_id,
                             deployed_mote_id,
                             base_channel
@@ -1067,22 +1068,26 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
                         )
                     # try another random coordinate
                     continue
-        
+
         if topology != "saved":
             pos = self.coordinates
             data = [list(x) for x in pos.values()]
             data = np.array(data)
             x, y = data.T
-            plt.scatter(x,y)
-            plt.scatter(center_x,center_y,color='r')
+            plt.scatter(x, y)
+            center_ = self.coordinates[0]
+            plt.scatter(center_[0], center_[1], color='r')
+            for key, value in self.coordinates.items():
+                plt.annotate(key, (value[0], value[1]))
+
             plt.savefig(
-                f"{filepath_topo_len}.png",
-                bbox_inches     = 'tight',
-                pad_inches      = 0,
-                format          = 'png',
+                filepath_topo_len_png,
+                bbox_inches='tight',
+                pad_inches=0,
+                format='png',
             )
             plt.close()
-            with open(filepath_topo_len, 'w') as f:
+            with open(filepath_topo_len_json, 'w') as f:
                 f.write(json.dumps(self.coordinates, indent=4))
 
     def _get_mote(self, mote_id):
@@ -1109,9 +1114,9 @@ class ConnectivityMatrixRandom(ConnectivityMatrixBase):
 
 class PisterHackModel(object):
 
-    PISTER_HACK_LOWER_SHIFT  =         40 # dB
-    TWO_DOT_FOUR_GHZ         = 2400000000 # Hz
-    SPEED_OF_LIGHT           =  299792458 # m/s
+    PISTER_HACK_LOWER_SHIFT = 40  # dB
+    TWO_DOT_FOUR_GHZ = 2400000000  # Hz
+    SPEED_OF_LIGHT = 299792458  # m/s
 
     # RSSI and PDR relationship obtained by experiment; dataset was available
     # at the link shown below:
@@ -1142,11 +1147,11 @@ class PisterHackModel(object):
     def __init__(self, sim_engine):
 
         # singleton
-        self.engine   = sim_engine
+        self.engine = sim_engine
 
         # remember what RSSI value is computed for a mote at an ASN; the same
         # RSSI value will be returned for the same motes and the ASN.
-        self.rssi_cache = {} # indexed by (src_mote.id, dst_mote.id)
+        self.rssi_cache = {}  # indexed by (src_mote.id, dst_mote.id)
 
     def compute_mean_rssi(self, src, dst):
         # distance in meters
@@ -1158,12 +1163,12 @@ class PisterHackModel(object):
         # sqrt and inverse of the free space path loss (fspl)
         free_space_path_loss = (
             old_div(self.SPEED_OF_LIGHT,
-            (4 * math.pi * distance * self.TWO_DOT_FOUR_GHZ))
+                    (4 * math.pi * distance * self.TWO_DOT_FOUR_GHZ))
         )
 
         # simple friis equation in Pr = Pt + Gt + Gr + 20log10(fspl)
         pr = (
-            src[u'mote'].radio.txPower     +
+            src[u'mote'].radio.txPower +
             src[u'mote'].radio.antennaGain +
             dst[u'mote'].radio.antennaGain +
             (20 * math.log10(free_space_path_loss))
@@ -1188,8 +1193,8 @@ class PisterHackModel(object):
         rssi = (
             mu +
             random.uniform(
-                old_div(-self.PISTER_HACK_LOWER_SHIFT,2),
-                old_div(+self.PISTER_HACK_LOWER_SHIFT,2)
+                old_div(-self.PISTER_HACK_LOWER_SHIFT, 2),
+                old_div(+self.PISTER_HACK_LOWER_SHIFT, 2)
             )
         )
 
@@ -1205,8 +1210,8 @@ class PisterHackModel(object):
             pdr = 1.0
         else:
             floor_rssi = int(math.floor(rssi))
-            pdr_low    = self.RSSI_PDR_TABLE[floor_rssi]
-            pdr_high   = self.RSSI_PDR_TABLE[floor_rssi + 1]
+            pdr_low = self.RSSI_PDR_TABLE[floor_rssi]
+            pdr_high = self.RSSI_PDR_TABLE[floor_rssi + 1]
             # linear interpolation
             pdr = (pdr_high - pdr_low) * (rssi - float(floor_rssi)) + pdr_low
 

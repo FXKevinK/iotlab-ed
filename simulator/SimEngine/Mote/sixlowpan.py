@@ -137,14 +137,13 @@ class Sixlowpan(object):
                 # DZAKY: DIO goes here (2)
                 self.mote.tsch.enqueue(frag)
 
-        # if "type" in packet:
-        #     if packet[u'type'] in [
-        #         d.PKT_TYPE_JOIN_REQUEST,
-        #         d.PKT_TYPE_JOIN_RESPONSE,
-        #         d.PKT_TYPE_DIS,
-        #         d.PKT_TYPE_DAO,
-        #     ]:
-        #         print(packet['type'])
+        pkt = packet
+        if pkt:
+            if 'type' in pkt:
+                if pkt[u'type'] == d.PKT_TYPE_DIO and pkt[u'mac'][u'dstMac'] == d.BROADCAST_ADDRESS:
+                    dio_id = pkt[u'app'][u'dio_id']
+                    self.mote.rpl.increase_dio_actual_sent(2, dio_id)
+
 
     def recvPacket(self, packet):
 
