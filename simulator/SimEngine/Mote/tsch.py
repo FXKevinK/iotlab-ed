@@ -124,7 +124,9 @@ class Tsch(object):
     def getIsSync(self):
         return self.isSync
 
-    def setIsSync(self, val):
+    def setIsSync(self, val, kill=False):
+        prev_sync = self.isSync
+
         # set
         self.isSync = val
 
@@ -164,8 +166,10 @@ class Tsch(object):
             assert not self.mote.dagRoot
 
             self.stopSendingEBs()
-            self.delete_minimal_cell()
-            self.mote.sf.stop()
+            
+            if (kill and prev_sync) or not kill:
+                self.delete_minimal_cell()
+                self.mote.sf.stop()
             self.mote.sixp.clear_transaction_table()
             self.mote.secjoin.setIsJoined(False)
             self.asnLastSync = None
@@ -183,7 +187,8 @@ class Tsch(object):
             self.engine.removeFutureEvent(      # remove previously scheduled listeningForEB cells
                 uniqueTag=(self.mote.id, u'_action_active_cell')
             )
-            self.schedule_next_listeningForEB_cell()
+            if not kill:
+                self.schedule_next_listeningForEB_cell()
 
     def get_busy_slots(self, slotframe_handle=0):
         if slotframe_handle in self.slotframes:
@@ -631,13 +636,10 @@ class Tsch(object):
 
         if self.use_sw and cell.is_minimal_cell() and pkt:
             cur_asn = self.engine.getAsn()
-            if cur_asn <= self.end_sw_asn:
+            if cur_asn < self.end_sw_asn:
                 if self.sw_tp < 2:
                     self.sw_tp += 1
-                elif self.sw_tp >= 2:
-                    pkt = None
-                elif pkt[u'type'] == d.PKT_TYPE_DIS and pkt[u'net'][u'dstIp'] == d.IPV6_ALL_RPL_NODES_ADDRESS:
-                    self.sw_x = 100
+                else:
                     pkt = None
 
         self.log_dio_process(pkt, 31)
@@ -1290,7 +1292,7 @@ class Tsch(object):
             'mbr': all_ops/slotframe_iteration,
         }
 
-        metric_to_measure = ['pbusy', 'pfree', 'ptransmit', 'preset', 'pstable' 'pfailed', 'psent', 'epsilon']
+        metric_to_measure = ['pbusy', 'pfree', 'ptransmit', 'preset', 'pstable', 'pfailed', 'psent', 'epsilon']
         for k in metric_to_measure:
             val = getattr(self.mote.rpl.trickle_timer, k, None)
             result[k] = val
@@ -1345,8 +1347,7 @@ class Tsch(object):
         # calculate sw
         self.sw_s = duration_s + ((self.sw_x/100) * duration_s)
         cur_asn = self.engine.getAsn()
-        self.end_sw_asn = cur_asn + \
-            int(math.ceil(old_div(self.sw_s, self.slot_duration_s)))
+        self.end_sw_asn = cur_asn + int(math.ceil(self.sw_s / self.slot_duration_s))
 
     def set_sw_after_dis(self):
         if not self.use_sw:
@@ -1357,6 +1358,8 @@ class Tsch(object):
             self.sw_tp = 0
             self.sw_x = 50
             self.calculate_eb_sw()
+        else:
+            self.sw_x = 100
 
     def _decided_to_send_eb(self):
         nbr = len(self.neighbor_table)

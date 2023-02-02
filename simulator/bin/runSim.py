@@ -174,6 +174,21 @@ def parseCliParams():
         default    = '',
         help       = 'algo_use_ql',
     )
+    parser.add_argument(
+        '--param_minep',
+        dest       = 'param_minep',
+        action     = 'store',
+        default    = '',
+        help       = 'ql_adaptive_min_epsilon',
+    )
+    parser.add_argument(
+        '--param_addrem',
+        dest       = 'param_addrem',
+        action     = 'store',
+        default    = '',
+        help       = 'algo_simulate_addremove',
+    )
+
 
 
     cliparams      = parser.parse_args()
@@ -340,6 +355,8 @@ def main():
         'param_ql': 'algo_use_ql',
         'param_autot': 'algo_auto_t',
         'param_autok': 'algo_auto_k',
+        'param_minep': 'ql_adaptive_min_epsilon',
+        'param_addrem': 'algo_simulate_addremove'
     }
     
     # cli params

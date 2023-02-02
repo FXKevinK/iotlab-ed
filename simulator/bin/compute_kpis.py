@@ -224,11 +224,12 @@ def kpis_all(inputfile):
             if 'rpljoin_dio_type' not in all_joined:
                 all_joined['rpljoin_dio_type'] = {}
             
-            k = logline['dio_type']
-            if k not in all_joined['rpljoin_dio_type']:
-                all_joined['rpljoin_dio_type'][k] = 0
+            if 'dio_type' in logline:
+                k = logline['dio_type']
+                if k not in all_joined['rpljoin_dio_type']:
+                    all_joined['rpljoin_dio_type'][k] = 0
 
-            all_joined['rpljoin_dio_type'][k] += 1
+                all_joined['rpljoin_dio_type'][k] += 1
 
         elif logline['_type'] == SimLog.LOG_APP_TX['type']:
             # packet transmission
@@ -593,6 +594,7 @@ def kpis_all(inputfile):
 
 
 def generate_stats(new_key, val, attach_value=False):
+    if isinstance(val[-1], list): return []
     val = [float(x) for x in val if x is not None]
     stats = {
         'name': new_key,
@@ -733,9 +735,8 @@ def exp3_process(df_, measured_metrics, base_path):
         sub_keys = measured_metrics[col]
         for sub_key in sub_keys:
             new_key = f'{col}-{sub_key}'
-            path = os.path.join(base_path, f"{new_key}.csv")
-            dftt.to_csv(path, index=False, sep ='\t')
-
+            path = os.path.join(base_path, f"{new_key}.xlsx")
+            dftt.to_excel(path, index=False)
 
 def main():
     cliparams = parseCliParams()
@@ -754,7 +755,7 @@ def main():
     )
 
     for subfolder in subfolders:
-        if not os.path.isdir(subfolder):
+        if not os.path.isdir(subfolder) and 'exp' not in subfolder:
             continue
 
         method_ = str(cliparams['method'])
@@ -785,12 +786,13 @@ def main():
     num_nodes = None
     df_ = None
     for subfolder in subfolders:
-        if not os.path.isdir(subfolder):
+        if not os.path.isdir(subfolder) and 'exp' not in subfolder:
             continue
 
         mthd = subfolder.split('/')[-1]
         for infile in glob.glob(os.path.join(subfolder, '*.dat.json')):
             with open(infile, 'r') as f:
+                print("\n", infile)
                 data = json.load(f)
                 num_runs = len(data.keys())
                 for run_id in data.keys():
@@ -825,10 +827,12 @@ def main():
 
     if not df_.empty:
         path_ = os.path.join(base_path, 'comparison_all.csv')
+        path2 = os.path.join(base_path, 'comparison_merged.csv')
+        exp = ''
+
         df_.sort_values(by='method', inplace=True, ignore_index=True)
         df_.to_csv(path_, index=False, sep ='\t')
-
-        path2 = os.path.join(base_path, 'comparison_merged.csv')
+        
         df2 = df_.copy()
         df2 = df2.drop(['run_id'], axis=1, errors='ignore')
         df2.loc[:, df2.columns != 'method'] = df2.loc[:,
@@ -845,6 +849,7 @@ def main():
         is_test = bool(cliparams.get('test', 0))
 
         methods = df2['method'].values
+        df2['ori_name'] = df2['method'].values
         if df2['method'].str.contains('exp1').sum():
             new_values = []
             for a in methods:
@@ -859,22 +864,34 @@ def main():
                 name = f'({lr}, {dr})'
                 new_values.append(name)
             df2['method'] = new_values
+            df2.sort_values(by='method', inplace=True, ignore_index=True)
+            exp = 1
 
         elif df2['method'].str.contains('exp2').sum():
             new_values = []
             for a in methods:
                 sp = a.split('_')
+                ep_min = ''
                 if 'ad1' in sp:
                     sp.remove('ad1')
                     ep_m = 'AD'
-                    ep_v = sp[-1].replace("epdecay", "")
+                    i1 = -1
+                    i2 = -1
+                    for i, x in enumerate(sp):
+                        if 'epdecay' in x: i1 = i
+                        elif 'minep' in x: i2 = i
+                    ep_v = sp[i1].replace("epdecay", "")
+                    # ep_min = sp[i2].replace("minep", "")
                 else:
                     sp.remove('ad0')
                     ep_m = 'ST'
                     ep_v = sp[-1].split('ep')[-1]
-                name = f'{ep_m} {ep_v}'
+                name = f'{ep_m} {ep_v} {ep_min}'
+                name = name.strip()
                 new_values.append(name)
             df2['method'] = new_values
+            df2.sort_values(by='method', inplace=True, ignore_index=True)
+            exp = 2
 
         elif df2['method'].str.contains('exp3').sum() and not is_test:
             new_values = []
@@ -913,8 +930,11 @@ def main():
             df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
 
             exp3_process(df2, measured_metrics, base_path)
+            exp = 3
 
         df2.to_csv(path2, index=False, sep ='\t')
+        path2_ = os.path.join(base_path, f'comparison_merged_exp{exp}.xlsx')
+        df2.to_excel(path2_, index=False)
 
 
 if __name__ == '__main__':

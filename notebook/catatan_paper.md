@@ -92,12 +92,21 @@ python3.7 runSim.py --algo=qt_1 --param_lr=0.8 --param_dr=0.8;
 python3.7 runSim.py --algo=qt_2 --param_ep=0.2 --param_ad=0;
 python3.7 runSim.py --algo=qt_2 --param_ep=0.5 --param_ad=0;
 python3.7 runSim.py --algo=qt_2 --param_ep=0.8 --param_ad=0;
-python3.7 runSim.py --algo=qt_2 --param_epdecay=0.001 --param_ad=1;
-python3.7 runSim.py --algo=qt_2 --param_epdecay=0.01 --param_ad=1;
-python3.7 runSim.py --algo=qt_2 --param_epdecay=0.05 --param_ad=1;
-python3.7 runSim.py --algo=qt_2 --param_epdecay=0.1 --param_ad=1;
-python3.7 runSim.py --algo=qt_2 --param_epdecay=0.2 --param_ad=1;
+python3.7 runSim.py --algo=qt_2 --param_epdecay=0.001 --param_ad=1 --param_minep=0.1;
+python3.7 runSim.py --algo=qt_2 --param_epdecay=0.01 --param_ad=1 --param_minep=0.1;
+python3.7 runSim.py --algo=qt_2 --param_epdecay=0.05 --param_ad=1 --param_minep=0.1;
+python3.7 runSim.py --algo=qt_2 --param_epdecay=0.1 --param_ad=1 --param_minep=0.1;
+python3.7 runSim.py --algo=qt_2 --param_epdecay=0.2 --param_ad=1 --param_minep=0.1;
+python3.7 runSim.py --algo=qt_2 --param_epdecay=0.3 --param_ad=1 --param_minep=0.1;
 
+<!-- exp 3 Add/Remove-->
+python3.7 runSim.py --algo=qt_3 --param_addrem=0;
+python3.7 runSim.py --algo=qt_3 --param_addrem=1;
+python3.7 runSim.py --algo=qt_3 --param_addrem=2;
+
+python3.7 runSim.py --algo=ori --param_addrem=0;
+python3.7 runSim.py --algo=ori --param_addrem=1;
+python3.7 runSim.py --algo=ori --param_addrem=2;
 
 <!-- exp 3 -->
 python3.7 runSim.py --algo=ori --param_motes=10 --param_imin=1;
@@ -121,11 +130,14 @@ python3.7 runSim.py --algo=riata --param_motes=100 --param_imin=5;
 python3.7 runSim.py --algo=riata --param_motes=100 --param_imin=10;
 
 python3.7 runSim.py --algo=qt_3 --param_motes=10 --param_imin=1;
-python3.7 runSim.py --algo=qt_3 --param_motes=10 --param_imin=5;
-python3.7 runSim.py --algo=qt_3 --param_motes=10 --param_imin=10;
 python3.7 runSim.py --algo=qt_3 --param_motes=50 --param_imin=1;
+
+python3.7 runSim.py --algo=qt_3 --param_motes=10 --param_imin=5;
 python3.7 runSim.py --algo=qt_3 --param_motes=50 --param_imin=5;
+
+python3.7 runSim.py --algo=qt_3 --param_motes=10 --param_imin=10;
 python3.7 runSim.py --algo=qt_3 --param_motes=50 --param_imin=10;
+
 python3.7 runSim.py --algo=qt_3 --param_motes=100 --param_imin=1;
 python3.7 runSim.py --algo=qt_3 --param_motes=100 --param_imin=5;
 python3.7 runSim.py --algo=qt_3 --param_motes=100 --param_imin=10;

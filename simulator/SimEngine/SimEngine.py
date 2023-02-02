@@ -19,7 +19,7 @@ import sys
 import threading
 import time
 import traceback
-import json
+import numpy as np
 
 from . import Mote
 from . import SimSettings
@@ -342,7 +342,7 @@ class DiscreteEventEngine(threading.Thread):
         LOG_EVERY_N = 200
         if self.verbose:
             if (slotframe_iteration % LOG_EVERY_N) == 0:
-                print(u'   slotframe_iteration: {0}/{1}'.format(slotframe_iteration, self.settings.exec_numSlotframesPerRun-1))
+                print(u'   slotframe_iteration: {0}/{1}'.format(slotframe_iteration, self.settings.exec_numSlotframesPerRun - 1))
 
         self._routine_on_end_slotframe()
 
@@ -379,6 +379,8 @@ class SimEngine(DiscreteEventEngine):
     joined_motes = 0
     all_ops = 0
     all_joined_ops = 0
+    addrem_motes = []
+    is_addremove = 0
 
     def add_ops(self):
         self.all_ops += 1
@@ -467,14 +469,57 @@ class SimEngine(DiscreteEventEngine):
         # select dagRoot
         self.motes[self.DAGROOT_ID].setDagRoot()
 
-        # boot all motes
-        for i in range(len(self.motes)):
-            self.motes[i].boot()
-    
+        self.is_addremove = getattr(self.settings, "algo_simulate_addremove", 0)
+        
+        # TODO DZAKY 
+        # 0 NO / 1 Add / 2 Remove
+        ### Simulate Add
+            # Stop
+            # after half time
+            # Start
+
+        ### Simulate Remove
+            # afer half time
+            # Stop
+
+        all_motes = list(range(len(self.motes)))
+        
+        list_motes = []
+        if self.is_addremove in [1, 2]:
+            k = int(0.2 * len(self.motes))
+            self.addrem_motes = np.copy(all_motes[1:]).tolist()
+            random.shuffle(self.addrem_motes)
+            self.addrem_motes = self.addrem_motes[:k]
+            print(f"\nSimulate Add/Remove on {k} motes:", self.addrem_motes)
+            assert len(set(self.addrem_motes)) == k
+            list_motes = [x for x in all_motes if x not in self.addrem_motes]
+
+        if self.is_addremove == 1:
+            # Stop at the beginning
+            for i in list_motes:
+                self.motes[i].boot()
+        else:
+            # Boot all motes
+            for i in all_motes:
+                self.motes[i].boot()
+
     def _routine_on_end_slotframe(self):
         slotframe_iteration = int(old_div(self.asn, self.settings.tsch_slotframeLength))
 
-        if slotframe_iteration == self.settings.exec_numSlotframesPerRun - 1:
+        end_slotframe = self.settings.exec_numSlotframesPerRun - 1
+
+        if self.is_addremove and slotframe_iteration == int(end_slotframe / 2):
+            k = len(self.addrem_motes)
+            if self.is_addremove == 1:
+                print(f"\nBoot (Add) {k} motes:", self.addrem_motes)
+                for i in self.addrem_motes:
+                    self.motes[i].boot()
+            elif self.is_addremove == 2:
+                print(f"\nKill (Remove) {k} motes:", self.addrem_motes)
+                for i in self.addrem_motes:
+                    self.motes[i].kill()
+
+        elif slotframe_iteration == end_slotframe:
             time_m = self.asn * self.settings.tsch_slotDuration / 60
             diff_ops = self.all_ops-self.all_joined_ops
             result = {

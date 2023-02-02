@@ -56,18 +56,15 @@
             "dio_interval_min_s": 5,
             "eb_interval_s": 4,
             "trickle_method": "qt",
-            "ql_learning_rate": 0.5,
-            "ql_discount_rate": 0.5,
-            "ql_epsilon": 0.5,
-            "algo_adaptive_epsilon": false,
-            "ql_adaptive_decay_rate": null,
-            "ql_adaptive_max_epsilon": null,
-            "ql_adaptive_min_epsilon": null,
             "algo_auto_eb": 3,
             "algo_use_ql": 1,
             "algo_dis_prio": 1,
             "algo_auto_t": 1,
-            "algo_auto_k": 1
+            "algo_auto_k": 1,
+            "ql_learning_rate": 0.5,
+            "ql_discount_rate": 0.5,
+            "ql_epsilon": 0.5,
+            "algo_adaptive_epsilon": false
         }
     },
     "logging": "all",

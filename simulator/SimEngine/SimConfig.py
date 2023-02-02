@@ -97,7 +97,9 @@ class SimConfig(dict):
                 'algo_dis_prio': int,
                 'algo_use_ql': int,
                 'algo_auto_t': int,
-                'algo_auto_k': int
+                'algo_auto_k': int,
+                'ql_adaptive_min_epsilon': float,
+                'algo_simulate_addremove': int
             }
             
             for key, func in check_regular_param.items():

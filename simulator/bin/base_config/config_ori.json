@@ -55,12 +55,7 @@
             "k_max": 10,
             "dio_interval_min_s": 5,
             "eb_interval_s": 4,
-            "trickle_method": "ori",
-            "algo_auto_eb": 0,
-            "algo_dis_prio": 0,
-            "ql_learning_rate": 0.5,
-            "ql_discount_rate": 0.5,
-            "ql_epsilon": 0.5
+            "trickle_method": "ori"
         }
     },
     "logging": "all",

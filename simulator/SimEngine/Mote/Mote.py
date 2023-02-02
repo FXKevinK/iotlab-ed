@@ -149,6 +149,9 @@ class Mote(object):
             # schedule the first listeningForE cell
             self.tsch.schedule_next_listeningForEB_cell()
 
+    def kill(self):
+        self.tsch.setIsSync(False, kill=True)
+
     # ==== EBs and DIOs
 
     def clear_to_send_EBs_DATA(self):
