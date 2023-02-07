@@ -470,6 +470,7 @@ class SimEngine(DiscreteEventEngine):
         self.motes[self.DAGROOT_ID].setDagRoot()
 
         self.is_addremove = getattr(self.settings, "algo_simulate_addremove", 0)
+        self.addremove_ratio = getattr(self.settings, "algo_addremove_ratio", 0.1)
         
         # TODO DZAKY 
         # 0 NO / 1 Add / 2 Remove
@@ -486,7 +487,7 @@ class SimEngine(DiscreteEventEngine):
         
         list_motes = []
         if self.is_addremove in [1, 2]:
-            k = int(0.2 * len(self.motes))
+            k = int(self.addremove_ratio * len(self.motes))
             self.addrem_motes = np.copy(all_motes[1:]).tolist()
             random.shuffle(self.addrem_motes)
             self.addrem_motes = self.addrem_motes[:k]

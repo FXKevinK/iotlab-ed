@@ -631,7 +631,7 @@ class Tsch(object):
             if asn_t_start is not None and asn_t_end is not None and cur_asn is not None:
                 if asn_t_start <= cur_asn and cur_asn <= asn_t_end:
                     if pkt[u'type'] != d.PKT_TYPE_DIO:
-                        if random.uniform(0, 1) < self.mote.rpl.trickle_timer.pbusy:
+                        if random.uniform(0, 1) < (self.mote.rpl.trickle_timer.pbusy or 0):
                             pkt = None
 
         if self.use_sw and cell.is_minimal_cell() and pkt:
@@ -1292,7 +1292,7 @@ class Tsch(object):
             'mbr': all_ops/slotframe_iteration,
         }
 
-        metric_to_measure = ['pbusy', 'pfree', 'ptransmit', 'preset', 'pstable', 'pfailed', 'psent', 'epsilon']
+        metric_to_measure = ['pbusy', 'pfree', 'ptransmit', 'preset', 'pstable', 'pfailed', 'psent', 'epsilon', 'k', 't', 'interval', 'nbr', 'counter', 'reward']
         for k in metric_to_measure:
             val = getattr(self.mote.rpl.trickle_timer, k, None)
             result[k] = val
@@ -1346,6 +1346,7 @@ class Tsch(object):
 
         # calculate sw
         self.sw_s = duration_s + ((self.sw_x/100) * duration_s)
+        self.sw_s = min(self.sw_s, 10 * self.slotframe_duration_s)
         cur_asn = self.engine.getAsn()
         self.end_sw_asn = cur_asn + int(math.ceil(self.sw_s / self.slot_duration_s))
 
@@ -1366,8 +1367,7 @@ class Tsch(object):
         self.eb_used_prob = self.eb_prob
 
         if getattr(self.settings, "algo_auto_eb", 0) in [1, 3]:
-            max_ = 1 - self.eb_prob
-            self.eb_used_prob = self.eb_prob + (max_ / pow(2, nbr))
+            self.eb_used_prob = self.eb_prob + ((1 - self.eb_prob) / pow(2, nbr))
 
         assert 0 <= self.eb_used_prob <= 1
 
@@ -1825,6 +1825,9 @@ class SlotFrame(object):
         self.slots = {}
         # index by neighbor_mac_addr for quick access
         self.cells = {}
+
+    def slotframe_utilization(self):
+        return len(self.slots)/self.length
 
     def __repr__(self):
         return u'slotframe(length: {0}, num_cells: {1})'.format(

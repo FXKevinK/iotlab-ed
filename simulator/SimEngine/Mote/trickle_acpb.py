@@ -83,11 +83,6 @@ class ACPBTrickle(object):
         return self.state == self.STATE_RUNNING
 
     def start(self, note=None):
-        # Section 4.2:
-        #   1.  When the algorithm starts execution, it sets I to a value in
-        #       the range of [Imin, Imax] -- that is, greater than or equal to
-        #       Imin and less than or equal to Imax.  The algorithm then begins
-        #       the first interval.
         self.state = self.STATE_RUNNING
         self.m = 0
         self.interval = self.min_interval
@@ -130,7 +125,7 @@ class ACPBTrickle(object):
 
         # Algorithm 1
         if note == 3:
-            if self.interval != self.min_interval:
+            if self.interval > self.min_interval:
                 self.flag = self.m
                 self.interval = self.min_interval
                 self.m = 0
@@ -172,17 +167,18 @@ class ACPBTrickle(object):
         self.counter = 0
 
     def _schedule_event_at_t_and_i(self):
+        # Algorithm 3
         slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
         NcellsC = self.toint_division(self.interval, slotframe_duration_ms, is_floor=True)
         half_ncells = self.toint_division(NcellsC, 2)
 
         is_t_in_cell = True
-        if self.interval == self.min_interval or self.suppressed != 0:
+        if self.interval == self.min_interval or self.suppressed > 0:
             self.t_start = 0
             self.t_end = half_ncells - ((half_ncells / (self.Nnbr + 1)) * self.suppressed)
             self.t_end = max(min(half_ncells, self.t_end), 0)
-        elif self.transmitted != 0:
+        elif self.transmitted > 0:
             self.t_start = half_ncells + (((self.Nnbr + 1) / half_ncells) * self.transmitted)
             self.t_start = max(min(NcellsC, self.t_start), half_ncells)
             self.t_end = NcellsC
@@ -292,6 +288,10 @@ class ACPBTrickle(object):
 
     def calculate_psent(self):
         self.pfailed = self.mote.rpl.get_failed_dio(True, True)
+        if self.pfailed is None:
+            self.psent = 0
+            self.pfailed = 0
+            return
         self.psent = 1 - self.pfailed
         assert 0 <= self.psent <= 1
 
@@ -345,7 +345,10 @@ class ACPBTrickle(object):
             'interval': self.interval,
             'nbr': self.Nnbr,
             'counter': self.counter,
-            'm': self.m,
+            'is_dio_sent': self.is_dio_sent,
+            'count_dio_trickle': self.mote.rpl.count_dio_trickle,
+            'reward': None,
+            'm': self.m
         }
         self.log(
             SimEngine.SimLog.LOG_TRICKLE,
@@ -359,7 +362,7 @@ class ACPBTrickle(object):
         # Algorithm 2
         if self.m == 0:
             k = min(self.Nnbr + 1, 10)
-        elif self.m > 0 and self.m <= int(math.ceil(old_div(self.i_max, 2))):
+        elif self.m > 0 and self.m <= self.i_max/2:
             k = min(self.toint_division(self.Nnbr + 1, 2), 10)
         else:
             k = min(self.Nnbr + 1, 10)

@@ -182,9 +182,7 @@ class TrickleTimer(object):
         slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
 
-        # Calculate T
         half_interval = old_div(self.interval, 2)
-
         self.t_start = half_interval
         self.t_end = self.interval
         if getattr(self.settings, "algo_auto_t", False):
@@ -301,6 +299,10 @@ class TrickleTimer(object):
 
     def calculate_psent(self):
         self.pfailed = self.mote.rpl.get_failed_dio(True, True)
+        if self.pfailed is None:
+            self.psent = 0
+            self.pfailed = 0
+            return
         self.psent = 1 - self.pfailed
         assert 0 <= self.psent <= 1
 
@@ -354,6 +356,9 @@ class TrickleTimer(object):
             'interval': self.interval,
             'nbr': self.Nnbr,
             'counter': self.counter,
+            'is_dio_sent': self.is_dio_sent,
+            'count_dio_trickle': self.mote.rpl.count_dio_trickle,
+            'reward': None
         }
 
         if getattr(self.settings, "algo_use_ql", False):

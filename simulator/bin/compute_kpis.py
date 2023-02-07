@@ -9,6 +9,8 @@ import argparse
 from scipy.stats import skew, kurtosis
 import pandas as pd
 import netaddr
+from multiprocessing import Process
+import shutil
 
 if __name__ == '__main__':
     here = sys.path[0]
@@ -29,6 +31,7 @@ DAGROOT_ID = 0  # we assume first mote is DAGRoot
 DAGROOT_IP = 'fd00::1:0'
 BATTERY_AA_CAPACITY_mAh = 2821.5
 
+N_default = 5
 # =========================== decorators ======================================
 
 
@@ -560,6 +563,11 @@ def kpis_all(inputfile):
             allstats[run_id]['global-stats'][new_key] = generate_stats(
                 new_key, val)
 
+        allstats[run_id]['global-stats']['last_pfailed'] = (
+            allstats[run_id]['global-stats']['last_failed_dio'][0]['sum'] / allstats[run_id]['global-stats']['last_count_dio'][0]['sum']
+        )
+        allstats[run_id]['global-stats']['last_psent'] = 1 - allstats[run_id]['global-stats']['last_pfailed']
+
     # === remove unnecessary stats
     remove_list = [
         'latencies',
@@ -685,12 +693,21 @@ def parseCliParams():
         default='',
         help='is_test',
     )
+    parser.add_argument(
+        '--worker',
+        dest='worker',
+        action='store',
+        default='',
+        help='num_worker',
+    )
 
     cliparams = parser.parse_args()
     return cliparams.__dict__
 
 
-def exp3_process(df_, measured_metrics, base_path):
+def exp4_process(df_, measured_metrics, base_path):
+    base_path = os.path.join(base_path, "exp4_metrics")
+
     c_ = df_.columns.to_list()
     c_.remove('parameter')
     c_.remove('method')
@@ -712,6 +729,10 @@ def exp3_process(df_, measured_metrics, base_path):
             df_t.rename(columns={c: new_col_name}, inplace=True)
 
     target_ = list(measured_metrics.keys())
+
+    print(base_path)
+    remove_create_folder(base_path)
+
     for col in target_:
         temp_dic = {}
         for i in df_t.columns[df_t.columns.str.contains(col)]:
@@ -738,6 +759,35 @@ def exp3_process(df_, measured_metrics, base_path):
             path = os.path.join(base_path, f"{new_key}.xlsx")
             dftt.to_excel(path, index=False)
 
+def generate_summary(infile):
+    print('generating KPIs for {0}'.format(infile))
+
+    # gather the kpis
+    kpis = kpis_all(infile)
+
+    # add to the data folder
+    outfile = '{0}.json'.format(infile)
+    with open(outfile, 'w') as f:
+        f.write(json.dumps(kpis, indent=4))
+    print('KPIs saved in {0}'.format(outfile))
+
+def remove_create_folder(path):
+    try:
+        shutil.rmtree(path)
+    except OSError:
+        pass
+
+    try:
+        os.makedirs(path)
+    except OSError:
+        pass
+
+def get_idval_text(lst, text):
+    for i, x in enumerate(lst):
+        if text in x:
+            return i, x.replace(text, '')
+    return None, None
+
 def main():
     cliparams = parseCliParams()
 
@@ -748,12 +798,12 @@ def main():
     add_path = str(cliparams['path'])
     if add_path:
         base_path += f'/{add_path}'
-    print(base_path)
 
     subfolders = list(
         [os.path.join(base_path, x) for x in os.listdir(base_path)]
     )
 
+    raw_files = []
     for subfolder in subfolders:
         if not os.path.isdir(subfolder) and 'exp' not in subfolder:
             continue
@@ -766,18 +816,24 @@ def main():
             pass
 
         for infile in glob.glob(os.path.join(subfolder, '*.dat')):
-            print('\ngenerating KPIs for {0}'.format(infile))
+            raw_files.append(infile)
 
-            # gather the kpis
-            kpis = kpis_all(infile)
+    N = int(cliparams['worker'] or N_default)
+    subList = [raw_files[n : n + N] for n in range(0, len(raw_files), N)]
+    for sl in subList:
+        processes = []
 
-            # add to the data folder
-            outfile = '{0}.json'.format(infile)
-            with open(outfile, 'w') as f:
-                f.write(json.dumps(kpis, indent=4))
-            print('KPIs saved in {0}'.format(outfile))
+        for file in sl:
+            proc = Process(target=generate_summary, args=(file,))
+            processes.append(proc)
 
-    compare_ = str(cliparams['compare'])
+        for p in processes:
+            p.start()
+
+        for p in processes:
+            p.join()
+
+    compare_ = int(cliparams['compare'])
 
     if not compare_:
         return
@@ -792,7 +848,6 @@ def main():
         mthd = subfolder.split('/')[-1]
         for infile in glob.glob(os.path.join(subfolder, '*.dat.json')):
             with open(infile, 'r') as f:
-                print("\n", infile)
                 data = json.load(f)
                 num_runs = len(data.keys())
                 for run_id in data.keys():
@@ -811,7 +866,7 @@ def main():
                         sub_keys = measured_metrics[key]
                         for sub_key in sub_keys:
                             new_key = f'{key}-{sub_key}'
-                            if key == 'e2e-pdr':
+                            if sub_key == '':
                                 value = stats[key]
                             else:
                                 value = stats[key][0][sub_key]
@@ -848,89 +903,76 @@ def main():
 
         is_test = bool(cliparams.get('test', 0))
 
-        methods = df2['method'].values
-        df2['ori_name'] = df2['method'].values
-        if df2['method'].str.contains('exp1').sum():
-            new_values = []
-            for a in methods:
-                param = a.split('_')[-1].split('-')
-                for p in param:
-                    key = 'lr'
-                    if key in p:
-                        lr = p.replace(key, '')
-                    key = 'dr'
-                    if key in p:
-                        dr = p.replace(key, '')
-                name = f'({lr}, {dr})'
-                new_values.append(name)
-            df2['method'] = new_values
-            df2.sort_values(by='method', inplace=True, ignore_index=True)
-            exp = 1
+        if not is_test:
+            methods = df2['method'].values
+            df2['ori_name'] = df2['method'].values
+            if df2['method'].str.contains('exp1').sum():
+                new_values = []
+                for a in methods:
+                    param = a.split('_')
+                    _, dr = get_idval_text(param, 'dr')
+                    name = f'{dr}'
+                    new_values.append(name)
+                df2['method'] = new_values
+                df2.sort_values(by='method', inplace=True, ignore_index=True)
+                exp = 1
 
-        elif df2['method'].str.contains('exp2').sum():
-            new_values = []
-            for a in methods:
-                sp = a.split('_')
-                ep_min = ''
-                if 'ad1' in sp:
-                    sp.remove('ad1')
-                    ep_m = 'AD'
-                    i1 = -1
-                    i2 = -1
-                    for i, x in enumerate(sp):
-                        if 'epdecay' in x: i1 = i
-                        elif 'minep' in x: i2 = i
-                    ep_v = sp[i1].replace("epdecay", "")
-                    # ep_min = sp[i2].replace("minep", "")
-                else:
-                    sp.remove('ad0')
-                    ep_m = 'ST'
-                    ep_v = sp[-1].split('ep')[-1]
-                name = f'{ep_m} {ep_v} {ep_min}'
-                name = name.strip()
-                new_values.append(name)
-            df2['method'] = new_values
-            df2.sort_values(by='method', inplace=True, ignore_index=True)
-            exp = 2
+            elif df2['method'].str.contains('exp2').sum():
+                new_values = []
+                for a in methods:
+                    param = a.split('_')
+                    _, lr = get_idval_text(param, 'lr')
+                    name = f'{lr}'
+                    new_values.append(name)
+                df2['method'] = new_values
+                df2.sort_values(by='method', inplace=True, ignore_index=True)
+                exp = 2
 
-        elif df2['method'].str.contains('exp3').sum() and not is_test:
-            new_values = []
-            sort_temp = []
-            parameter = []
-            for v in methods:
-                param = v.split('_')
-                for p in param:
-                    key = 'imin'
-                    if key in p:
-                        i = p.replace(key, '')
-                    key = 'motes'
-                    if key in p:
-                        n = p.replace(key, '')
+            elif df2['method'].str.contains('exp3').sum():
+                new_values = []
+                for a in methods:
+                    param = a.split('_')
+                    _, ep = get_idval_text(param, 'ep')
+                    name = f'{ep}'
+                    new_values.append(name)
+                df2['method'] = new_values
+                df2.sort_values(by='method', inplace=True, ignore_index=True)
+                exp = 3
 
-                m = str(param[0]).upper()
-                new_values.append(m)
-                parameter.append(f"({n}, {i})")
 
-                if m == 'ORI':
-                    id_ = 1
-                elif m == 'RIATA':
-                    id_ = 2
-                elif m == 'AC':
-                    id_ = 3
-                else:
-                    id_ = 4
+            elif df2['method'].str.contains('exp4').sum():
+                new_values = []
+                sort_temp = []
+                parameter = []
+                for v in methods:
+                    param = v.split('_')
+                    _, i = get_idval_text(param, 'imin')
+                    _, n = get_idval_text(param, 'motes')
 
-                sort_temp.append(f"{n}-{i}-{id_}")
+                    m = str(param[0]).upper()
+                    new_values.append(m)
+                    parameter.append(f"({n}, {i})")
 
-            df2['method'] = new_values
-            df2['parameter'] = parameter
+                    if m == 'ORI':
+                        id_ = 1
+                    elif m == 'RIATA':
+                        id_ = 2
+                    elif m == 'AC':
+                        id_ = 3
+                    else:
+                        id_ = 4
 
-            df2['sort_temp'] = sort_temp
-            df2.sort_values(by='sort_temp', inplace=True, ignore_index=True)
-            df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
+                    sort_temp.append(f"{n}-{i}-{id_}")
 
-            exp3_process(df2, measured_metrics, base_path)
-            exp = 3
+                df2['method'] = new_values
+                df2['parameter'] = parameter
+
+                df2['sort_temp'] = sort_temp
+                df2.sort_values(by='sort_temp', inplace=True, ignore_index=True)
+                df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
+
+                exp4_process(df2, measured_metrics, base_path)
+                exp = 4
 
         df2.to_csv(path2, index=False, sep ='\t')
         path2_ = os.path.join(base_path, f'comparison_merged_exp{exp}.xlsx')

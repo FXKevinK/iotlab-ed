@@ -44,7 +44,7 @@
             "conn_random_init_min_pdr": 0.5,
             "conn_random_init_min_neighbors": 3,
             "phy_numChans": 16,
-            "exec_randomSeed": "random",
+            "exec_randomSeed": "run_id",
             "motes_eui64": [],
             "conn_topology": "grid",
             "conn_grid_max_distance": 0.1,
@@ -61,11 +61,9 @@
             "algo_dis_prio": 1,
             "algo_auto_t": 1,
             "algo_auto_k": 1,
-            "ql_learning_rate": 0.8,
-            "ql_discount_rate": 0.2,
-            "ql_epsilon": 0.5,
-            "algo_adaptive_epsilon": true,
-            "ql_adaptive_decay_rate": 0.01
+            "ql_learning_rate": 0.5,
+            "ql_discount_rate": 0.5,
+            "ql_epsilon": 0.5
         }
     },
     "logging": "all",

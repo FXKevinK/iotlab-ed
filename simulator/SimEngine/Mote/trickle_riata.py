@@ -55,53 +55,55 @@ class RiataTrickle(object):
         self.is_dio_sent = False
         self.Nstates = 0
         self.Ncells = 0
-        self.Nreset = 1
-        self.pbusy = 1
-        self.preset = 1
-        self.pfree = 1 - self.pbusy
-        self.pstable = 1 - self.preset
-        self.ptransmit = 1
         self.DIOsurpress = 0
         self.DIOtransmit = 0
         self.used = 0
         self.listen_period = 0
         self.Nnbr = 0
+        self.t = 0
         self.t_range = None
         self.t_start = 0
         self.t_end = 0
-        self.t = 0
-        self.prev_state = 0
         self.listen_period = 0
+        self.is_explore = None
+
         self.psent = 0
         self.pqu = 0
-        self.pfailed = 1
-        self.is_explore = None
+        # self.Nreset = 1
+        # self.pbusy = 1
+        # self.preset = 1
+        # self.pfree = 1 - self.pbusy
+        # self.pstable = 1 - self.preset
+        # self.ptransmit = 1
+        # self.pfailed = 1
+        self.Nreset = 0
+        self.pbusy = 0 # None
+        self.preset = 0 # None
+        self.pfree = 0 # None
+        self.pstable = 0 #None
+        self.ptransmit = 0 # None
+        self.pfailed = 0 # None
+        self.reward = 0
+
 
         # for riata
         self.m_riata = 1  # m as interval states
         self.DIOsent = 0
         self.inconc = {self.m_riata: 0}
-        self.Ndio = {}
+        self.DIOCount = {}
         self.counter = {self.m_riata: 0}
         self.alpha = self.settings.ql_learning_rate
         self.betha = self.settings.ql_discount_rate
         self.epsilon = self.settings.ql_epsilon
         self.ql_table = np.zeros([2, 2]).tolist()
-        self.reward = 0
-        self.average_reward = 0
-        self.total_reward = 0
-        self.prev_inconc = 0
+        self.is_change = 0
+        self.is_dio_sent_prev = 0
 
     @property
     def is_running(self):
         return self.state == self.STATE_RUNNING
 
     def start(self, note=None):
-        # Section 4.2:
-        #   1.  When the algorithm starts execution, it sets I to a value in
-        #       the range of [Imin, Imax] -- that is, greater than or equal to
-        #       Imin and less than or equal to Imax.  The algorithm then begins
-        #       the first interval.
         self.state = self.STATE_RUNNING
         self.m_riata = 1
         self.interval = self.min_interval
@@ -113,18 +115,12 @@ class RiataTrickle(object):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_start_t')
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
         self.state = self.STATE_STOPPED
+        self.asn_t_start = None
+        self.asn_t_end = None
 
     def reset(self, note=None):
         if self.state == self.STATE_STOPPED:
             return
-
-        self.DIOsent = 0
-        self.counter[self.m_riata] = 0
-        self.Ndio[self.m_riata] = 0
-        # populate
-        if self.m_riata not in self.inconc:
-            self.inconc[self.m_riata] = 0
-        self.inconc[self.m_riata] += 1
 
         type_ = ""
         if note == 1:
@@ -148,15 +144,22 @@ class RiataTrickle(object):
             }
         )
 
-        self.m_riata = 1
-        self.Nreset += 1
+        # populate
         self.interval = self.min_interval
+        self.DIOsent = 0
+        self.Nreset += 1
+
+        self.counter[self.m_riata] = 0
+        self.m_riata = 1
+        self.DIOCount[self.m_riata] = 0
+        if self.m_riata not in self.inconc: self.inconc[self.m_riata] = 0
+        self.inconc[self.m_riata] += 1
+
         self._start_next_interval()
 
     def increment_counter(self):
         # populate
-        if self.m_riata not in self.counter:
-            self.counter[self.m_riata] = 0
+        if self.m_riata not in self.counter: self.counter[self.m_riata] = 0
         self.counter[self.m_riata] += 1
 
     def _start_next_interval(self):
@@ -173,6 +176,7 @@ class RiataTrickle(object):
         self.calculate_preset()
         self.Nnbr = len(self.mote.rpl.of.neighbors) if hasattr(
             self.mote.rpl.of, 'neighbors') else 0
+        self.is_dio_sent_prev = self.is_dio_sent
         self._schedule_event_at_t_and_i()
         self.log_result()
 
@@ -180,53 +184,52 @@ class RiataTrickle(object):
         slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
 
-
-        I_ = old_div(self.interval, (self.m_riata + self.inconc[self.m_riata]))
+        I_ = self.interval / (self.m_riata + self.inconc[self.m_riata])
         self.t_start = self.DIOsent * I_
         self.t_end = (self.DIOsent + 1) * I_
-        self.t_start = int(math.ceil(self.t_start))
-        self.t_end = int(math.ceil(self.t_end))
+
+        if not (self.t_start <= self.t_end <= self.interval):
+            half_interval = old_div(self.interval, 2)
+            self.t_start = half_interval
+            self.t_end = self.interval
 
         self.t = random.uniform(self.t_start, self.t_end)
         assert self.t_start <= self.t_end <= self.interval
         assert self.t_start <= self.t <= self.t_end
 
         self.listen_period = self.t - self.t_start
-        t_range = self.t_end - self.t_start
-        self.Ncells = self.toint_division(t_range, slotframe_duration_ms, is_floor=True)
+        self.t_range = self.t_end - self.t_start
+        self.Ncells = self.toint_division(self.t_range, slotframe_duration_ms, is_floor=True)
 
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
         cur_asn = self.engine.getAsn()
-        asn_start = cur_asn + \
+        self.asn_t_start = cur_asn + \
             self.toint_division(self.t_start, slot_duration_ms)
         asn_t = cur_asn + self.toint_division(self.t, slot_duration_ms)
-        asn_end = cur_asn + self.toint_division(self.t_end, slot_duration_ms)
+        self.asn_t_end = cur_asn + \
+            self.toint_division(self.t_end, slot_duration_ms)
         asn_i = cur_asn + self.toint_division(self.interval, slot_duration_ms)
 
-        assert asn_start >= 0 and asn_end >= 0 and asn_t >= 0 and asn_i >= 0
+        assert self.asn_t_start >= 0 and self.asn_t_end >= 0 and asn_t >= 0 and asn_i >= 0
 
         def t_callback():
             self.is_dio_sent = False
             self.is_explore = random.uniform(0, 1) < self.epsilon
             if self.is_explore:
                 # populate
-                if self.m_riata not in self.counter:
-                    self.counter[self.m_riata] = 0
+                if self.m_riata not in self.counter: self.counter[self.m_riata] = 0
                 # Explore action space
                 if self.counter[self.m_riata] < self.redundancy_constant:
                     self.is_dio_sent = True
-                    self.user_callback()
             else:
                 # Exploit learned values
-                change = np.argmax(self.ql_table[self.prev_state])
-                if self.prev_state:
-                    self.is_dio_sent = False if change else True
-                else:
-                    self.is_dio_sent = True if change else False
+                self.is_change = np.argmax(self.ql_table[self.is_dio_sent_prev])
+                self.is_dio_sent = not self.is_dio_sent_prev if self.is_change else self.is_dio_sent_prev
+                
+            if self.is_dio_sent:
+                self.DIOsent += 1
+                self.user_callback()
 
-                if self.is_dio_sent:
-                    self.user_callback()
-            self.prev_state = self.is_dio_sent
 
         def start_t():
             self.start_t_record = self.getOpsMC()
@@ -241,14 +244,14 @@ class RiataTrickle(object):
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         self.engine.scheduleAtAsn(
-            asn=self.correctASN(asn_start),
+            asn=self.correctASN(self.asn_t_start),
             cb=start_t,
             uniqueTag=self.unique_tag_base + u'_at_start_t',
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
         if self.t_end < self.interval:
             self.engine.scheduleAtAsn(
-                asn=self.correctASN(asn_end),
+                asn=self.correctASN(self.asn_t_end),
                 cb=end_t,
                 uniqueTag=self.unique_tag_base + u'_at_end_t',
                 intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
@@ -257,7 +260,6 @@ class RiataTrickle(object):
 
         def i_callback():
             if self.is_dio_sent:
-                self.DIOsent += 1
                 self.DIOtransmit += 1
             else:
                 self.DIOsurpress += 1
@@ -272,20 +274,15 @@ class RiataTrickle(object):
                 min(self.max_interval, self.interval), self.min_interval)
 
             # populate
-            if self.m_riata not in self.Ndio:
-                self.Ndio[self.m_riata] = 0
+            if self.m_riata not in self.DIOCount:
+                self.DIOCount[self.m_riata] = 0
 
-            if self.Ndio[self.m_riata] == 0:
-                self.redundancy_constant = self.kmax
-            else:
-                self.redundancy_constant = self.calculate_k()
-
+            self.redundancy_constant = self.kmax if self.DIOCount[self.m_riata] == 0 else self.calculate_k()
             self.m_riata += 1
 
             # populate
-            if self.m_riata not in self.Ndio:
-                self.Ndio[self.m_riata] = 0
-            self.Ndio[self.m_riata] += self.redundancy_constant
+            if self.m_riata not in self.DIOCount: self.DIOCount[self.m_riata] = 0
+            self.DIOCount[self.m_riata] += self.redundancy_constant
             self.inconc[self.m_riata] = 0
             self._start_next_interval()
 
@@ -310,6 +307,10 @@ class RiataTrickle(object):
 
     def calculate_psent(self):
         self.pfailed = self.mote.rpl.get_failed_dio(True, True)
+        if self.pfailed is None:
+            self.psent = 0
+            self.pfailed = 0
+            return
         self.psent = 1 - self.pfailed
         assert 0 <= self.psent <= 1
 
@@ -363,6 +364,8 @@ class RiataTrickle(object):
             'interval': self.interval,
             'nbr': self.Nnbr,
             'counter': self.counter.get(self.m_riata, 0),
+            'is_dio_sent': self.is_dio_sent,
+            'count_dio_trickle': self.mote.rpl.count_dio_trickle,
             "reward": self.reward,
             'm': self.m_riata,
         }
@@ -376,40 +379,19 @@ class RiataTrickle(object):
         )
 
     def update_qtable(self):
-        current_state = self.is_dio_sent
-        next_state = current_state
-
-        change = 0  # no change
-        if self.is_dio_sent:
-            if self.prev_inconc:
-                self.reward = 1
-            else:
-                self.reward = 0
-                change = 1
-        else:
-            if self.prev_inconc:
-                self.reward = -1
-                change = 1
-            else:
-                self.reward = 1
-
-        if change:
-            next_state = not next_state
-
-        old_value = self.ql_table[current_state][change]
+        current_state = self.is_dio_sent_prev
+        next_state = self.is_dio_sent
+        incon = self.inconc[self.m_riata]
+        self.reward = incon if current_state else 1 - incon
+        old_value = self.ql_table[current_state][self.is_change]
         ql_next_state = self.ql_table[next_state]
 
         td = self.reward + (self.betha * np.max(ql_next_state))
         new_value = ((1 - self.alpha) * old_value) + (self.alpha * td)
-        self.ql_table[current_state][change] = new_value
-
-        self.total_reward += self.pfree
-        self.average_reward = self.total_reward / self.Nstates
-        self.prev_inconc = self.inconc[self.m_riata]
+        self.ql_table[current_state][self.is_change] = new_value
 
     def calculate_k(self):
         total = 0
-        for i in range(1, self.m_riata+1):
-            total += self.Ndio[i]
-        k = int(math.ceil(old_div(total, self.m_riata)))
+        for i in range(1, self.m_riata+1): total += self.DIOCount[i]
+        k = total / self.m_riata
         return k

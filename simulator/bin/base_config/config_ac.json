@@ -44,7 +44,7 @@
             "conn_random_init_min_pdr": 0.5,
             "conn_random_init_min_neighbors": 3,
             "phy_numChans": 16,
-            "exec_randomSeed": "random",
+            "exec_randomSeed": "run_id",
             "motes_eui64": [],
             "conn_topology": "grid",
             "conn_grid_max_distance": 0.1,
@@ -55,8 +55,7 @@
             "k_max": 10,
             "dio_interval_min_s": 5,
             "eb_interval_s": 4,
-            "trickle_method": "ac",
-            "algo_auto_eb": 0
+            "trickle_method": "ac"
         }
     },
     "logging": "all",

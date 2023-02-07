@@ -188,6 +188,13 @@ def parseCliParams():
         default    = '',
         help       = 'algo_simulate_addremove',
     )
+    parser.add_argument(
+        '--param_arratio',
+        dest       = 'param_arratio',
+        action     = 'store',
+        default    = '',
+        help       = 'algo_addremove_ratio',
+    )
 
 
 
@@ -356,7 +363,8 @@ def main():
         'param_autot': 'algo_auto_t',
         'param_autok': 'algo_auto_k',
         'param_minep': 'ql_adaptive_min_epsilon',
-        'param_addrem': 'algo_simulate_addremove'
+        'param_addrem': 'algo_simulate_addremove',
+        'param_arratio': 'algo_addremove_ratio'
     }
     
     # cli params
@@ -372,7 +380,7 @@ def main():
         if 'qt' in algo:
             param_exp = str(algo).split("_")[-1]
         else:
-            param_exp = 3
+            param_exp = 4
 
         changed_param = {
             map_param['param_exp']: param_exp,

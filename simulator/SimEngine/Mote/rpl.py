@@ -135,9 +135,13 @@ class Rpl(object):
         else:
             count_ = self.count_dio
             transmit_ = self.get_set_size(self.DIOtransmit_all.get(6, 0))
+        count_ = int(count_)
+        transmit_ = int(transmit_)
 
-        failed = int(count_)-int(transmit_)
-        if is_prob: failed = failed/max(int(count_), 1)
+        failed = count_ - transmit_
+        assert failed >= 0 # check
+        if count_ == 0: return None # havent send anything
+        if is_prob: failed = failed/count_
         return failed
 
     def last_slotframe_callback(self):

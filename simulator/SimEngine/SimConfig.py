@@ -55,6 +55,26 @@ class SimConfig(dict):
     _startTime          = None
     _log_directory_name = None
 
+    check_regular_param = {
+        'exec_randomSeed': str,
+        'dio_interval_min_s': int,
+        'ql_learning_rate': float,
+        'ql_discount_rate': float,
+        'ql_epsilon': float,
+        'algo_adaptive_epsilon': int,
+        'ql_adaptive_decay_rate': float,
+        'algo_auto_eb': int,
+        'eb_interval_s': float,
+        'exec_minutesPerRun': int,
+        'algo_dis_prio': int,
+        'algo_use_ql': int,
+        'algo_auto_t': int,
+        'algo_auto_k': int,
+        'ql_adaptive_min_epsilon': float,
+        'algo_simulate_addremove': int,
+        'algo_addremove_ratio': float
+    }
+    
     def __init__(self, configfile=None, configdata=None, changed_param=None, map_param=None):
 
         if changed_param and map_param:
@@ -83,26 +103,8 @@ class SimConfig(dict):
 
         if changed_param is not None and isinstance(changed_param, dict):
             self.config_temp = json.loads(self._raw_data)
-            check_regular_param = {
-                'exec_randomSeed': str,
-                'dio_interval_min_s': int,
-                'ql_learning_rate': float,
-                'ql_discount_rate': float,
-                'ql_epsilon': float,
-                'algo_adaptive_epsilon': int,
-                'ql_adaptive_decay_rate': float,
-                'algo_auto_eb': int,
-                'eb_interval_s': float,
-                'exec_minutesPerRun': int,
-                'algo_dis_prio': int,
-                'algo_use_ql': int,
-                'algo_auto_t': int,
-                'algo_auto_k': int,
-                'ql_adaptive_min_epsilon': float,
-                'algo_simulate_addremove': int
-            }
             
-            for key, func in check_regular_param.items():
+            for key, func in self.check_regular_param.items():
                 if key in changed_param:
                     val = func(changed_param[key])
                     self.config_temp['settings']['regular'][key] = val
@@ -184,11 +186,7 @@ class SimConfig(dict):
 
         if "trickle" in self.log_directory_name:
             method = self.config['settings']['regular']['trickle_method']
-            subfolders = list(
-                [os.path.join(SimSettings.SimSettings.DEFAULT_LOG_ROOT_DIR, x) for x in os.listdir(SimSettings.SimSettings.DEFAULT_LOG_ROOT_DIR) if method in x]
-            )
-            index = len(subfolders) + 1
-            log_directory_name = u'_'.join((method, str(index)))
+            log_directory_name = method
 
             used_changed_param = self.changed_param.copy()
             key = 'log_directory_name'
@@ -196,31 +194,14 @@ class SimConfig(dict):
             log_directory_name += u'_{}{}'.format(self.map_param[key], exp_)
             used_changed_param.pop(key, None)
 
-            if "1" == exp_:
-                use_adaptive = getattr(self.config['settings']['regular'], "algo_adaptive_epsilon", 0)
-                adaptive_epsilon = "adaptive" if use_adaptive else "static"
-                ql_learning_rate = self.config['settings']['regular']['ql_learning_rate']
-                ql_discount_rate = self.config['settings']['regular']['ql_discount_rate']
-                epsilon_var = self.config['settings']['regular']['ql_adaptive_decay_rate'] if use_adaptive else self.config['settings']['regular']['ql_epsilon']
-                log_directory_name = u'{}_lr{}-dr{}-{}{}'.format(log_directory_name, ql_learning_rate, ql_discount_rate, adaptive_epsilon, epsilon_var)
-
-                used_changed_param.pop("algo_adaptive_epsilon", None)
-                used_changed_param.pop("ql_learning_rate", None)
-                used_changed_param.pop("ql_discount_rate", None)
-                used_changed_param.pop("ql_adaptive_decay_rate", None)
-                used_changed_param.pop("ql_epsilon", None)
-            elif "2" == exp_:
-                ql_learning_rate = self.config['settings']['regular']['ql_learning_rate']
-                ql_discount_rate = self.config['settings']['regular']['ql_discount_rate']
-                ql_epsilon = self.config['settings']['regular']['ql_epsilon']
-                log_directory_name = u'{}_lr{}-dr{}-ep{}'.format(log_directory_name, ql_learning_rate, ql_discount_rate, ql_epsilon)
-
-                used_changed_param.pop("ql_learning_rate", None)
-                used_changed_param.pop("ql_discount_rate", None)
-                used_changed_param.pop("ql_epsilon", None)
-
             for key in used_changed_param:
                 log_directory_name += u'_{}{}'.format(self.map_param[key], self.changed_param[key])
+
+            subfolders = list(
+                [os.path.join(SimSettings.SimSettings.DEFAULT_LOG_ROOT_DIR, x) for x in os.listdir(SimSettings.SimSettings.DEFAULT_LOG_ROOT_DIR) if log_directory_name in x]
+            )
+            index = str(len(subfolders) + 1)
+            log_directory_name += f'_{index}'
 
         elif self.log_directory_name == u'startTime':
             # determine log_directory_name

@@ -1,6 +1,10 @@
 {
-    "trickle_pbusy": ["mean"],
-    "current-consumed": ["mean"],
+    "trickle_reward": ["mean"],
     "rpljoin_time_m": ["mean"],
-    "last_failed_dio": ["sum"]
+    "current-consumed": ["mean"],
+    "last_pfailed": [""],
+    "last_psent": [""],
+    "trickle_pbusy": ["mean"],
+    "last_failed_dio": ["sum"],
+    "last_count_dio": ["sum"]
 }
