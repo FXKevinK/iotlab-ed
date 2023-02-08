@@ -2,7 +2,7 @@
     "version": 0,
     "execution": {
         "numCPUs": 1,
-        "numRuns": 3
+        "numRuns": 5
     },
     "settings": {
         "combination": {
@@ -55,7 +55,8 @@
             "k_max": 10,
             "dio_interval_min_s": 5,
             "eb_interval_s": 4,
-            "trickle_method": "ori"
+            "trickle_method": "ori",
+            "exec_randomSeed_add": 10
         }
     },
     "logging": "all",

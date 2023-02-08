@@ -247,22 +247,9 @@ void opentrickletimers_ambr_trigger(opentimers_id_t id)
 
 void opentrickletimers_scheduler_ambr(void)
 {
-    uint16_t slotframe_duration_ms;
-    uint8_t slot_duration_ms;
-    uint16_t frameLength;
-
-    slot_duration_ms = (ieee154e_getSlotDuration() * 305) / 10000; // 10 ms
-    frameLength = schedule_getFrameLength();                       // 101
-    slotframe_duration_ms = frameLength * slot_duration_ms;        // 1010 ms per slotframe
-
-    if (slotframe_duration_ms < 1)
-    {
-        slotframe_duration_ms = SLOTFRAME_LENGTH * SLOTDURATION;
-    }
-
     opentimers_scheduleIn(
         opentrickletimers_vars.sc_ambr,
-        MINIMAL_CELL_BUSY_RATIO_SLOTFRAME * slotframe_duration_ms,
+        MINIMAL_CELL_BUSY_RATIO_SLOTFRAME * schedule_getSlotframeDuration(),
         TIME_MS,
         TIMER_ONESHOT,
         opentrickletimers_ambr_trigger);
@@ -283,13 +270,10 @@ uint32_t opentrickletimers_getValue(uint8_t code)
 
 void opentrickletimers_schedule_event_at_t_and_i(void)
 {
-
-    uint16_t slotframe_duration_ms;
     uint32_t t_range;
     uint32_t rand_num;
     uint32_t half_interval;
-    uint8_t slot_duration_ms;
-    uint16_t frameLength;
+    uint16_t slotframe_duration_ms = schedule_getSlotframeDuration();
 
     INTERRUPT_DECLARATION();
 
@@ -316,10 +300,6 @@ void opentrickletimers_schedule_event_at_t_and_i(void)
     opentrickletimers_vars.listen_period = opentrickletimers_vars.T - opentrickletimers_vars.t_start;
 
     t_range = opentrickletimers_vars.t_end - opentrickletimers_vars.t_start;
-
-    slot_duration_ms = (ieee154e_getSlotDuration() * 305) / 10000; // 10 ms
-    frameLength = schedule_getFrameLength();                       // 101
-    slotframe_duration_ms = frameLength * slot_duration_ms;        // 1010 ms per slotframe
 
     opentrickletimers_vars.Ncells = packetfunctions_mathCeil(((float)t_range / (float)slotframe_duration_ms));
     if(opentrickletimers_vars.Ncells < 1){

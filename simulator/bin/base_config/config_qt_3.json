@@ -2,7 +2,7 @@
     "version": 0,
     "execution": {
         "numCPUs": 1,
-        "numRuns": 3
+        "numRuns": 5
     },
     "settings": {
         "combination": {
@@ -61,9 +61,10 @@
             "algo_dis_prio": 1,
             "algo_auto_t": 1,
             "algo_auto_k": 1,
-            "ql_learning_rate": 0.5,
+            "ql_learning_rate": 0.7,
             "ql_discount_rate": 0.5,
-            "ql_epsilon": 0.9
+            "ql_epsilon": 0.5,
+            "exec_randomSeed_add": 10
         }
     },
     "logging": "all",

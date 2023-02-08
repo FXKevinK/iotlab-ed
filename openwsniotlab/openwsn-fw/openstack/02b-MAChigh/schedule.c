@@ -120,6 +120,24 @@ bool debugPrint_schedule(void) {
     return TRUE;
 }
 
+
+uint16_t schedule_getSlotframeDuration(void){
+    uint16_t slotframe_duration_ms;
+    uint8_t slot_duration_ms;
+    uint16_t frameLength;
+
+    slot_duration_ms = (ieee154e_getSlotDuration() * 305) / 10000; // 10 ms
+    frameLength = schedule_getFrameLength();                       // 101
+    slotframe_duration_ms = frameLength * slot_duration_ms;        // 1010 ms per slotframe
+
+    if (slotframe_duration_ms < 1)
+    {
+        slotframe_duration_ms = SLOTFRAME_LENGTH * SLOTDURATION;
+    }
+
+    return slotframe_duration_ms;
+}
+
 /**
 \brief Trigger this module to print status information, over serial.
 

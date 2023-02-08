@@ -127,7 +127,6 @@ class Rpl(object):
             return len(set(data))
         return 0
 
-
     def get_failed_dio(self, is_prob=False, is_trickle=False):
         if is_trickle:
             count_ = self.count_dio_trickle
@@ -394,10 +393,11 @@ class Rpl(object):
         self._send_DIO(dstIp=dst, dis_req=req, dio_type=dio_type)
 
     def _send_DIO_Trickle(self):
+        self.count_dio_trickle += 1
         self._send_DIO(dstIp=None, is_trickle=True, dio_type='trickle')
 
     def _send_DIO(self, dstIp=None, is_trickle=False, dis_req=False, dio_type=None):
-        if self.dodagId is None:
+        if not is_trickle and self.dodagId is None:
             # seems we performed local repair
             return
 
@@ -405,8 +405,6 @@ class Rpl(object):
         if dstIp is None:
             self.count_dio += 1
             dio_id = self.count_dio
-            if is_trickle:
-                self.count_dio_trickle += 1
 
         dio = self._create_DIO(dstIp, is_trickle, dio_id, dis_req, dio_type)
 

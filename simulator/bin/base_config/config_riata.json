@@ -2,7 +2,7 @@
     "version": 0,
     "execution": {
         "numCPUs": 1,
-        "numRuns": 3
+        "numRuns": 5
     },
     "settings": {
         "combination": {
@@ -58,7 +58,8 @@
             "trickle_method": "riata",
             "ql_learning_rate": 0.5,
             "ql_discount_rate": 0.5,
-            "ql_epsilon": 0.7
+            "ql_epsilon": 0.7,
+            "exec_randomSeed_add": 10
         }
     },
     "logging": "all",

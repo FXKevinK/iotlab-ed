@@ -286,6 +286,8 @@ void schedule_indicateRx(asn_t *asnTimestamp);
 
 void schedule_indicateTx(asn_t *asnTimestamp, bool succesfullTx);
 
+uint16_t schedule_getSlotframeDuration(void);
+
 // from sixtop
 bool schedule_getOneCellAfterOffset(
         uint8_t metadata,

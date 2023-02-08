@@ -27,7 +27,7 @@ class ACPBTrickle(object):
         self.log = SimEngine.SimLog.SimLog().log
 
         self.mote = mote
-        
+
         # calculate slotframe duration
         slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
@@ -55,22 +55,35 @@ class ACPBTrickle(object):
         self.is_dio_sent = False
         self.Nstates = 0
         self.Ncells = 0
-        self.Nreset = 1
-        self.pbusy = 1
-        self.preset = 1
-        self.pfree = 1 - self.pbusy
-        self.pstable = 1 - self.preset
-        self.ptransmit = 1
         self.DIOsurpress = 0
         self.DIOtransmit = 0
         self.used = 0
         self.listen_period = 0
         self.Nnbr = 0
+        self.t = 0
+        self.t_range = None
+        self.asn_t_start = None
+        self.asn_t_end = None
+        self.qul = 0
         self.counter = 0
-        self.psent = 0
-        self.pqu = 0
-        self.pfailed = 1
 
+        # self.Nreset = 1
+        # self.pbusy = 1
+        # self.preset = 1
+        # self.pfree = 1 - self.pbusy
+        # self.pstable = 1 - self.preset
+        # self.ptransmit = 1
+        # self.pfailed = 1
+
+        self.Nreset = 0
+        self.pbusy = 0 # None
+        self.pfree = 0 # None
+        self.preset = 0 # None
+        self.pstable = 0 #None
+        self.ptransmit = 0 # None
+        self.pfailed = 0 # None
+        self.psent = 0 # None
+        self.pqu = 0
 
         # for acpb
         self.transmitted = 0
@@ -122,6 +135,8 @@ class ACPBTrickle(object):
         )
 
         self.Nreset += 1
+        self.calculate_preset()
+        self.log_result(is_reset=True)
 
         # Algorithm 1
         if note == 3:
@@ -157,13 +172,11 @@ class ACPBTrickle(object):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
 
         self.Nstates += 1
-        self.calculate_preset()
         self.Nnbr = len(self.mote.rpl.of.neighbors) if hasattr(
             self.mote.rpl.of, 'neighbors') else 0
 
         self.redundancy_constant = self.calculate_k()
         self._schedule_event_at_t_and_i()
-        self.log_result()
         self.counter = 0
 
     def _schedule_event_at_t_and_i(self):
@@ -257,8 +270,9 @@ class ACPBTrickle(object):
             self.calculate_pfree()
             self.calculate_ptransmit()
             self.calculate_psent()
-            # self.calculate_pqu()
+            self.calculate_pqu()
 
+            self.log_result()
 
             self.interval = self.interval * 2
             self.m += 1
@@ -297,7 +311,7 @@ class ACPBTrickle(object):
 
     def calculate_pqu(self):
         self.pqu = self.mote.tsch.get_queue_usage()
-        assert 0 <= self.pqu and self.pqu <= 1
+        assert 0 <= self.pqu <= 1
 
     def calculate_pfree(self):
         if (
@@ -330,9 +344,16 @@ class ACPBTrickle(object):
             return int(math.floor(a / b))
         return int(math.ceil(a / b))
 
-    def log_result(self):
-        result = {
+    def log_result(self, is_reset=False):
+        base = {
             'state': self.Nstates,
+            'is_reset': is_reset,
+            'preset': self.preset,
+            'Nreset': self.Nreset,
+        }
+
+        more = {
+            'pqu': self.pqu,
             'pbusy': self.pbusy,
             'pfree': self.pfree,
             'ptransmit': self.ptransmit,
@@ -340,16 +361,18 @@ class ACPBTrickle(object):
             'pfailed': self.pfailed,
             'preset': self.preset,
             'pstable': self.pstable,
-            'k': self.redundancy_constant,
+            'redundancy_constant': self.redundancy_constant,
             't': self.t,
             'interval': self.interval,
-            'nbr': self.Nnbr,
+            'Nnbr': self.Nnbr,
             'counter': self.counter,
             'is_dio_sent': self.is_dio_sent,
             'count_dio_trickle': self.mote.rpl.count_dio_trickle,
             'reward': None,
             'm': self.m
         }
+
+        result = {**base} if is_reset else {**base, **more}
         self.log(
             SimEngine.SimLog.LOG_TRICKLE,
             {

@@ -474,8 +474,10 @@ def kpis_all(inputfile):
             # trickle timer
 
             for key in trickle_keys:
-                val = [motestats['trickle'][x][key]
-                       for x in motestats['trickle']]
+                val = []
+                for x in motestats['trickle']:
+                    if key in motestats['trickle'][x]:
+                        val.append(motestats['trickle'][x][key])
 
                 # populate
                 if key not in trickle_stats:
@@ -543,6 +545,7 @@ def kpis_all(inputfile):
 
         for key in trickle_keys:
             val = trickle_stats[key]
+            if len(val) == 0: continue
             new_key = "trickle_{}".format(key)
             if '_class' in key:
                 stats = {}

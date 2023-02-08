@@ -166,7 +166,7 @@ class Tsch(object):
             assert not self.mote.dagRoot
 
             self.stopSendingEBs()
-            
+
             if (kill and prev_sync) or not kill:
                 self.delete_minimal_cell()
                 self.mote.sf.stop()
@@ -427,7 +427,7 @@ class Tsch(object):
                         # 2 5 1111
                         # 2 6 1111
                         # 2 7 1111
-                    
+
     def enqueue(self, packet, priority=False):
 
         assert packet[u'type'] != d.PKT_TYPE_EB
@@ -1284,15 +1284,31 @@ class Tsch(object):
         all_ops = cell.all_ops if cell else 0
 
         cur_asn = self.engine.getAsn()
-        slotframe_iteration = int(old_div(cur_asn, self.settings.tsch_slotframeLength)) + 1
+        slotframe_iteration = int(
+            old_div(cur_asn, self.settings.tsch_slotframeLength)) + 1
 
         result = {
             'eb_prob': self.eb_used_prob,
-            'nbr': len(self.neighbor_table),
-            'mbr': all_ops/slotframe_iteration,
+            'eb_nbr': len(self.neighbor_table),
+            'eb_mbr': all_ops/slotframe_iteration,
         }
 
-        metric_to_measure = ['pbusy', 'pfree', 'ptransmit', 'preset', 'pstable', 'pfailed', 'psent', 'epsilon', 'k', 't', 'interval', 'nbr', 'counter', 'reward']
+        metric_to_measure = [
+            'pbusy',
+            'pfree',
+            'ptransmit',
+            'preset',
+            'pstable',
+            'pfailed',
+            'psent',
+            'epsilon',
+            'redundancy_constant',
+            't',
+            'interval',
+            'Nnbr',
+            'counter',
+            'reward'
+        ]
         for k in metric_to_measure:
             val = getattr(self.mote.rpl.trickle_timer, k, None)
             result[k] = val
@@ -1348,7 +1364,8 @@ class Tsch(object):
         self.sw_s = duration_s + ((self.sw_x/100) * duration_s)
         self.sw_s = min(self.sw_s, 10 * self.slotframe_duration_s)
         cur_asn = self.engine.getAsn()
-        self.end_sw_asn = cur_asn + int(math.ceil(self.sw_s / self.slot_duration_s))
+        self.end_sw_asn = cur_asn + \
+            int(math.ceil(self.sw_s / self.slot_duration_s))
 
     def set_sw_after_dis(self):
         if not self.use_sw:
@@ -1367,7 +1384,8 @@ class Tsch(object):
         self.eb_used_prob = self.eb_prob
 
         if getattr(self.settings, "algo_auto_eb", 0) in [1, 3]:
-            self.eb_used_prob = self.eb_prob + ((1 - self.eb_prob) / pow(2, nbr))
+            self.eb_used_prob = self.eb_prob + \
+                ((1 - self.eb_prob) / pow(2, nbr))
 
         assert 0 <= self.eb_used_prob <= 1
 

@@ -62,13 +62,12 @@ class RiataTrickle(object):
         self.Nnbr = 0
         self.t = 0
         self.t_range = None
-        self.t_start = 0
-        self.t_end = 0
-        self.listen_period = 0
-        self.is_explore = None
+        self.asn_t_start = None
+        self.asn_t_end = None
+        self.qul = 0
 
-        self.psent = 0
-        self.pqu = 0
+
+
         # self.Nreset = 1
         # self.pbusy = 1
         # self.preset = 1
@@ -78,12 +77,14 @@ class RiataTrickle(object):
         # self.pfailed = 1
         self.Nreset = 0
         self.pbusy = 0 # None
-        self.preset = 0 # None
         self.pfree = 0 # None
+        self.preset = 0 # None
         self.pstable = 0 #None
         self.ptransmit = 0 # None
         self.pfailed = 0 # None
-        self.reward = 0
+        self.psent = 0 # None
+        self.pqu = 0
+
 
 
         # for riata
@@ -91,13 +92,16 @@ class RiataTrickle(object):
         self.DIOsent = 0
         self.inconc = {self.m_riata: 0}
         self.DIOCount = {}
-        self.counter = {self.m_riata: 0}
+        self.counter_riata = {self.m_riata: 0}
+        self.counter = 0
         self.alpha = self.settings.ql_learning_rate
         self.betha = self.settings.ql_discount_rate
         self.epsilon = self.settings.ql_epsilon
         self.ql_table = np.zeros([2, 2]).tolist()
         self.is_change = 0
         self.is_dio_sent_prev = 0
+        self.is_explore = None
+        self.reward = 0
 
     @property
     def is_running(self):
@@ -144,12 +148,17 @@ class RiataTrickle(object):
             }
         )
 
+        self.Nreset += 1
+        self.calculate_preset()
+        self.log_result(is_reset=True)
+
         # populate
         self.interval = self.min_interval
         self.DIOsent = 0
-        self.Nreset += 1
 
-        self.counter[self.m_riata] = 0
+        self.counter_riata[self.m_riata] = 0
+        self.counter = self.get_counter()
+
         self.m_riata = 1
         self.DIOCount[self.m_riata] = 0
         if self.m_riata not in self.inconc: self.inconc[self.m_riata] = 0
@@ -159,8 +168,10 @@ class RiataTrickle(object):
 
     def increment_counter(self):
         # populate
-        if self.m_riata not in self.counter: self.counter[self.m_riata] = 0
-        self.counter[self.m_riata] += 1
+        if self.m_riata not in self.counter_riata:
+            self.counter_riata[self.m_riata] = 0
+        self.counter_riata[self.m_riata] += 1
+        self.counter = self.get_counter()
 
     def _start_next_interval(self):
         if self.state == self.STATE_STOPPED:
@@ -173,12 +184,10 @@ class RiataTrickle(object):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
 
         self.Nstates += 1
-        self.calculate_preset()
         self.Nnbr = len(self.mote.rpl.of.neighbors) if hasattr(
             self.mote.rpl.of, 'neighbors') else 0
         self.is_dio_sent_prev = self.is_dio_sent
         self._schedule_event_at_t_and_i()
-        self.log_result()
 
     def _schedule_event_at_t_and_i(self):
         slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
@@ -217,9 +226,11 @@ class RiataTrickle(object):
             self.is_explore = random.uniform(0, 1) < self.epsilon
             if self.is_explore:
                 # populate
-                if self.m_riata not in self.counter: self.counter[self.m_riata] = 0
+                if self.m_riata not in self.counter_riata:
+                    self.counter_riata[self.m_riata] = 0
+                self.counter = self.get_counter()
                 # Explore action space
-                if self.counter[self.m_riata] < self.redundancy_constant:
+                if self.counter_riata[self.m_riata] < self.redundancy_constant:
                     self.is_dio_sent = True
             else:
                 # Exploit learned values
@@ -229,7 +240,6 @@ class RiataTrickle(object):
             if self.is_dio_sent:
                 self.DIOsent += 1
                 self.user_callback()
-
 
         def start_t():
             self.start_t_record = self.getOpsMC()
@@ -267,7 +277,10 @@ class RiataTrickle(object):
             self.calculate_pfree()
             self.calculate_ptransmit()
             self.calculate_psent()
+            self.calculate_pqu()
+
             self.update_qtable()
+            self.log_result()
 
             self.interval = self.interval * 2
             self.interval = max(
@@ -316,7 +329,7 @@ class RiataTrickle(object):
 
     def calculate_pqu(self):
         self.pqu = self.mote.tsch.get_queue_usage()
-        assert 0 <= self.pqu and self.pqu <= 1
+        assert 0 <= self.pqu <= 1
 
     def calculate_pfree(self):
         if (
@@ -349,9 +362,19 @@ class RiataTrickle(object):
             return int(math.floor(a / b))
         return int(math.ceil(a / b))
 
-    def log_result(self):
-        result = {
+    def get_counter(self):
+        return self.counter_riata.get(self.m_riata, 0)
+
+    def log_result(self, is_reset=False):
+        base = {
             'state': self.Nstates,
+            'is_reset': is_reset,
+            'preset': self.preset,
+            'Nreset': self.Nreset,
+        }
+
+        more = {
+            'pqu': self.pqu,
             'pbusy': self.pbusy,
             'pfree': self.pfree,
             'ptransmit': self.ptransmit,
@@ -359,16 +382,18 @@ class RiataTrickle(object):
             'pfailed': self.pfailed,
             'preset': self.preset,
             'pstable': self.pstable,
-            'k': self.redundancy_constant,
+            'redundancy_constant': self.redundancy_constant,
             't': self.t,
             'interval': self.interval,
-            'nbr': self.Nnbr,
-            'counter': self.counter.get(self.m_riata, 0),
+            'Nnbr': self.Nnbr,
+            'counter': self.counter,
             'is_dio_sent': self.is_dio_sent,
             'count_dio_trickle': self.mote.rpl.count_dio_trickle,
             "reward": self.reward,
             'm': self.m_riata,
         }
+
+        result = {**base} if is_reset else {**base, **more}
 
         self.log(
             SimEngine.SimLog.LOG_TRICKLE,

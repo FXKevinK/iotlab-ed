@@ -44,11 +44,8 @@ Latency: Bar
 - - Table count DIO Transmission, Supression, Failed Transmission
 
 4. Evaluation on Testbed (with packet transmission): 2 algo (or & qt)
-- Main metric: 3 CDF (Pfree, Joining time, Energy consumption) over 4 (2 nodes x 2 algo)
+- Main metric: 3 CDF (psent, joining time, energy consumption) over 4 (2 nodes x 2 algo)
 - Packet transmission: 2 Bar (PDR & Latency) over 4
-- Computational: 2 value table of Firmware size & runtime excluding waiting per interval. over 4
-- Add/Remove node: Select random 20% of the node: 7 of large topology only 
-(a) Turn off in the beginning and then after 30minutes turn on to emulate Add. (b) Turn off after 30minutes to emulate Remove.
 - - 4 axis (Pfree, DIOTransmit, K, ListenPeriod) over ASN over 4 (algo and condition add/remove) of random 1 parent node, give middle line indicate add/remove process.
 
 
@@ -78,19 +75,18 @@ python3.7 compute_kpis.py;
 ====================
 
 <!-- exp 1 -->
-python3.7 runSim.py --algo=qt_1 --param_lr=0.5 --param_dr=0.1;
-python3.7 runSim.py --algo=qt_1 --param_lr=0.5 --param_dr=0.3;
+python3.7 runSim.py --algo=qt_1 --param_lr=0.1 --param_dr=0.5;
+python3.7 runSim.py --algo=qt_1 --param_lr=0.3 --param_dr=0.5;
 python3.7 runSim.py --algo=qt_1 --param_lr=0.5 --param_dr=0.5;
-python3.7 runSim.py --algo=qt_1 --param_lr=0.5 --param_dr=0.7;
-python3.7 runSim.py --algo=qt_1 --param_lr=0.5 --param_dr=0.9;
+python3.7 runSim.py --algo=qt_1 --param_lr=0.7 --param_dr=0.5;
+python3.7 runSim.py --algo=qt_1 --param_lr=0.9 --param_dr=0.5;
 
 <!-- exp 2 -->
-
-python3.7 runSim.py --algo=qt_2 --param_lr=0.1 --param_dr=0.5;
-python3.7 runSim.py --algo=qt_2 --param_lr=0.3 --param_dr=0.5;
-python3.7 runSim.py --algo=qt_2 --param_lr=0.5 --param_dr=0.5;
+python3.7 runSim.py --algo=qt_2 --param_lr=0.7 --param_dr=0.1;
+python3.7 runSim.py --algo=qt_2 --param_lr=0.7 --param_dr=0.3;
 python3.7 runSim.py --algo=qt_2 --param_lr=0.7 --param_dr=0.5;
-python3.7 runSim.py --algo=qt_2 --param_lr=0.9 --param_dr=0.5;
+python3.7 runSim.py --algo=qt_2 --param_lr=0.7 --param_dr=0.7;
+python3.7 runSim.py --algo=qt_2 --param_lr=0.7 --param_dr=0.9;
 
 <!-- exp 3 -->
 python3.7 runSim.py --algo=qt_3 --param_ep=0.1 --param_ad=0;

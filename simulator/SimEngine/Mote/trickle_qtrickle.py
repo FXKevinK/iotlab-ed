@@ -65,7 +65,6 @@ class QTrickle(object):
         self.asn_t_start = None
         self.asn_t_end = None
         self.qul = 0
-        self.pqu = 0
         self.counter = 0
         self.reward = 0
 
@@ -85,6 +84,7 @@ class QTrickle(object):
         self.ptransmit = 0 # None
         self.pfailed = 0 # None
         self.psent = 0 # None
+        self.pqu = 0
 
         if getattr(self.settings, "algo_use_ql", False):
             self.alpha = self.settings.ql_learning_rate
@@ -92,14 +92,17 @@ class QTrickle(object):
             self.epsilon = self.settings.ql_epsilon
             self.classes = ['low', 'medium', 'high']
             self.num_class = len(self.classes)
-            self.ql_table = np.zeros([self.num_class, 2]).tolist()
+            self.ql_table = np.zeros([self.num_class, self.num_class, 2]).tolist()
             self.average_reward = 0
             self.total_reward = 0
             self.current_action = 0
             self.psent_prev = self.psent
             self.pbusy_prev = self.pbusy
+            self.pqu_prev = self.pqu
             self.s1 = 0
             self.n_s1 = 0
+            self.s2 = 0
+            self.n_s2 = 0
             self.is_explore = False
 
             if getattr(self.settings, "algo_adaptive_epsilon", False):
@@ -158,6 +161,8 @@ class QTrickle(object):
         )
 
         self.Nreset += 1
+        self.calculate_preset()
+        self.log_result(is_reset=True)
         self.interval = self.min_interval
         self._start_next_interval()
 
@@ -175,7 +180,6 @@ class QTrickle(object):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
 
         self.Nstates += 1
-        self.calculate_preset()
         self.Nnbr = len(self.mote.rpl.of.neighbors) if hasattr(
             self.mote.rpl.of, 'neighbors') else 0
 
@@ -184,8 +188,8 @@ class QTrickle(object):
 
         self.psent_prev = self.psent
         self.pbusy_prev = self.pbusy
+        self.pqu_prev = self.pqu
         self._schedule_event_at_t_and_i()
-        self.log_result()
         self.counter = 0
 
     def _schedule_event_at_t_and_i(self):
@@ -199,9 +203,6 @@ class QTrickle(object):
         if getattr(self.settings, "algo_auto_t", False):
             self.t_start = half_interval * (self.ptransmit or 0) # small, allow more. large, stable/less.
             self.t_end = half_interval + (half_interval * (self.pstable or 0)) # small, allow more. large, stable/less.
-            # 1 ptransmit
-            # 2 pfailed
-            # 3 ptransmit & pfailed
 
         self.t = random.uniform(self.t_start, self.t_end)
         assert self.t_start <= self.t_end <= self.interval
@@ -226,6 +227,7 @@ class QTrickle(object):
             self.is_dio_sent = False
             self.is_explore = random.uniform(
                 0, 1) < self.epsilon if getattr(self.settings, "algo_use_ql", False) else 1
+            # self.qul = self.mote.tsch.get_queue_left()
 
             if self.is_explore:
                 if self.counter < self.redundancy_constant:
@@ -234,7 +236,8 @@ class QTrickle(object):
             else:
                 # Exploit learned values
                 s1 = self.prob_to_class(self.pbusy_prev)
-                action = np.argmax(self.ql_table[s1])
+                s2 = self.prob_to_class(self.pqu_prev)
+                action = np.argmax(self.ql_table[s1][s2])
                 if action == 1:
                     self.is_dio_sent = True
                     self.user_callback()
@@ -277,10 +280,12 @@ class QTrickle(object):
             self.calculate_pfree()
             self.calculate_ptransmit()
             self.calculate_psent()
-            # self.calculate_pqu()
+            self.calculate_pqu()
 
             if getattr(self.settings, "algo_use_ql", False):
                 self.update_qtable()
+
+            self.log_result()
 
             if getattr(self.settings, "algo_adaptive_epsilon", False):
                 self.total_reward += self.reward
@@ -322,7 +327,7 @@ class QTrickle(object):
 
     def calculate_pqu(self):
         self.pqu = self.mote.tsch.get_queue_usage()
-        assert 0 <= self.pqu and self.pqu <= 1
+        assert 0 <= self.pqu <= 1
 
     def calculate_pfree(self):
         if (
@@ -355,32 +360,45 @@ class QTrickle(object):
             return int(math.floor(a / b))
         return int(math.ceil(a / b))
 
-    def log_result(self):
-        result = {
+    def log_result(self, is_reset=False):
+        base = {
             'state': self.Nstates,
+            'is_reset': is_reset,
+            'preset': self.preset,
+            'Nreset': self.Nreset,
+        }
+
+        more = {
+            'pqu_prev': self.pqu_prev,
+            'pqu': self.pqu,
+            'pbusy_prev': self.pbusy_prev,
             'pbusy': self.pbusy,
             'pfree': self.pfree,
             'ptransmit': self.ptransmit,
+            'psent_prev': self.psent_prev,
             'psent': self.psent,
             'pfailed': self.pfailed,
             'preset': self.preset,
             'pstable': self.pstable,
-            'k': self.redundancy_constant,
+            'redundancy_constant': self.redundancy_constant,
             't': self.t,
             'interval': self.interval,
-            'nbr': self.Nnbr,
+            'Nnbr': self.Nnbr,
             'counter': self.counter,
             'is_dio_sent': self.is_dio_sent,
             'count_dio_trickle': self.mote.rpl.count_dio_trickle,
             'reward': self.reward
         }
 
+        result = {**base} if is_reset else {**base, **more}
+
         if getattr(self.settings, "algo_use_ql", False):
-            c1 = self.classes[self.s1] if self.s1 is not None else None
-            n_c1 = self.classes[self.n_s1] if self.s1 is not None else None
+            result['s1_class'] = self.classes[self.s1] if self.s1 is not None else None
+            result['n_s1_class'] = self.classes[self.n_s1] if self.s1 is not None else None
+            result['s2_class'] = self.classes[self.s2] if self.s2 is not None else None
+            result['n_s2_class'] = self.classes[self.n_s2] if self.s2 is not None else None
+
             result['epsilon'] = self.epsilon
-            result['s1_class'] = c1
-            result['n_s1_class'] = n_c1
 
         self.log(
             SimEngine.SimLog.LOG_TRICKLE,
@@ -391,12 +409,6 @@ class QTrickle(object):
         )
 
     def prob_to_class(self, prob):
-        # prob = prob or 0
-        # limit_per_class = 1 / self.num_class
-        # class_ = prob / limit_per_class
-        # class_ = int(np.ceil(class_))
-        # if class_ == 0: class_ = 1
-        # return class_ - 1
         if 0 <= prob <= 1/3: return 0
         elif 1/3 < prob < 2/3: return 1
         elif 2/3 <= prob <= 1: return 2
@@ -411,13 +423,15 @@ class QTrickle(object):
             self.reward = 0
 
         self.s1 = self.prob_to_class(self.pbusy_prev)
+        self.s2 = self.prob_to_class(self.pqu_prev)
         self.n_s1 = self.prob_to_class(self.pbusy)
-        old_value = self.ql_table[self.s1][self.current_action]
-        ql_next_state = self.ql_table[self.n_s1]
+        self.n_s2 = self.prob_to_class(self.pqu)
+        old_value = self.ql_table[self.s1][self.s2][self.current_action]
+        ql_next_state = self.ql_table[self.n_s1][self.n_s2]
 
         td = self.reward + (self.betha * np.max(ql_next_state))
         new_value = ((1 - self.alpha) * old_value) + (self.alpha * td)
-        self.ql_table[self.s1][self.current_action] = new_value
+        self.ql_table[self.s1][self.s2][self.current_action] = new_value
 
     def calculate_k(self):
         k = 1 + math.ceil(min(self.Nnbr, self.kmax - 1) * self.preset) # large, allow more. small, stable/less/likely satisfied
