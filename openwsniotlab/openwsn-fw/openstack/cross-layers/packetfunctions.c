@@ -5,6 +5,7 @@
 #include "openqueue.h"
 #include "idmanager.h"
 #include "radio.h"
+#include "openrandom.h"
 
 //=========================== variables =======================================
 
@@ -710,5 +711,18 @@ uint32_t packetfunctions_mathCeil(float num)
     return inum + 1;
 }
 
+uint32_t packetfunctions_mathFloor(float num)
+{
+    return (uint32_t) num;
+}
 
+bool packetfunctions_random_p(float p)
+{
+    uint16_t rand_num;
+    uint16_t temp;
+    rand_num = (openrandom_get16b() % float_multiplier);
+    temp = (uint16_t)(p * float_multiplier);
+    if (rand_num < temp) return TRUE;
+    return FALSE;
+}
 //=========================== private =========================================

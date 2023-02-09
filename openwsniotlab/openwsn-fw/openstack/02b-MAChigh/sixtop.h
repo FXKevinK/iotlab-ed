@@ -117,6 +117,8 @@ typedef struct {
     sixtop_sf_translatemetadata_cbt cb_sf_translateMetadata;
     sixtop_sf_handle_callback_cbt cb_sf_handleRCError;
     open_addr_t neighborToClearCells;
+    float eb_prob;
+    float eb_used_prob;
 } sixtop_vars_t;
 
 //=========================== prototypes ======================================

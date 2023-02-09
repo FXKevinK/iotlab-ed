@@ -76,6 +76,10 @@ void packetfunctions_reverseArrayByteOrder(uint8_t *start, uint8_t len);
 
 uint32_t packetfunctions_mathCeil(float num);
 
+uint32_t packetfunctions_mathFloor(float num);
+
+bool packetfunctions_random_p(float p);
+
 /**
 \}
 \}

@@ -20,7 +20,7 @@
 // #define QUEUELENGTH  PACKETQUEUE_LENGTH
 // #endif
 
-#define QUEUELENGTH  30
+#define QUEUELENGTH  20
 #define HIGH_PRIORITY_QUEUE_ENTRY 5
 
 #if OPENWSN_6LO_FRAGMENTATION_C
@@ -54,6 +54,7 @@ bool debugPrint_queue(void);
 
 // called by any component
 OpenQueueEntry_t* openqueue_getFreePacketBuffer(uint8_t creator);
+OpenQueueEntry_t* openqueue_getFreePacketBufferPriority(uint8_t creator);
 
 #if OPENWSN_6LO_FRAGMENTATION_C
 OpenQueueEntry_t* openqueue_getFreeBigPacketBuffer(uint8_t creator);

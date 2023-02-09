@@ -37,8 +37,7 @@ void sendDIS(void);
 
 // DIO-related
 void icmpv6rpl_timer_DIO_cb(opentimers_id_t id);
-void icmpv6rpl_timer_DIO_task(void);
-owerror_t sendDIO(void);
+owerror_t sendDIO(bool is_trickle, bool is_priority);
 // DAO-related
 void icmpv6rpl_timer_DAO_cb(opentimers_id_t id);
 void icmpv6rpl_timer_DAO_task(void);
@@ -67,8 +66,14 @@ void icmpv6rpl_init(void)
     icmpv6rpl_vars.haveParent = FALSE;
     icmpv6rpl_vars.ParentIndex = -1;
     icmpv6rpl_vars.daoSent = FALSE;
-    icmpv6rpl_vars.dioSent = FALSE;
-    icmpv6rpl_vars.dioScheduled = FALSE;
+
+    icmpv6rpl_vars.count_dis = 0;
+    icmpv6rpl_vars.count_dio = 0;
+    icmpv6rpl_vars.count_dio_done = 0;
+    icmpv6rpl_vars.count_dao = 0;
+    icmpv6rpl_vars.count_dio_trickle = 0;
+    icmpv6rpl_vars.count_dio_trickle_done = 0;
+    
 
     if (idmanager_getIsDAGroot() == TRUE)
     {
@@ -302,7 +307,8 @@ void icmpv6rpl_sendDone(OpenQueueEntry_t *msg, owerror_t error)
         if(code == IANA_ICMPv6_RPL_DIO){
             icmpv6rpl_vars.busySendingDIO = FALSE;
             if(error == E_SUCCESS){
-                icmpv6rpl_vars.dioSent = TRUE;
+                icmpv6rpl_vars.count_dio_done += 1;
+                if(msg->note == 1) icmpv6rpl_vars.count_dio_trickle_done += 1;
             }
         }
 
@@ -368,8 +374,7 @@ void icmpv6rpl_receive(OpenQueueEntry_t *msg)
             {
                 icmpv6rpl_start_or_reset_trickle_timer();
             }
-            opentrickletimers_incrementDioTransmitDis();
-            icmpv6rpl_timer_DIO_task();
+            sendDIO(FALSE, TRUE);
         }
 
         break;
@@ -1018,6 +1023,8 @@ void sendDIS(void)
 
     //===== send
     icmpv6rpl_vars.creatingDIS = TRUE;
+
+    icmpv6rpl_vars.count_dis += 1;
     if (icmpv6_send(msg) == E_SUCCESS)
     {
         icmpv6rpl_vars.busySendingDIS = TRUE;
@@ -1040,25 +1047,14 @@ void sendDIS(void)
 */
 void icmpv6rpl_timer_DIO_cb(opentimers_id_t id)
 {
-    icmpv6rpl_timer_DIO_task();
-}
-
-/**
-\brief Handler for DIO timer event.
-
-\note This function is executed in task context, called by the scheduler.
-*/
-void icmpv6rpl_timer_DIO_task(void)
-{
-    sendDIO();
+    sendDIO(TRUE, FALSE);
 }
 
 /**
 \brief Prepare and a send a RPL DIO.
 */
-owerror_t sendDIO(void)
+owerror_t sendDIO(bool is_trickle, bool is_priority)
 {
-
     OpenQueueEntry_t *msg;
     open_addr_t addressToWrite;
 
@@ -1110,7 +1106,12 @@ owerror_t sendDIO(void)
     // if you get here, all good to send a DIO
 
     // reserve a free packet buffer for DIO
+    
     msg = openqueue_getFreePacketBuffer(COMPONENT_ICMPv6RPL);
+    if(is_priority == TRUE && msg == NULL){
+        msg = openqueue_getFreePacketBufferPriority(COMPONENT_ICMPv6RPL);
+    }
+
     if (msg == NULL)
     {
         LOG_ERROR(COMPONENT_ICMPv6RPL, ERR_NO_FREE_PACKET_BUFFER,
@@ -1203,10 +1204,11 @@ owerror_t sendDIO(void)
     packetfunctions_calculateChecksum(msg, (uint8_t *)&(((ICMPv6_ht *)(msg->payload))->checksum)); // call last
 
     // send
+    icmpv6rpl_vars.count_dio += 1;
+    if(is_trickle) icmpv6rpl_vars.count_dio_trickle += 1;
     if (icmpv6_send(msg) == E_SUCCESS)
     {
         icmpv6rpl_vars.busySendingDIO = TRUE;
-        icmpv6rpl_vars.dioScheduled = TRUE;
     }
     else
     {
@@ -1541,40 +1543,24 @@ bool icmpv6rpl_daoSent(void)
     return icmpv6rpl_vars.daoSent;
 }
 
-bool icmpv6rpl_getdioSent(void)
+uint16_t icmpv6rpl_get_failed_dio(bool is_trickle, bool failed_or_count)
 {
-    if (icmpv6rpl_allowSendingDIO() == FALSE)
-    {
-        return FALSE;
-    }
-    return icmpv6rpl_vars.dioSent;
-}
+    uint16_t count_;
+    uint16_t transmit_;
 
-void icmpv6rpl_setdioSent(bool value)
-{
-    if (icmpv6rpl_allowSendingDIO() == FALSE)
-    {
-        return;
+    if (is_trickle) {
+        count_ = icmpv6rpl_vars.count_dio_trickle;
+        transmit_ = icmpv6rpl_vars.count_dio_trickle_done;
+    }else{
+        count_ = icmpv6rpl_vars.count_dio;
+        transmit_ = icmpv6rpl_vars.count_dio_done;
     }
-    icmpv6rpl_vars.dioSent = value;
-}
 
-bool icmpv6rpl_getdioScheduled(void)
-{
-    if (icmpv6rpl_allowSendingDIO() == FALSE)
-    {
-        return FALSE;
-    }
-    return icmpv6rpl_vars.dioScheduled;
-}
-
-void icmpv6rpl_setdioScheduled(bool value)
-{
-    if (icmpv6rpl_allowSendingDIO() == FALSE)
-    {
-        return;
-    }
-    icmpv6rpl_vars.dioScheduled = value;
+    uint16_t failed = count_ - transmit_;
+    if (failed < 0) LOG_CRITICAL(COMPONENT_ICMPv6RPL, ERR_UNDER_OVER_VALUE, 1, failed);
+    if (count_ == 0) return EMPTY_16;
+    if (failed_or_count == FALSE) return failed;
+    return count_;
 }
 
 
@@ -1597,8 +1583,6 @@ void icmpv6rpl_resetAll(void)
     }
 
     icmpv6rpl_vars.daoSent = FALSE;
-    icmpv6rpl_vars.dioSent = FALSE;
-    icmpv6rpl_vars.dioScheduled = FALSE;
 #if RPL_DIS_TRANSMISSION == TRUE
     icmpv6rpl_vars.busySendingDIS = FALSE;
     icmpv6rpl_vars.creatingDIS = FALSE;

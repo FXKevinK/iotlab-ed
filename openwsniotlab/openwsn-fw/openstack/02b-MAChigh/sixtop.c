@@ -118,6 +118,7 @@ void sixtop_init(void) {
     sixtop_vars.mgtTaskCounter = 0;
     sixtop_vars.kaPeriod = MAXKAPERIOD;
     sixtop_vars.six2six_state = SIX_STATE_IDLE;
+    sixtop_vars.eb_prob = (float) 1.0 / EB_PORTION;
 
     sixtop_vars.ebSendingTimerId = opentimers_create(TIMER_GENERAL_PURPOSE, TASKPRIO_SIXTOP);
     opentimers_scheduleIn(
@@ -657,9 +658,14 @@ void sixtop_timeout_timer_cb(opentimers_id_t id) {
 //======= EB/KA task
 
 void timer_sixtop_sendEb_fired(void) {
-    if (openrandom_get16b() < (0xffff / EB_PORTION)) {
-        sixtop_sendEB();
-    }
+    uint8_t nbr = neighbors_getNumNeighbors();
+    sixtop_vars.eb_used_prob = sixtop_vars.eb_prob;
+
+#if use_qtrickle == TRUE
+    sixtop_vars.eb_used_prob = sixtop_vars.eb_prob + ((float) (1.0 - sixtop_vars.eb_prob) / (uint32_t) (1 << nbr));
+#endif
+    if (sixtop_vars.eb_used_prob < 0 || sixtop_vars.eb_used_prob > 1) LOG_CRITICAL(COMPONENT_SIXTOP, ERR_TIMER_MINUS, 0, 0);
+    if (packetfunctions_random_p(sixtop_vars.eb_used_prob)) sixtop_sendEB();
 }
 
 /**
@@ -703,7 +709,7 @@ port_INLINE void sixtop_sendEB(void) {
     memset(&addressToWrite, 0, sizeof(open_addr_t));
 
     if (
-            (ieee154e_isSynch() == FASE) ||
+            (ieee154e_isSynch() == FALSE) ||
             (IEEE802154_security_isConfigured() == FALSE) ||
             (icmpv6rpl_getMyDAGrank() == DEFAULTDAGRANK) ||
             icmpv6rpl_daoSent() == FALSE) {

@@ -23,9 +23,6 @@
 
 //=========================== define ==========================================
 
-#define use_qtrickle TRUE
-#define adaptive_epsilon TRUE
-
 // DIO trickle timer parameters
 #define DEFAULT_DIO_REDUNDANCY_CONSTANT 10
 #define DEFAULT_DIO_INTERVAL_DOUBLINGS 8
@@ -49,13 +46,6 @@
 #define default_epsilon 0.5
 #endif
 
-#if adaptive_epsilon == TRUE
-#define max_epsilon 1.0
-#define min_epsilon 0.01
-#define decay_rate 0.2
-#define epsilon_delta ((max_epsilon - min_epsilon) * decay_rate)
-#endif
-
 //=========================== typedef =========================================
 
 // |-------+-----+------------------------------|
@@ -65,7 +55,6 @@
 
 BEGIN_PACK
 typedef struct {
-    uint8_t m;
     uint8_t Nnbr;
     uint8_t k;
     uint8_t counter;
@@ -74,8 +63,6 @@ typedef struct {
     uint16_t used;
     uint16_t Ncells;
     uint16_t DIOtransmit;
-    uint16_t DIOsurpress;
-    uint16_t DIOtransmit_collision;
     uint16_t DIOtransmit_dis;
     uint16_t average_reward;
     uint16_t epsilon; // in xxxx int
@@ -97,56 +84,53 @@ typedef struct
 {
     uint32_t Imin;
     uint8_t Imax;
+    uint64_t max_interval;
     uint8_t K;
     uint32_t I;
-    uint32_t T;
-    uint8_t C;
     opentimers_cbt callback;
     bool isUsed;
     bool isRunning;
-    uint8_t m;
-    uint16_t Nreset;
+    bool is_dio_sent;
     uint16_t Nstates;
+    uint16_t Ncells;
+    uint16_t DIOtransmit;
+    uint16_t used;
+    uint8_t Nnbr;
+    uint32_t T;
+    uint8_t C;
+
+    uint16_t Nreset;
+    float pbusy;
     float preset;
     float pstable;
-    float pfree;
-    float pbusy;
-    uint32_t listen_period;
-    uint16_t Ncells;
-    uint16_t start_ops;
-    uint16_t end_ops;
-    uint16_t DIOtransmit;
-    uint16_t DIOsurpress;
-    uint16_t DIOtransmit_dis;
-    uint64_t max_interval;
-    bool is_dio_sent;
+    float ptransmit;
+    float pfailed;
+    float psent;
+    float pqu;
+    float ops;
+    float epsilon;
+
     uint8_t sc_at_i;
     uint8_t sc_at_t;
     uint8_t sc_at_start_t;
     uint8_t sc_at_end_t;
-    uint8_t sc_ambr;
     uint32_t t_start;
     uint32_t t_end;
 
-    uint8_t Nnbr;
-    float epsilon;
-
-    uint16_t prev_ops_ambr;
-    uint32_t counter_ambr;
-    float ambr;
-    float ptransmit;
-    uint16_t used;
-
 #if use_qtrickle == TRUE
-    bool is_explore;
+    float reward;
     uint8_t current_action;
-    // skip 0 index, since 0 * 0 and 0 * 1 will be the same
-    float q_table[(DEFAULT_DIO_INTERVAL_DOUBLINGS + 2) * 2];
-#endif
+    float psent_prev;
+    float pbusy_prev;
+    float pqu_prev;
 
-#if adaptive_epsilon == TRUE
-    float total_reward;
-    float average_reward;
+    bool is_explore;
+    // skip 0 index, since 0 * 0 and 0 * 1 will be the same
+    float ql_table[3][3][2];
+    uint8_t s1;
+    uint8_t s2;
+    uint8_t n_s1;
+    uint8_t n_s2;
 #endif
 
 } opentrickletimers_vars_t;
@@ -161,8 +145,9 @@ bool opentrickletimers_stop(opentimers_id_t id);
 bool opentrickletimers_recvConsistent(opentimers_id_t id);
 bool opentrickletimers_reset(opentimers_id_t id);
 uint32_t opentrickletimers_getValue(uint8_t code);
-uint16_t opentrickletimers_getAMBR(void);
-void opentrickletimers_incrementDioTransmitDis(void);
+uint32_t opentrickletimers_get_p(uint8_t code);
+uint8_t opentrickletimers_prob_to_class(float prob);
+bool opentrickletimers_isInTRange(void);
 
 /**
 \}

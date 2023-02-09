@@ -1295,13 +1295,12 @@ class Tsch(object):
 
         metric_to_measure = [
             'pbusy',
-            'pfree',
             'ptransmit',
+            'pqu',
             'preset',
             'pstable',
             'pfailed',
             'psent',
-            'epsilon',
             'redundancy_constant',
             't',
             'interval',

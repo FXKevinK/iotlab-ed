@@ -78,8 +78,8 @@ class Rpl(object):
 
         self.count_dis = 0
         self.count_dio = 0
-        self.count_dio_trickle = 0
         self.count_dao = 0
+        self.count_dio_trickle = 0
         self.DIOtransmit_all = {}
         self.first_joined = False
         self.received_DIS = {}

@@ -22,6 +22,7 @@
         "icmpv6rpl.h": "c",
         "sixtop.h": "c",
         "opentimers.h": "c",
-        "neighbors.h": "c"
+        "neighbors.h": "c",
+        "openrandom.h": "c"
     }
 }

@@ -66,26 +66,14 @@ class RiataTrickle(object):
         self.asn_t_end = None
         self.qul = 0
 
-
-
-        # self.Nreset = 1
-        # self.pbusy = 1
-        # self.preset = 1
-        # self.pfree = 1 - self.pbusy
-        # self.pstable = 1 - self.preset
-        # self.ptransmit = 1
-        # self.pfailed = 1
         self.Nreset = 0
         self.pbusy = 0 # None
-        self.pfree = 0 # None
         self.preset = 0 # None
         self.pstable = 0 #None
         self.ptransmit = 0 # None
         self.pfailed = 0 # None
         self.psent = 0 # None
         self.pqu = 0
-
-
 
         # for riata
         self.m_riata = 1  # m as interval states
@@ -184,14 +172,11 @@ class RiataTrickle(object):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
 
         self.Nstates += 1
-        self.Nnbr = len(self.mote.rpl.of.neighbors) if hasattr(
-            self.mote.rpl.of, 'neighbors') else 0
         self.is_dio_sent_prev = self.is_dio_sent
         self._schedule_event_at_t_and_i()
 
     def _schedule_event_at_t_and_i(self):
         slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
-        slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
 
         I_ = self.interval / (self.m_riata + self.inconc[self.m_riata])
         self.t_start = self.DIOsent * I_
@@ -208,7 +193,9 @@ class RiataTrickle(object):
 
         self.listen_period = self.t - self.t_start
         self.t_range = self.t_end - self.t_start
-        self.Ncells = self.toint_division(self.t_range, slotframe_duration_ms, is_floor=True)
+
+        self.ops = self.getOpsMC()
+        self.ops_asn = self.engine.getAsn()
 
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
         cur_asn = self.engine.getAsn()
@@ -239,8 +226,12 @@ class RiataTrickle(object):
                 
             if self.is_dio_sent:
                 self.DIOsent += 1
+                self.DIOtransmit += 1
                 self.user_callback()
-
+            else:
+                self.DIOsurpress += 1
+            self.calculate_ptransmit()
+                
         def start_t():
             self.start_t_record = self.getOpsMC()
 
@@ -269,15 +260,7 @@ class RiataTrickle(object):
         # ========================
 
         def i_callback():
-            if self.is_dio_sent:
-                self.DIOtransmit += 1
-            else:
-                self.DIOsurpress += 1
-
-            self.calculate_pfree()
-            self.calculate_ptransmit()
-            self.calculate_psent()
-            self.calculate_pqu()
+            self.calculate_multiple_p()
 
             self.update_qtable()
             self.log_result()
@@ -309,6 +292,11 @@ class RiataTrickle(object):
             uniqueTag=self.unique_tag_base + u'_at_i',
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
 
+    def calculate_multiple_p(self):
+        self.calculate_pbusy()
+        self.calculate_psent()
+        self.calculate_pqu()
+
     def calculate_preset(self):
         self.preset = self.Nreset / self.Nstates
         assert 0 <= self.preset <= 1
@@ -331,19 +319,21 @@ class RiataTrickle(object):
         self.pqu = self.mote.tsch.get_queue_usage()
         assert 0 <= self.pqu <= 1
 
-    def calculate_pfree(self):
-        if (
-            self.end_t_record is not None and
-            self.start_t_record is not None and
-            self.Ncells
-        ):
-            self.used = self.end_t_record - self.start_t_record
-            if self.Ncells < self.used:
-                self.Ncells = self.used
-            occ = self.used / self.Ncells
-            self.pbusy = occ
-            assert 0 <= self.pbusy <= 1
-            self.pfree = 1 - self.pbusy
+    def calculate_pbusy(self):
+        curr = self.getOpsMC()
+        curr_asn = self.engine.getAsn()
+        diff_asn = curr_asn - self.ops_asn
+        self.Ncells = self.toint_division(diff_asn, self.settings.tsch_slotframeLength, is_floor=True)
+
+        if self.ops is None or curr is None or self.Ncells == 0:
+            self.pbusy = 0
+            return
+
+        self.used = curr - self.ops
+        if self.Ncells < self.used: self.Ncells = self.used
+        occ = self.used / self.Ncells
+        self.pbusy = occ
+        assert 0 <= self.pbusy <= 1
 
     def getOpsMC(self):
         minimal_cell = self.mote.tsch.get_minimal_cell()
@@ -366,31 +356,40 @@ class RiataTrickle(object):
         return self.counter_riata.get(self.m_riata, 0)
 
     def log_result(self, is_reset=False):
+        self.Nnbr = len(self.mote.rpl.of.neighbors) if hasattr(
+            self.mote.rpl.of, 'neighbors') else 0
+
         base = {
             'state': self.Nstates,
             'is_reset': is_reset,
             'preset': self.preset,
             'Nreset': self.Nreset,
-        }
 
-        more = {
+            'pqu_prev': self.pqu_prev,
             'pqu': self.pqu,
+            'pbusy_prev': self.pbusy_prev,
             'pbusy': self.pbusy,
-            'pfree': self.pfree,
-            'ptransmit': self.ptransmit,
+            'psent_prev': self.psent_prev,
             'psent': self.psent,
             'pfailed': self.pfailed,
             'preset': self.preset,
             'pstable': self.pstable,
+            'ptransmit': self.ptransmit,
+
             'redundancy_constant': self.redundancy_constant,
             't': self.t,
             'interval': self.interval,
             'Nnbr': self.Nnbr,
+            'Ncells': self.Ncells,
+            'used': self.used,
+            'm': self.m_riata
+        }
+
+        more = {
             'counter': self.counter,
             'is_dio_sent': self.is_dio_sent,
             'count_dio_trickle': self.mote.rpl.count_dio_trickle,
             "reward": self.reward,
-            'm': self.m_riata,
         }
 
         result = {**base} if is_reset else {**base, **more}

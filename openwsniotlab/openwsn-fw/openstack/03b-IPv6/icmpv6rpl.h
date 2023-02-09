@@ -255,8 +255,12 @@ typedef struct
    icmpv6rpl_pio_t *incomingPio;      // pio structure incoming
    icmpv6rpl_config_ht *incomingConf; // configuration incoming
    bool daoSent;
-   bool dioSent;
-   bool dioScheduled;
+   uint16_t count_dis;
+   uint16_t count_dio;
+   uint16_t count_dio_done;
+   uint16_t count_dao;
+   uint16_t count_dio_trickle;
+   uint16_t count_dio_trickle_done;
 } icmpv6rpl_vars_t;
 
 BEGIN_PACK
@@ -298,10 +302,7 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection(void);
 void icmpv6rpl_indicateRxDIO(OpenQueueEntry_t *msg);
 void senddao_(void);
 bool icmpv6rpl_daoSent(void);
-bool icmpv6rpl_getdioSent(void);
-void icmpv6rpl_setdioSent(bool value);
-bool icmpv6rpl_getdioScheduled(void);
-void icmpv6rpl_setdioScheduled(bool value);
+uint16_t icmpv6rpl_get_failed_dio(bool is_trickle, bool failed_or_count);
 void icmpv6rpl_resetAll(void);
 
 /**

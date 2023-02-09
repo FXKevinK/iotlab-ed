@@ -180,7 +180,6 @@ owerror_t icmpv6periodic_send(void)
 
     icmpv6periodic_debug.counter = icmpv6periodic_vars.info.counter;
     icmpv6periodic_debug.is_failed = result;
-    icmpv6periodic_debug.ambr = opentrickletimers_getAMBR();
 
     ieee154e_getAsn(&(asn[0]));
     curAsn.bytes0and1 = 256 * asn[1] + asn[0];

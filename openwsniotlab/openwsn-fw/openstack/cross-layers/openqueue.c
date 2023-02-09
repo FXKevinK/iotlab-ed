@@ -106,6 +106,23 @@ OpenQueueEntry_t* openqueue_getFreePacketBuffer(uint8_t creator) {
     return NULL;
 }
 
+OpenQueueEntry_t* openqueue_getFreePacketBufferPriority(uint8_t creator) {
+    uint8_t i;
+    INTERRUPT_DECLARATION();
+    DISABLE_INTERRUPTS();
+
+    for (i = 0; i < QUEUELENGTH; i++) {
+        if (openqueue_vars.queue[i].creator > COMPONENT_FORWARDING){
+            openqueue_reset_entry(&(openqueue_vars.queue[i]));
+            ENABLE_INTERRUPTS();
+            return &openqueue_vars.queue[i];
+        }
+    }
+
+    ENABLE_INTERRUPTS();
+    return NULL;
+}
+
 /**
 \brief Free a previously-allocated packet buffer.
 

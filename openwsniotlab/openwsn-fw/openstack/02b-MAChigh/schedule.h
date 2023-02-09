@@ -267,6 +267,7 @@ slotOffset_t schedule_getNextActiveSlotOffset(void);
 frameLength_t schedule_getFrameLength(void);
 
 cellType_t schedule_getType(void);
+bool schedule_isMinimalCell(void);
 
 bool schedule_getShared(void);
 

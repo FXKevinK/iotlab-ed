@@ -68,17 +68,8 @@ class TrickleTimer(object):
         self.counter = 0
         self.reward = 0
 
-        # self.Nreset = 1
-        # self.pbusy = 1
-        # self.preset = 1
-        # self.pfree = 1 - self.pbusy
-        # self.pstable = 1 - self.preset
-        # self.ptransmit = 1
-        # self.pfailed = 1
-
         self.Nreset = 0
         self.pbusy = 0 # None
-        self.pfree = 0 # None
         self.preset = 0 # None
         self.pstable = 0 #None
         self.ptransmit = 0 # None
@@ -189,13 +180,12 @@ class TrickleTimer(object):
         self.psent_prev = self.psent
         self.pbusy_prev = self.pbusy
         self.pqu_prev = self.pqu
-        self._schedule_event_at_t_and_i()
         self.counter = 0
+        self._schedule_event_at_t_and_i()
 
     def _schedule_event_at_t_and_i(self):
         slot_duration_ms = self.settings.tsch_slotDuration * 1000  # convert to ms
-        slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
-
+    
         # Calculate T
         half_interval = old_div(self.interval, 2)
         self.t_start = half_interval
@@ -203,9 +193,6 @@ class TrickleTimer(object):
         if getattr(self.settings, "algo_auto_t", False):
             self.t_start = half_interval * (self.ptransmit or 0) # small, allow more. large, stable/less.
             self.t_end = half_interval + (half_interval * (self.pstable or 0)) # small, allow more. large, stable/less.
-            # 1 ptransmit
-            # 2 pfailed
-            # 3 ptransmit & pfailed
 
         self.t = random.uniform(self.t_start, self.t_end)
         assert self.t_start <= self.t_end <= self.interval
@@ -213,7 +200,9 @@ class TrickleTimer(object):
 
         self.listen_period = self.t - self.t_start
         self.t_range = self.t_end - self.t_start
-        self.Ncells = self.toint_division(self.t_range, slotframe_duration_ms, is_floor=True)
+
+        self.ops = self.getOpsMC()
+        self.ops_asn = self.engine.getAsn()
 
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
         cur_asn = self.engine.getAsn()
@@ -228,6 +217,7 @@ class TrickleTimer(object):
 
         def t_callback():
             self.is_dio_sent = False
+            self.current_action = 0
             self.is_explore = random.uniform(
                 0, 1) < self.epsilon if getattr(self.settings, "algo_use_ql", False) else 1
             # self.qul = self.mote.tsch.get_queue_left()
@@ -244,6 +234,11 @@ class TrickleTimer(object):
                 if action == 1:
                     self.is_dio_sent = True
                     self.user_callback()
+            
+            if self.is_dio_sent:
+                self.DIOtransmit += 1
+                self.current_action = 1
+            self.calculate_ptransmit()
 
         def start_t():
             self.start_t_record = self.getOpsMC()
@@ -273,27 +268,18 @@ class TrickleTimer(object):
         # ========================
 
         def i_callback():
-            if self.is_dio_sent:
-                self.DIOtransmit += 1
-                self.current_action = 1
-            else:
-                self.DIOsurpress += 1
-                self.current_action = 0
-
-            self.calculate_pfree()
-            self.calculate_ptransmit()
-            self.calculate_psent()
-            self.calculate_pqu()
+            self.calculate_multiple_p()
 
             if getattr(self.settings, "algo_use_ql", False):
+                self.calculate_reward_state()
                 self.update_qtable()
 
             self.log_result()
 
-            if getattr(self.settings, "algo_adaptive_epsilon", False):
-                self.total_reward += self.reward
-                self.average_reward = self.total_reward / self.Nstates
-                self.calculate_epsilon()
+            # if getattr(self.settings, "algo_adaptive_epsilon", False):
+            #     self.total_reward += self.reward
+            #     self.average_reward = self.total_reward / self.Nstates
+            #     self.calculate_epsilon()
 
             self.interval = self.interval * 2
             self.interval = max(
@@ -309,6 +295,11 @@ class TrickleTimer(object):
             cb=i_callback if self.t_end < self.interval else end_t_i_callback,
             uniqueTag=self.unique_tag_base + u'_at_i',
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
+    
+    def calculate_multiple_p(self):
+        self.calculate_pbusy()
+        self.calculate_psent()
+        self.calculate_pqu()
 
     def calculate_preset(self):
         self.preset = self.Nreset / self.Nstates
@@ -332,19 +323,21 @@ class TrickleTimer(object):
         self.pqu = self.mote.tsch.get_queue_usage()
         assert 0 <= self.pqu <= 1
 
-    def calculate_pfree(self):
-        if (
-            self.end_t_record is not None and
-            self.start_t_record is not None and
-            self.Ncells
-        ):
-            self.used = self.end_t_record - self.start_t_record
-            if self.Ncells < self.used:
-                self.Ncells = self.used
-            occ = self.used / self.Ncells
-            self.pbusy = occ
-            assert 0 <= self.pbusy <= 1
-            self.pfree = 1 - self.pbusy
+    def calculate_pbusy(self):
+        curr = self.getOpsMC()
+        curr_asn = self.engine.getAsn()
+        diff_asn = curr_asn - self.ops_asn
+        self.Ncells = self.toint_division(diff_asn, self.settings.tsch_slotframeLength, is_floor=True)
+
+        if self.ops is None or curr is None or self.Ncells == 0:
+            self.pbusy = 0
+            return
+
+        self.used = curr - self.ops
+        if self.Ncells < self.used: self.Ncells = self.used
+        occ = self.used / self.Ncells
+        self.pbusy = occ
+        assert 0 <= self.pbusy <= 1
 
     def getOpsMC(self):
         minimal_cell = self.mote.tsch.get_minimal_cell()
@@ -354,8 +347,7 @@ class TrickleTimer(object):
 
     def correctASN(self, asn_):
         cur = self.engine.getAsn()
-        if asn_ == cur:
-            asn_ = cur + 1
+        if asn_ == cur: asn_ = cur + 1
         return asn_
 
     def toint_division(self, a, b, is_floor=False):
@@ -369,39 +361,40 @@ class TrickleTimer(object):
             'is_reset': is_reset,
             'preset': self.preset,
             'Nreset': self.Nreset,
-        }
 
-        more = {
             'pqu_prev': self.pqu_prev,
             'pqu': self.pqu,
             'pbusy_prev': self.pbusy_prev,
             'pbusy': self.pbusy,
-            'pfree': self.pfree,
-            'ptransmit': self.ptransmit,
             'psent_prev': self.psent_prev,
             'psent': self.psent,
             'pfailed': self.pfailed,
             'preset': self.preset,
             'pstable': self.pstable,
+            'ptransmit': self.ptransmit,
+
             'redundancy_constant': self.redundancy_constant,
             't': self.t,
             'interval': self.interval,
             'Nnbr': self.Nnbr,
+            'Ncells': self.Ncells,
+            'used': self.used
+        }
+
+        more = {
             'counter': self.counter,
             'is_dio_sent': self.is_dio_sent,
             'count_dio_trickle': self.mote.rpl.count_dio_trickle,
-            'reward': self.reward
+            'reward': None,
         }
 
-        result = {**base} if is_reset else {**base, **more}
-
         if getattr(self.settings, "algo_use_ql", False):
-            result['s1_class'] = self.classes[self.s1] if self.s1 is not None else None
-            result['n_s1_class'] = self.classes[self.n_s1] if self.s1 is not None else None
-            result['s2_class'] = self.classes[self.s2] if self.s2 is not None else None
-            result['n_s2_class'] = self.classes[self.n_s2] if self.s2 is not None else None
+            more['s1_class'] = self.classes[self.s1] if self.s1 is not None else None
+            more['n_s1_class'] = self.classes[self.n_s1] if self.s1 is not None else None
+            more['s2_class'] = self.classes[self.s2] if self.s2 is not None else None
+            more['n_s2_class'] = self.classes[self.n_s2] if self.s2 is not None else None
 
-            result['epsilon'] = self.epsilon
+        result = {**base} if is_reset else {**base, **more}
 
         self.log(
             SimEngine.SimLog.LOG_TRICKLE,
@@ -416,7 +409,7 @@ class TrickleTimer(object):
         elif 1/3 < prob < 2/3: return 1
         elif 2/3 <= prob <= 1: return 2
 
-    def update_qtable(self):
+    def calculate_reward_state(self):
         if self.psent > self.psent_prev or self.psent == 1:
             self.reward = 1
         elif self.psent < self.psent_prev or self.psent == 0:
@@ -426,8 +419,11 @@ class TrickleTimer(object):
 
         self.s1 = self.prob_to_class(self.pbusy_prev)
         self.s2 = self.prob_to_class(self.pqu_prev)
+
         self.n_s1 = self.prob_to_class(self.pbusy)
         self.n_s2 = self.prob_to_class(self.pqu)
+
+    def update_qtable(self):
         old_value = self.ql_table[self.s1][self.s2][self.current_action]
         ql_next_state = self.ql_table[self.n_s1][self.n_s2]
 
@@ -439,18 +435,18 @@ class TrickleTimer(object):
         k = 1 + math.ceil(min(self.Nnbr, self.kmax - 1) * self.preset) # large, allow more. small, stable/less/likely satisfied
         return k
 
-    def calculate_epsilon(self):
-        new_epsilon = self.epsilon
+    # def calculate_epsilon(self):
+    #     new_epsilon = self.epsilon
 
-        if self.Nstates == 0:
-            new_epsilon = self.max_epsilon
-        elif self.reward > self.average_reward:
-            # towards exploit
-            new_epsilon -= self.delta
-        else:
-            # towards explore
-            new_epsilon += self.delta
+    #     if self.Nstates == 0:
+    #         new_epsilon = self.max_epsilon
+    #     elif self.reward > self.average_reward:
+    #         # towards exploit
+    #         new_epsilon -= self.delta
+    #     else:
+    #         # towards explore
+    #         new_epsilon += self.delta
 
-        new_epsilon = max(new_epsilon, self.min_epsilon)
-        new_epsilon = min(new_epsilon, self.max_epsilon)
-        self.epsilon = new_epsilon
+    #     new_epsilon = max(new_epsilon, self.min_epsilon)
+    #     new_epsilon = min(new_epsilon, self.max_epsilon)
+    #     self.epsilon = new_epsilon

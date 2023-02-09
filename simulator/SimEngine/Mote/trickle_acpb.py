@@ -172,12 +172,10 @@ class ACPBTrickle(object):
         self.engine.removeFutureEvent(self.unique_tag_base + u'_at_end_t')
 
         self.Nstates += 1
-        self.Nnbr = len(self.mote.rpl.of.neighbors) if hasattr(
-            self.mote.rpl.of, 'neighbors') else 0
 
+        self.counter = 0
         self.redundancy_constant = self.calculate_k()
         self._schedule_event_at_t_and_i()
-        self.counter = 0
 
     def _schedule_event_at_t_and_i(self):
         # Algorithm 3
@@ -185,6 +183,9 @@ class ACPBTrickle(object):
         slotframe_duration_ms = slot_duration_ms * self.settings.tsch_slotframeLength
         NcellsC = self.toint_division(self.interval, slotframe_duration_ms, is_floor=True)
         half_ncells = self.toint_division(NcellsC, 2)
+
+        self.Nnbr = len(self.mote.rpl.of.neighbors) if hasattr(
+            self.mote.rpl.of, 'neighbors') else 0
 
         is_t_in_cell = True
         if self.interval == self.min_interval or self.suppressed > 0:
@@ -212,8 +213,9 @@ class ACPBTrickle(object):
         assert self.t_start <= self.t <= self.t_end, logss
 
         self.listen_period = self.t - self.t_start
-        t_range = self.t_end - self.t_start
-        self.Ncells = self.toint_division(t_range, slotframe_duration_ms, is_floor=True)
+
+        self.ops = self.getOpsMC()
+        self.ops_asn = self.engine.getAsn()
 
         # asn = seconds / tsch_slotDuration (s) = ms / slot_duration_ms
         cur_asn = self.engine.getAsn()
@@ -233,6 +235,12 @@ class ACPBTrickle(object):
                 self.user_callback()
             else:
                 self.suppressed += 1
+
+            if self.is_dio_sent:
+                self.DIOtransmit += 1
+            else:
+                self.DIOsurpress += 1
+            self.calculate_ptransmit()
 
         def start_t():
             self.start_t_record = self.getOpsMC()
@@ -262,15 +270,7 @@ class ACPBTrickle(object):
         # ========================
 
         def i_callback():
-            if self.is_dio_sent:
-                self.DIOtransmit += 1
-            else:
-                self.DIOsurpress += 1
-
-            self.calculate_pfree()
-            self.calculate_ptransmit()
-            self.calculate_psent()
-            self.calculate_pqu()
+            self.calculate_multiple_p()
 
             self.log_result()
 
@@ -290,6 +290,11 @@ class ACPBTrickle(object):
             cb=i_callback if self.t_end < self.interval else end_t_i_callback,
             uniqueTag=self.unique_tag_base + u'_at_i',
             intraSlotOrder=d.INTRASLOTORDER_STACKTASKS)
+
+    def calculate_multiple_p(self):
+        self.calculate_pbusy()
+        self.calculate_psent()
+        self.calculate_pqu()
 
     def calculate_preset(self):
         self.preset = self.Nreset / self.Nstates
@@ -313,19 +318,21 @@ class ACPBTrickle(object):
         self.pqu = self.mote.tsch.get_queue_usage()
         assert 0 <= self.pqu <= 1
 
-    def calculate_pfree(self):
-        if (
-            self.end_t_record is not None and
-            self.start_t_record is not None and
-            self.Ncells
-        ):
-            self.used = self.end_t_record - self.start_t_record
-            if self.Ncells < self.used:
-                self.Ncells = self.used
-            occ = self.used / self.Ncells
-            self.pbusy = occ
-            assert 0 <= self.pbusy <= 1
-            self.pfree = 1 - self.pbusy
+    def calculate_pbusy(self):
+        curr = self.getOpsMC()
+        curr_asn = self.engine.getAsn()
+        diff_asn = curr_asn - self.ops_asn
+        self.Ncells = self.toint_division(diff_asn, self.settings.tsch_slotframeLength, is_floor=True)
+
+        if self.ops is None or curr is None or self.Ncells == 0:
+            self.pbusy = 0
+            return
+
+        self.used = curr - self.ops
+        if self.Ncells < self.used: self.Ncells = self.used
+        occ = self.used / self.Ncells
+        self.pbusy = occ
+        assert 0 <= self.pbusy <= 1
 
     def getOpsMC(self):
         minimal_cell = self.mote.tsch.get_minimal_cell()
@@ -350,26 +357,32 @@ class ACPBTrickle(object):
             'is_reset': is_reset,
             'preset': self.preset,
             'Nreset': self.Nreset,
-        }
 
-        more = {
+            'pqu_prev': self.pqu_prev,
             'pqu': self.pqu,
+            'pbusy_prev': self.pbusy_prev,
             'pbusy': self.pbusy,
-            'pfree': self.pfree,
-            'ptransmit': self.ptransmit,
+            'psent_prev': self.psent_prev,
             'psent': self.psent,
             'pfailed': self.pfailed,
             'preset': self.preset,
             'pstable': self.pstable,
+            'ptransmit': self.ptransmit,
+
             'redundancy_constant': self.redundancy_constant,
             't': self.t,
             'interval': self.interval,
             'Nnbr': self.Nnbr,
+            'Ncells': self.Ncells,
+            'used': self.used,
+            'm': self.m
+        }
+
+        more = {
             'counter': self.counter,
             'is_dio_sent': self.is_dio_sent,
             'count_dio_trickle': self.mote.rpl.count_dio_trickle,
             'reward': None,
-            'm': self.m
         }
 
         result = {**base} if is_reset else {**base, **more}
@@ -382,6 +395,9 @@ class ACPBTrickle(object):
         )
 
     def calculate_k(self):
+        self.Nnbr = len(self.mote.rpl.of.neighbors) if hasattr(
+            self.mote.rpl.of, 'neighbors') else 0
+
         # Algorithm 2
         if self.m == 0:
             k = min(self.Nnbr + 1, 10)

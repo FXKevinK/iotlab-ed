@@ -27,6 +27,12 @@ static const uint8_t infoStackName[] = "OpenWSN ";
 #define OPENWSN_VERSION_MINOR     25
 #define OPENWSN_VERSION_PATCH     0
 
+#define EMPTY_16 0xffff
+#define EMPTY_8 0xff
+#define float_multiplier 10000
+
+#define use_qtrickle FALSE
+
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -410,6 +416,7 @@ typedef struct {
     bool l1_crc;                                               // did received packet pass CRC check?
     //the packet
     uint8_t packet[1 + 1 + 125 + 2 + 1];                       // 1B spi address, 1B length, 125B data, 2B CRC, 1B LQI
+    uint8_t note;
 } OpenQueueEntry_t;
 
 
