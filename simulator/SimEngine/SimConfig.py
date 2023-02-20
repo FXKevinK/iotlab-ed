@@ -61,8 +61,6 @@ class SimConfig(dict):
         'ql_learning_rate': float,
         'ql_discount_rate': float,
         'ql_epsilon': float,
-        'algo_adaptive_epsilon': int,
-        'ql_adaptive_decay_rate': float,
         'algo_auto_eb': int,
         'eb_interval_s': float,
         'exec_minutesPerRun': int,
@@ -70,9 +68,8 @@ class SimConfig(dict):
         'algo_use_ql': int,
         'algo_auto_t': int,
         'algo_auto_k': int,
-        'ql_adaptive_min_epsilon': float,
         'algo_simulate_addremove': int,
-        'algo_addremove_ratio': float
+        'exec_randomSeed_add': int
     }
     
     def __init__(self, configfile=None, configdata=None, changed_param=None, map_param=None):

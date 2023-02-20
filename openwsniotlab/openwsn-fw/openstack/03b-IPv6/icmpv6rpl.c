@@ -683,7 +683,6 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection(void)
         openserial_print_exp(COMPONENT_ICMPv6RPL, ERR_EXPERIMENT, (uint8_t *) & icmpv6rpl_debug, sizeof(icmpv6rpl_debug_t));
 
         icmpv6periodic_begin();
-        
     }
     else
     {
@@ -1108,9 +1107,11 @@ owerror_t sendDIO(bool is_trickle, bool is_priority)
     // reserve a free packet buffer for DIO
     
     msg = openqueue_getFreePacketBuffer(COMPONENT_ICMPv6RPL);
+#if use_qtrickle == TRUE
     if(is_priority == TRUE && msg == NULL){
         msg = openqueue_getFreePacketBufferPriority(COMPONENT_ICMPv6RPL);
     }
+#endif
 
     if (msg == NULL)
     {

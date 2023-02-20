@@ -33,17 +33,17 @@
 // #define IMIN_1 (1 << DEFAULT_DIO_INTERVAL_MIN)
 
 // milliseconds, DIO_IMIN = 2 ^ DEFAULT_DIO_INTERVAL_MIN
-#if PYTHON_BOARD
-#define IMIN_2 (DEFAULT_DIO_INTERVAL_MIN * 60)
-#else
+// #if PYTHON_BOARD
+// #define IMIN_2 (DEFAULT_DIO_INTERVAL_MIN * 60)
+// #else
 #define IMIN_2 DEFAULT_DIO_INTERVAL_MIN
-#endif
+// #endif
 #define DEFAULT_DIO_IMIN_MS IMIN_2
 
 #if use_qtrickle == TRUE
-#define ql_learning_rate 0.5
+#define ql_learning_rate 0.7
 #define ql_discount_rate 0.2
-#define default_epsilon 0.5
+#define default_epsilon 0.9
 #endif
 
 //=========================== typedef =========================================
@@ -56,27 +56,18 @@
 BEGIN_PACK
 typedef struct {
     uint8_t Nnbr;
-    uint8_t k;
-    uint8_t counter;
+    uint8_t K;
+    int16_t reward;
     uint16_t state;
-    uint16_t Nreset;
-    uint16_t used;
-    uint16_t Ncells;
     uint16_t DIOtransmit;
-    uint16_t DIOtransmit_dis;
-    uint16_t average_reward;
-    uint16_t epsilon; // in xxxx int
+    uint16_t DIOsuppress;
+    uint16_t DIOfailed;
+    uint16_t psent;
+    uint16_t pbusy;
+    uint16_t pqu;
+    uint16_t preset;
     uint16_t ptransmit;
-    uint16_t pfree; // in xxxx int
-    uint16_t pbusy; // from 1 - pfree
-    uint16_t preset; // in xxxx int
-    uint16_t pstable; // from 1 - preset
-    uint32_t listen_period;
-    uint32_t t_start;
-    uint32_t t;
-    uint32_t t_end;
-    uint32_t interval;
-    // size 4+(2*9) = 22
+    uint32_t T;
 } opentrickletimers_debug_t;
 END_PACK
 
@@ -94,6 +85,8 @@ typedef struct
     uint16_t Nstates;
     uint16_t Ncells;
     uint16_t DIOtransmit;
+    uint16_t DIOfailed;
+    uint16_t DIOsuppress;
     uint16_t used;
     uint8_t Nnbr;
     uint32_t T;
@@ -116,9 +109,9 @@ typedef struct
     uint8_t sc_at_end_t;
     uint32_t t_start;
     uint32_t t_end;
+    float reward;
 
 #if use_qtrickle == TRUE
-    float reward;
     uint8_t current_action;
     float psent_prev;
     float pbusy_prev;

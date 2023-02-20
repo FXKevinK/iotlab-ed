@@ -238,6 +238,8 @@ class TrickleTimer(object):
             if self.is_dio_sent:
                 self.DIOtransmit += 1
                 self.current_action = 1
+            else:
+                self.DIOsurpress += 1
             self.calculate_ptransmit()
 
         def start_t():

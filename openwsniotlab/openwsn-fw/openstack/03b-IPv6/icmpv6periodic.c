@@ -51,9 +51,9 @@ void icmpv6periodic_init(void)
 
     ms = app_pkPeriodSec * 1000;
 
-    #if PYTHON_BOARD
-    ms *= 60;
-    #endif
+    // #if PYTHON_BOARD
+    // ms *= 60;
+    // #endif
 
     icmpv6periodic_vars.info.mote_duration = ms;
     icmpv6periodic_vars.timer_id = opentimers_create(TIMER_GENERAL_PURPOSE, TASKPRIO_RPL);
@@ -172,22 +172,23 @@ owerror_t icmpv6periodic_send(void)
     packetfunctions_calculateChecksum(msg, (uint8_t * ) & (((ICMPv6_ht *) (msg->payload))->checksum));//do last
 
     // Log
-    uint8_t asn[5];
-    asn_t curAsn;
+    // uint8_t asn[5];
+    // asn_t curAsn;
     bool result;
 
     result = icmpv6_send(msg);
+    LOG_INFO(COMPONENT_ICMPv6PERIODIC, ERR_DEBUG_1, 2, 2);
 
-    icmpv6periodic_debug.counter = icmpv6periodic_vars.info.counter;
-    icmpv6periodic_debug.is_failed = result;
+    // icmpv6periodic_debug.counter = icmpv6periodic_vars.info.counter;
+    // icmpv6periodic_debug.is_failed = result;
 
-    ieee154e_getAsn(&(asn[0]));
-    curAsn.bytes0and1 = 256 * asn[1] + asn[0];
-    curAsn.bytes2and3 = 256 * asn[3] + asn[2];
-    curAsn.byte4 = asn[4];
+    // ieee154e_getAsn(&(asn[0]));
+    // curAsn.bytes0and1 = 256 * asn[1] + asn[0];
+    // curAsn.bytes2and3 = 256 * asn[3] + asn[2];
+    // curAsn.byte4 = asn[4];
     
-    memcpy(&icmpv6periodic_debug.asn, &curAsn, sizeof(asn_t));
-    openserial_print_exp(COMPONENT_ICMPv6PERIODIC, ERR_EXPERIMENT, (uint8_t *) & icmpv6periodic_debug, sizeof(icmpv6periodic_debug_t));
+    // memcpy(&icmpv6periodic_debug.asn, &curAsn, sizeof(asn_t));
+    // openserial_print_exp(COMPONENT_ICMPv6PERIODIC, ERR_EXPERIMENT, (uint8_t *) & icmpv6periodic_debug, sizeof(icmpv6periodic_debug_t));
 
     if (result == E_SUCCESS)
     {

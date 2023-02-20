@@ -68,6 +68,13 @@ def parseCliParams():
     help       = 'exec_randomSeed',
     )
     parser.add_argument(
+        '--param_randomadd',
+        dest       = 'param_randomadd',
+        action     = 'store',
+        default    = '',
+    help       = 'exec_randomSeed_add',
+    )
+    parser.add_argument(
         '--param_imin',
         dest       = 'param_imin',
         action     = 'store',
@@ -94,20 +101,6 @@ def parseCliParams():
         action     = 'store',
         default    = '',
         help       = 'ql_epsilon',
-    )
-    parser.add_argument(
-        '--param_ad',
-        dest       = 'param_ad',
-        action     = 'store',
-        default    = '',
-        help       = 'algo_adaptive_epsilon',
-    )
-    parser.add_argument(
-        '--param_epdecay',
-        dest       = 'param_epdecay',
-        action     = 'store',
-        default    = '',
-        help       = 'ql_adaptive_decay_rate',
     )
     parser.add_argument(
         '--param_runs',
@@ -173,13 +166,6 @@ def parseCliParams():
         action     = 'store',
         default    = '',
         help       = 'algo_use_ql',
-    )
-    parser.add_argument(
-        '--param_minep',
-        dest       = 'param_minep',
-        action     = 'store',
-        default    = '',
-        help       = 'ql_adaptive_min_epsilon',
     )
     parser.add_argument(
         '--param_addrem',
@@ -350,8 +336,6 @@ def main():
         'param_lr': 'ql_learning_rate',
         'param_dr': 'ql_discount_rate',
         'param_ep': 'ql_epsilon',
-        'param_ad': 'algo_adaptive_epsilon',
-        'param_epdecay': 'ql_adaptive_decay_rate',
         'param_runs': 'numRuns',
         'param_motes': 'exec_numMotes',
         'param_exp': 'log_directory_name',
@@ -362,9 +346,9 @@ def main():
         'param_ql': 'algo_use_ql',
         'param_autot': 'algo_auto_t',
         'param_autok': 'algo_auto_k',
-        'param_minep': 'ql_adaptive_min_epsilon',
         'param_addrem': 'algo_simulate_addremove',
-        'param_arratio': 'algo_addremove_ratio'
+        'param_arratio': 'algo_addremove_ratio',
+        'param_randomadd': 'exec_randomSeed_add'
     }
     
     # cli params

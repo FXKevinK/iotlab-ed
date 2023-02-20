@@ -4,15 +4,14 @@
 #include "config.h"
 #include "opentimers.h"
 
-#define app_pkPeriodSec 1
+#define app_pkPeriodSec 10
 #define app_pkLength 20
-#define PERIODIC_PORTION 0.05
+#define PERIODIC_PORTION 0.5
 
 BEGIN_PACK
 typedef struct
 {
     uint16_t counter;
-    uint16_t ambr;
     bool is_failed;
     asn_t asn;
 } icmpv6periodic_debug_t;

@@ -54,6 +54,7 @@ class QTrickle(object):
         self.Nstates = 0
         self.Ncells = 0
         self.DIOtransmit = 0
+        self.DIOsurpress = 0
         self.used = 0
         self.Nnbr = 0
         self.t = 0
@@ -223,6 +224,8 @@ class QTrickle(object):
                 self.user_callback()
                 self.DIOtransmit += 1
                 self.current_action = 1
+            else:
+                self.DIOsurpress += 1
             self.calculate_ptransmit()
 
         self.engine.scheduleAtAsn(
@@ -338,14 +341,14 @@ class QTrickle(object):
             'interval': self.interval,
             'Nnbr': self.Nnbr,
             'Ncells': self.Ncells,
-            'used': self.used
+            'used': self.used,
+            'reward': self.reward,
         }
 
         more = {
             'counter': self.counter,
             'is_dio_sent': self.is_dio_sent,
             'count_dio_trickle': self.mote.rpl.count_dio_trickle,
-            'reward': self.reward,
         }
 
         if getattr(self.settings, "algo_use_ql", False):

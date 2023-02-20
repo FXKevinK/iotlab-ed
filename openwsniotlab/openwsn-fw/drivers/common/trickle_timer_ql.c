@@ -520,17 +520,15 @@ void opentrickletimers_log_result(bool is_reset)
     }
 
     opentrickletimers_debug.state = opentrickletimers_vars.Nstates;
-    opentrickletimers_debug.K = opentrickletimers_vars.K;
-    opentrickletimers_debug.DIOtransmit = icmpv6rpl_get_failed_dio(FALSE, TRUE);
-    opentrickletimers_debug.DIOfailed = icmpv6rpl_get_failed_dio(FALSE, FALSE);
-    opentrickletimers_debug.DIOsuppress = opentrickletimers_vars.DIOsuppress;
-    opentrickletimers_debug.reward = (int16_t)(opentrickletimers_vars.reward * float_multiplier);
-    opentrickletimers_debug.psent = (uint16_t)(opentrickletimers_vars.psent * float_multiplier);
-    opentrickletimers_debug.pbusy = (uint16_t)(opentrickletimers_vars.pbusy * float_multiplier);
-    opentrickletimers_debug.pqu = (uint16_t)(opentrickletimers_vars.pqu * float_multiplier);
+    opentrickletimers_debug.Nreset = opentrickletimers_vars.Nreset;
+    opentrickletimers_debug.counter = opentrickletimers_vars.C;
+    opentrickletimers_debug.k = opentrickletimers_vars.K;
+    opentrickletimers_debug.Nnbr = opentrickletimers_vars.Nnbr;
+    opentrickletimers_debug.used = opentrickletimers_vars.used;
+    opentrickletimers_debug.Ncells = opentrickletimers_vars.Ncells;
     opentrickletimers_debug.preset = (uint16_t)(opentrickletimers_vars.preset * float_multiplier);
+    opentrickletimers_debug.pstable = (uint16_t)(opentrickletimers_vars.pstable * float_multiplier);
     opentrickletimers_debug.ptransmit = (uint16_t)(opentrickletimers_vars.ptransmit * float_multiplier);
-    opentrickletimers_debug.T = opentrickletimers_vars.T;
     openserial_print_exp(COMPONENT_OPENTRICKLETIMERS, ERR_EXPERIMENT, (uint8_t *)&opentrickletimers_debug, sizeof(opentrickletimers_debug_t));
 }
 
@@ -645,13 +643,11 @@ void opentrickletimers_t_callback(opentimers_id_t id)
 
     if (opentrickletimers_vars.is_dio_sent)
     {
-        opentrickletimers_vars.DIOtransmit += 1;
         opentrickletimers_vars.callback(id);
+        opentrickletimers_vars.DIOtransmit += 1;
 #if use_qtrickle == TRUE
         opentrickletimers_vars.current_action = 1;
 #endif
-    }else{
-        opentrickletimers_vars.DIOsuppress += 1;
     }
     opentrickletimers_calculate_ptransmit();
 

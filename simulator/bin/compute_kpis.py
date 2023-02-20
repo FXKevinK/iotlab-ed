@@ -762,6 +762,60 @@ def exp4_process(df_, measured_metrics, base_path):
             path = os.path.join(base_path, f"{new_key}.xlsx")
             dftt.to_excel(path, index=False)
 
+# def exp4_table(df_, base_path):
+#     base_path = os.path.join(base_path, "exp4_metrics")
+
+#     c_ = df_.columns.to_list()
+#     c_.remove('parameter')
+#     c_.remove('method')
+
+#     df_t = df_.pivot(index='parameter', columns='method', values=c_)
+#     df_t = df_t.reset_index()
+#     df_t.columns = df_t.columns.map('-'.join)
+
+#     df_t['n'] = df_t['parameter-'].str.replace(
+#         "(", "").str.replace(")", "").str.split(", ").str[0].astype(int)
+#     df_t['i'] = df_t['parameter-'].str.replace(
+#         "(", "").str.replace(")", "").str.split(", ").str[1].astype(int)
+#     df_t.sort_values(by=['n', 'i'], inplace=True)
+
+#     for c in df_t.columns:
+#         method = c.split("-")[-1]
+#         if len(method) > 1:
+#             new_col_name = method + "-" + c.replace(f"-{method}", "")
+#             df_t.rename(columns={c: new_col_name}, inplace=True)
+
+#     target_ = [
+#         'last_count_dio-sum-mean',
+#         'last_failed_dio-sum-mean',
+#         'last_trickle_surpress-sum-mean'
+#     ]
+
+#     print(base_path)
+#     remove_create_folder(base_path)
+
+#     df_t = df_t[df_t.columns[~df_t.columns.str.contains('-std')]]
+
+#     temp_dic = {}
+#     for i in df_t.columns[df_t.columns.str.contains(col)]:
+#         if 'ORI' in i:
+#             id_ = 10
+#         elif 'RIATA' in i:
+#             id_ = 20
+#         elif 'AC' in i:
+#             id_ = 30
+#         else:
+#             id_ = 40
+#         temp_dic[i] = id_
+
+#     sorted_cols = list(
+#         dict(sorted(temp_dic.items(), key=lambda item: item[1])).keys())
+#     cols = ["parameter-"] + sorted_cols
+#     dftt = df_t[cols]
+
+#     path = os.path.join(base_path, "tabel_dio.xlsx")
+#     dftt.to_excel(path, index=False)
+
 def generate_summary(infile):
     print('generating KPIs for {0}'.format(infile))
 
@@ -902,7 +956,7 @@ def main():
         df2 = df2.groupby('method').aggregate(funcs)
         df2.columns = df2.columns.map('-'.join)
         df2 = df2.reset_index()
-        df2 = df2.fillna(0)
+        # df2 = df2.fillna(0)
 
         is_test = bool(cliparams.get('test', 0))
 
@@ -975,6 +1029,7 @@ def main():
                 df2.drop(['sort_temp'], axis=1, errors='ignore', inplace=True)
 
                 exp4_process(df2, measured_metrics, base_path)
+                # exp4_table(df2, base_path)
                 exp = 4
 
         df2.to_csv(path2, index=False, sep ='\t')

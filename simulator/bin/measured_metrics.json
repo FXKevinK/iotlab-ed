@@ -5,6 +5,7 @@
     "last_pfailed": [""],
     "last_psent": [""],
     "trickle_pbusy": ["mean"],
+    "last_count_dio": ["sum"],
     "last_failed_dio": ["sum"],
-    "last_count_dio": ["sum"]
+    "last_trickle_surpress": ["sum"]
 }

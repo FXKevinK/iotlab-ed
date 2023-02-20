@@ -365,11 +365,11 @@ class RiataTrickle(object):
             'preset': self.preset,
             'Nreset': self.Nreset,
 
-            'pqu_prev': self.pqu_prev,
+            'pqu_prev': None,
             'pqu': self.pqu,
-            'pbusy_prev': self.pbusy_prev,
+            'pbusy_prev': None,
             'pbusy': self.pbusy,
-            'psent_prev': self.psent_prev,
+            'psent_prev': None,
             'psent': self.psent,
             'pfailed': self.pfailed,
             'preset': self.preset,
@@ -382,14 +382,14 @@ class RiataTrickle(object):
             'Nnbr': self.Nnbr,
             'Ncells': self.Ncells,
             'used': self.used,
-            'm': self.m_riata
+            'm': self.m_riata,
+            "reward": self.reward,
         }
 
         more = {
             'counter': self.counter,
             'is_dio_sent': self.is_dio_sent,
             'count_dio_trickle': self.mote.rpl.count_dio_trickle,
-            "reward": self.reward,
         }
 
         result = {**base} if is_reset else {**base, **more}

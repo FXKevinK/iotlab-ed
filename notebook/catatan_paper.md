@@ -55,6 +55,8 @@ Latency: Bar
 ( find . -type f -name ".DS_Store" ) | xargs rm -rf
 
 openv-server --sim=2 --simtopo=linear
+openv-client root emulated1
+openv-client view web
 
 cd openwsn-fw; scons board=python toolchain=gcc modules=icmpv6periodic oos_openwsn; cd ..
 
@@ -89,18 +91,11 @@ python3.7 runSim.py --algo=qt_2 --param_lr=0.7 --param_dr=0.7;
 python3.7 runSim.py --algo=qt_2 --param_lr=0.7 --param_dr=0.9;
 
 <!-- exp 3 -->
-python3.7 runSim.py --algo=qt_3 --param_ep=0.1 --param_ad=0;
-python3.7 runSim.py --algo=qt_3 --param_ep=0.3 --param_ad=0;
-python3.7 runSim.py --algo=qt_3 --param_ep=0.5 --param_ad=0;
-python3.7 runSim.py --algo=qt_3 --param_ep=0.7 --param_ad=0;
-python3.7 runSim.py --algo=qt_3 --param_ep=0.9 --param_ad=0;
-
-python3.7 runSim.py --algo=qt_3 --param_epdecay=0.001 --param_ad=1;
-python3.7 runSim.py --algo=qt_3 --param_epdecay=0.01 --param_ad=1;
-python3.7 runSim.py --algo=qt_3 --param_epdecay=0.05 --param_ad=1;
-python3.7 runSim.py --algo=qt_3 --param_epdecay=0.1 --param_ad=1;
-python3.7 runSim.py --algo=qt_3 --param_epdecay=0.2 --param_ad=1;
-python3.7 runSim.py --algo=qt_3 --param_epdecay=0.3 --param_ad=1;
+python3.7 runSim.py --algo=qt_3 --param_ep=0.1;
+python3.7 runSim.py --algo=qt_3 --param_ep=0.3;
+python3.7 runSim.py --algo=qt_3 --param_ep=0.5;
+python3.7 runSim.py --algo=qt_3 --param_ep=0.7;
+python3.7 runSim.py --algo=qt_3 --param_ep=0.9;
 
 <!-- exp 5 Add/Remove-->
 python3.7 runSim.py --algo=qt_4 --param_addrem=1;
@@ -116,52 +111,55 @@ python3.7 runSim.py --algo=ac --param_addrem=1;
 python3.7 runSim.py --algo=ac --param_addrem=2;
 
 <!-- exp 4 -->
-python3.7 runSim.py --algo=ori --param_motes=10 --param_imin=1;
-python3.7 runSim.py --algo=ori --param_motes=10 --param_imin=5;
-python3.7 runSim.py --algo=ori --param_motes=10 --param_imin=10;
+<!-- ORI -->
+python3.7 runSim.py --algo=ori --param_motes=10 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=ori --param_motes=10 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=ori --param_motes=10 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=ori --param_motes=50 --param_imin=1;
-python3.7 runSim.py --algo=ori --param_motes=50 --param_imin=5;
-python3.7 runSim.py --algo=ori --param_motes=50 --param_imin=10;
+python3.7 runSim.py --algo=ori --param_motes=50 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=ori --param_motes=50 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=ori --param_motes=50 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=ori --param_motes=100 --param_imin=1 --param_runs=3;
-python3.7 runSim.py --algo=ori --param_motes=100 --param_imin=5 --param_runs=3;
-python3.7 runSim.py --algo=ori --param_motes=100 --param_imin=10 --param_runs=3;
+python3.7 runSim.py --algo=ori --param_motes=100 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=ori --param_motes=100 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=ori --param_motes=100 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=riata --param_motes=10 --param_imin=1;
-python3.7 runSim.py --algo=riata --param_motes=10 --param_imin=5;
-python3.7 runSim.py --algo=riata --param_motes=10 --param_imin=10;
+<!-- RIATA -->
+python3.7 runSim.py --algo=riata --param_motes=10 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=riata --param_motes=10 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=riata --param_motes=10 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=riata --param_motes=50 --param_imin=1;
-python3.7 runSim.py --algo=riata --param_motes=50 --param_imin=5;
-python3.7 runSim.py --algo=riata --param_motes=50 --param_imin=10;
+python3.7 runSim.py --algo=riata --param_motes=50 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=riata --param_motes=50 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=riata --param_motes=50 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=riata --param_motes=100 --param_imin=1 --param_runs=3;
-python3.7 runSim.py --algo=riata --param_motes=100 --param_imin=5 --param_runs=3;
-python3.7 runSim.py --algo=riata --param_motes=100 --param_imin=10 --param_runs=3;
+python3.7 runSim.py --algo=riata --param_motes=100 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=riata --param_motes=100 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=riata --param_motes=100 --param_imin=10 --param_runs=1;
 
+<!-- AC -->
 
-python3.7 runSim.py --algo=ac --param_motes=10 --param_imin=1;
-python3.7 runSim.py --algo=ac --param_motes=10 --param_imin=5;
-python3.7 runSim.py --algo=ac --param_motes=10 --param_imin=10;
+python3.7 runSim.py --algo=ac --param_motes=10 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=ac --param_motes=10 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=ac --param_motes=10 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=ac --param_motes=50 --param_imin=1;
-python3.7 runSim.py --algo=ac --param_motes=50 --param_imin=5;
-python3.7 runSim.py --algo=ac --param_motes=50 --param_imin=10;
+python3.7 runSim.py --algo=ac --param_motes=50 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=ac --param_motes=50 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=ac --param_motes=50 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=ac --param_motes=100 --param_imin=1 --param_runs=3;
-python3.7 runSim.py --algo=ac --param_motes=100 --param_imin=5 --param_runs=3;
-python3.7 runSim.py --algo=ac --param_motes=100 --param_imin=10 --param_runs=3;
+python3.7 runSim.py --algo=ac --param_motes=100 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=ac --param_motes=100 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=ac --param_motes=100 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=qt_4 --param_motes=10 --param_imin=1;
-python3.7 runSim.py --algo=qt_4 --param_motes=50 --param_imin=1;
+<!-- QT -->
+python3.7 runSim.py --algo=qt_4 --param_motes=10 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=qt_4 --param_motes=10 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=qt_4 --param_motes=10 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=qt_4 --param_motes=10 --param_imin=5;
-python3.7 runSim.py --algo=qt_4 --param_motes=50 --param_imin=5;
+python3.7 runSim.py --algo=qt_4 --param_motes=50 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=qt_4 --param_motes=50 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=qt_4 --param_motes=50 --param_imin=10 --param_runs=1;
 
-python3.7 runSim.py --algo=qt_4 --param_motes=10 --param_imin=10;
-python3.7 runSim.py --algo=qt_4 --param_motes=50 --param_imin=10;
-
-python3.7 runSim.py --algo=qt_4 --param_motes=100 --param_imin=1;
-python3.7 runSim.py --algo=qt_4 --param_motes=100 --param_imin=5;
-python3.7 runSim.py --algo=qt_4 --param_motes=100 --param_imin=10;
+python3.7 runSim.py --algo=qt_4 --param_motes=100 --param_imin=1 --param_runs=1;
+python3.7 runSim.py --algo=qt_4 --param_motes=100 --param_imin=5 --param_runs=1;
+python3.7 runSim.py --algo=qt_4 --param_motes=100 --param_imin=10 --param_runs=1;

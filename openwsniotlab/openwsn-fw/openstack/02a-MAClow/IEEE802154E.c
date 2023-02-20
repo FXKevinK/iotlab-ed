@@ -1128,11 +1128,15 @@ port_INLINE void activity_ti1ORri1(void)
             else
             {
                 // this is minimal cell
+#if use_qtrickle == TRUE
                 is_dio = TRUE;
+#endif
                 ieee154e_vars.dataToSend = openqueue_macGetDIOPacket();
                 if (ieee154e_vars.dataToSend == NULL)
                 {
+#if use_qtrickle == TRUE
                     is_dio = FALSE;
+#endif
                     couldSendEB = TRUE;
                     // look for an EB packet in the queue
                     ieee154e_vars.dataToSend = openqueue_macGetEBPacket();

@@ -25,6 +25,7 @@ log.addHandler(logging.NullHandler())
 class ParserLogs(Parser):
     HEADER_LENGTH = 1
     def_len = 2+1+1+4+4
+    float_multiplier = 10000
 
     class LogSeverity(IntEnum):
         SEVERITY_VERBOSE = ord('V')
@@ -118,7 +119,6 @@ class ParserLogs(Parser):
                 pkt_["0_state"] = "send"
                 pkt_["counter"] = counter
                 pkt_["is_failed"] = is_failed
-                pkt_["ambr"] = float(ambr)/10000
                 pkt_["asn"] = asn
                 pkt_["mote_id"] = mote_id
                 pkt_["time"] = datetime.now().strftime(time_format)
@@ -152,28 +152,26 @@ class ParserLogs(Parser):
             exp_log = True
             values = None
             try:
-                values = struct.unpack('<BBBBHHHHHHHHHI', ''.join([chr(c) for c in data_only]))
+                values = struct.unpack('<BBhHHHHHHHHHI', ''.join([chr(c) for c in data_only]))
             except struct.error:
                 log.info("could not extract data from {0}".format(data_only))
 
             if values:
                 values = list(values)
-                if len(values) == 14:
-                    pkt_["m"] = values[0]
-                    pkt_["Nnbr"] = values[1]
-                    pkt_["k"] = values[2]
-                    pkt_["counter"] = values[3]
-                    pkt_["Nstates"] = values[4]
-                    pkt_["Nreset"] = values[5]
-                    pkt_["DIOtransmit"] = values[6]
-                    pkt_["DIOsurpress"] = values[7]
-                    pkt_["DIOtransmit_collision"] = values[8]
-                    pkt_["DIOtransmit_dis"] = values[9]
-                    pkt_["pfree"] = float(values[10])/10000
-                    pkt_["preset"] = float(values[11])/10000
-                    pkt_["epsilon"] = float(values[12])/10000
-                    pkt_["listen_period"] = values[13]
-
+                if len(values) == 13:
+                    pkt_["Nnbr"] = values[0]
+                    pkt_["k"] = values[1]
+                    pkt_["reward"] = values[2]
+                    pkt_["Nstates"] = values[3]
+                    pkt_["DIOtransmit"] = values[4]
+                    pkt_["DIOsurpress"] = values[5]
+                    pkt_["DIOfailed"] = values[6]
+                    pkt_["psent"] = float(values[7])/self.float_multiplier
+                    pkt_["pbusy"] = float(values[8])/self.float_multiplier
+                    pkt_["pqu"] = float(values[9])/self.float_multiplier
+                    pkt_["preset"] = float(values[10])/self.float_multiplier
+                    pkt_["ptransmit"] = float(values[11])/self.float_multiplier
+                    pkt_["t"] = values[12]
                     pkt_["0_state"] = "trickle"
                     pkt_["mote_id"] = mote_id
                     pkt_["time"] = datetime.now().strftime(time_format)

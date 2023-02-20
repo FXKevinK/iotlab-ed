@@ -658,14 +658,21 @@ void sixtop_timeout_timer_cb(opentimers_id_t id) {
 //======= EB/KA task
 
 void timer_sixtop_sendEb_fired(void) {
+#if use_qtrickle == TRUE
     uint8_t nbr = neighbors_getNumNeighbors();
-    sixtop_vars.eb_used_prob = sixtop_vars.eb_prob;
+#endif
+    // sixtop_vars.eb_used_prob = sixtop_vars.eb_prob;
 
 #if use_qtrickle == TRUE
     sixtop_vars.eb_used_prob = sixtop_vars.eb_prob + ((float) (1.0 - sixtop_vars.eb_prob) / (uint32_t) (1 << nbr));
 #endif
-    if (sixtop_vars.eb_used_prob < 0 || sixtop_vars.eb_used_prob > 1) LOG_CRITICAL(COMPONENT_SIXTOP, ERR_TIMER_MINUS, 0, 0);
-    if (packetfunctions_random_p(sixtop_vars.eb_used_prob)) sixtop_sendEB();
+    // if (sixtop_vars.eb_used_prob < 0 || sixtop_vars.eb_used_prob > 1) LOG_CRITICAL(COMPONENT_SIXTOP, ERR_TIMER_MINUS, 0, 0);
+    // if (packetfunctions_random_p(sixtop_vars.eb_used_prob)) sixtop_sendEB();
+
+    if (openrandom_get16b() < (0xffff / EB_PORTION))
+    {
+        sixtop_sendEB();
+    }
 }
 
 /**

@@ -206,7 +206,7 @@ class RPL(eventbusclient.EventBusClient):
         return True
 
     def _icmpv6periodic_notif(self,sender,signal,data):   
-        self._indicatePeriodic(data)
+        # self._indicatePeriodic(data)
         return True
 
     def _get_source_route_notif(self, sender, signal, data):
